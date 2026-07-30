@@ -1,0 +1,21 @@
+Options -Indexes
+
+RewriteEngine On
+RewriteBase /DigitalEvangelization/
+
+# Block direct access to internal PHP source directories
+RewriteRule ^(views|src|config|database)/ - [F,L]
+
+# Block direct access to admin/index.php and portal/index.php specifically
+RewriteRule ^admin/index\.php$ index.php [QSA,L]
+
+# Explicitly allow PWA files to be served directly
+RewriteRule ^sw\.js$        - [L]
+RewriteRule ^manifest\.json$ - [L]
+
+# Allow direct access to actual static assets (css, js, images, uploads)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Route everything else through index.php
+RewriteRule ^(.*)$ index.php [QSA,L]

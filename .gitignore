@@ -1,0 +1,29 @@
+# ── Credentials & environment ──────────────────────────────────────────────
+config/database.php
+.env
+*.env
+
+# ── XAMPP / local server logs ───────────────────────────────────────────────
+*.log
+error_log
+
+# ── OS junk ─────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Editor folders ──────────────────────────────────────────────────────────
+.vscode/
+.idea/
+
+# ── Uploaded user files (large binary files, not for git) ───────────────────
+public/uploads/videos/*.mp4
+public/uploads/videos/*.webm
+public/uploads/avatars/*.jpg
+public/uploads/avatars/*.png
+public/uploads/avatars/*.jpeg
+public/uploads/avatars/*.gif
+public/uploads/avatars/*.webp
+
+# ── Local SQL dumps ─────────────────────────────────────────────────────────
+daybreak.sql
