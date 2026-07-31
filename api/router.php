@@ -39,8 +39,17 @@ set_exception_handler(function (Throwable $e): void {
     exit;
 });
 
-// CORS headers for local development
-header('Access-Control-Allow-Origin: *');
+// Start session so protected routes can read $_SESSION['member']
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// CORS headers (only for cross-origin requests during development)
+if (!empty($_SERVER['HTTP_ORIGIN'])) {
+    $origin = $_SERVER['HTTP_ORIGIN'];
+    header('Access-Control-Allow-Origin: ' . $origin);
+    header('Access-Control-Allow-Credentials: true');
+}
 header('Access-Control-Allow-Methods: GET, POST, PATCH, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 header('Content-Type: application/json; charset=utf-8');

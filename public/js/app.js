@@ -90,6 +90,7 @@ function animatedModalClose(overlayEl, callback) {
 
 async function apiFetch(path, options = {}) {
   const res = await fetch(BASE_URL + path, {
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
     ...options,
   });

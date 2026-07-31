@@ -2,14 +2,13 @@
  * Daybreak — Service Worker
  * Strategy:
  *   - App shell (HTML, CSS, JS, fonts) → Cache-first, then network fallback
- *   - API calls                         → Network-first, then cache fallback
+ *   - API calls                         → Pass-through to network (no caching; session cookies must work)
  *   - Images                            → Cache-first with long TTL
  */
 
-const CACHE_VERSION  = 'daybreak-v1';
+const CACHE_VERSION  = 'daybreak-v2';
 const SHELL_CACHE    = CACHE_VERSION + '-shell';
 const IMAGE_CACHE    = CACHE_VERSION + '-images';
-const API_CACHE      = CACHE_VERSION + '-api';
 
 const BASE = '/DigitalEvangelization';
 
@@ -36,7 +35,7 @@ self.addEventListener('activate', event => {
     caches.keys().then(keys =>
       Promise.all(
         keys
-          .filter(key => key.startsWith('daybreak-') && key !== SHELL_CACHE && key !== IMAGE_CACHE && key !== API_CACHE)
+          .filter(key => key.startsWith('daybreak-') && key !== SHELL_CACHE && key !== IMAGE_CACHE)
           .map(key => caches.delete(key))
       )
     )
@@ -54,9 +53,9 @@ self.addEventListener('fetch', event => {
   if (request.method !== 'GET') return;
   if (!url.pathname.startsWith(BASE)) return;
   if (url.pathname.startsWith(BASE + '/admin')) return;
+  // API calls — always go straight to network (never cache; must carry session cookies)
   if (url.pathname.startsWith(BASE + '/api')) {
-    event.respondWith(networkFirstWithCache(request, API_CACHE));
-    return;
+    return; // let the browser handle it natively
   }
 
   // Images — cache-first
@@ -105,24 +104,3 @@ async function cacheFirstWithNetwork(request, cacheName) {
   }
 }
 
-/**
- * Network-first: try the network, fall back to cache.
- * Used for API calls so data is always fresh when online.
- */
-async function networkFirstWithCache(request, cacheName) {
-  const cache = await caches.open(cacheName);
-  try {
-    const response = await fetch(request);
-    if (response && response.status === 200) {
-      cache.put(request, response.clone());
-    }
-    return response;
-  } catch {
-    const cached = await cache.match(request);
-    if (cached) return cached;
-    return new Response(JSON.stringify({ status: 'error', message: 'You are offline.' }), {
-      status: 503,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
-}
