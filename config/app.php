@@ -10,10 +10,6 @@ define('APP_ENV',     'development');   // 'production' in prod
 define('APP_DEBUG',   APP_ENV === 'development');
 define('APP_TIMEZONE','Asia/Manila');
 
-// Admin panel credentials — change these before going to production
-define('ADMIN_USER', 'admin');
-define('ADMIN_PASS', 'admin123'); // plain text — hashed at login with password_hash
-
 date_default_timezone_set(APP_TIMEZONE);
 
 // Never print raw errors to the browser — they corrupt JSON responses.

@@ -121,15 +121,6 @@ INSERT INTO media (title, description, type, series, duration, featured, publish
 ('Live from Main Site',       'A full worship set recorded live, uncut.',                                              'worship',    'Worship Night',   2700, 0, DATE_SUB(NOW(), INTERVAL 21 DAY),   'https://www.youtube.com/watch?v=FgGAqS-5s2k'),
 ('When Prayer Feels Silent',  'What to do when heaven seems quiet.',                                                   'devotional', 'Daily Devotional', 480, 0, DATE_SUB(NOW(), INTERVAL 3 DAY),    'https://www.youtube.com/watch?v=AyOHXI3sY8w');
 
--- Update existing media rows with video URLs (run if table already exists)
--- UPDATE media SET video_url = 'https://www.youtube.com/watch?v=5IATfBFsyNs' WHERE title = 'What It Means to Abide';
--- UPDATE media SET video_url = 'https://www.youtube.com/watch?v=7ltmb6SdGj8' WHERE title = 'Pruned to Grow';
--- UPDATE media SET video_url = 'https://www.youtube.com/watch?v=pVgFb4hWCGc' WHERE title = 'Enough for Today';
--- UPDATE media SET video_url = 'https://www.youtube.com/watch?v=KfuKMnLSWpc' WHERE title = 'Mara''s Story';
--- UPDATE media SET video_url = 'https://www.youtube.com/watch?v=SqchgHx9U0Q' WHERE title = 'Deep Water';
--- UPDATE media SET video_url = 'https://www.youtube.com/watch?v=FgGAqS-5s2k' WHERE title = 'Live from Main Site';
--- UPDATE media SET video_url = 'https://www.youtube.com/watch?v=AyOHXI3sY8w' WHERE title = 'When Prayer Feels Silent';
-
 INSERT INTO articles (title, excerpt, body, read_minutes, published_at) VALUES
 ('Enough for Today',           'On manna, anxiety, and the discipline of asking only for today\'s bread.',                        'Full article body here...', 5, NOW()),
 ('The Waiting Isn\'t Wasted',  'A look at the four hundred silent years before the Gospels begin.',                               'Full article body here...', 7, DATE_SUB(NOW(), INTERVAL 1 DAY)),

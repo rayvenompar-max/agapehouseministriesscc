@@ -1,100 +1,93 @@
-# Daybreak — Layered Architecture
+# Daybreak — Agape House Ministries
 
-A PHP layered-architecture implementation of the Daybreak digital evangelization platform.
+A PHP 8 MVC + SPA hybrid for the Daybreak digital evangelization platform.
 
 ## Project Structure
 
 ```
 DigitalEvangelization/
 │
-├── index.php                  # Front controller
+├── index.php                  # Front controller (all web requests)
 ├── .htaccess                  # URL rewriting
 │
 ├── config/
 │   ├── app.php                # App constants & error settings
-│   └── database.php           # PDO singleton (getDB())
+│   ├── database.php           # PDO singleton (getDB()) — gitignored
+│   └── database.example.php  # Template — copy to database.php and fill in credentials
 │
 ├── src/
 │   ├── Model/                 # Pure data classes (no DB logic)
-│   │   ├── Media.php
-│   │   ├── Article.php
-│   │   ├── PrayerRequest.php
-│   │   ├── Event.php
-│   │   ├── Donation.php
-│   │   └── ContactMessage.php
-│   │
-│   ├── Repository/            # Data access layer (SQL lives here)
-│   │   ├── MediaRepository.php
-│   │   ├── ArticleRepository.php
-│   │   ├── PrayerRepository.php
-│   │   ├── EventRepository.php
-│   │   ├── DonationRepository.php
-│   │   └── ContactRepository.php
-│   │
-│   ├── Service/               # Business logic
-│   │   ├── MediaService.php
-│   │   ├── ArticleService.php
-│   │   ├── PrayerService.php
-│   │   ├── EventService.php
-│   │   ├── DonationService.php
-│   │   └── ContactService.php
-│   │
-│   └── Controller/            # HTTP layer — validates input, calls Service
-│       ├── BaseController.php
-│       ├── MediaController.php
-│       ├── ArticleController.php
-│       ├── PrayerController.php
-│       ├── EventController.php
-│       ├── DonationController.php
-│       └── ContactController.php
+│   ├── Repository/            # Data access layer (SQL via PDO)
+│   ├── Service/               # Business logic & orchestration
+│   └── Controller/            # HTTP layer — validates input, calls Service, returns JSON
 │
 ├── api/
 │   └── router.php             # Maps HTTP routes → Controllers
 │
 ├── views/
-│   ├── layout.php             # HTML shell (includes all partials + pages)
+│   ├── layout.php             # SPA HTML shell
+│   ├── login.php              # Admin + member auth page
+│   ├── portal.php             # Member portal (protected)
+│   ├── member_profile.php     # Public member profile page
 │   ├── partials/
 │   │   ├── header.php
-│   │   └── footer.php
+│   │   ├── footer.php
+│   │   └── member_profile_modal.php
 │   └── pages/
-│       ├── home.php
-│       ├── watch.php
-│       ├── read.php
-│       ├── prayer.php
-│       ├── events.php
-│       ├── give.php
-│       ├── about.php
-│       └── connect.php
+│       ├── home.php, watch.php, read.php, prayer.php
+│       ├── events.php, connect.php, about.php
+│       ├── announcement.php, bible.php, quizzes.php
 │
 ├── public/
-│   ├── css/app.css            # All styles
-│   └── js/app.js              # SPA routing + API calls
+│   ├── css/app.css            # All styles (Horizon Design System)
+│   ├── js/app.js              # SPA routing + API calls
+│   └── uploads/               # User-uploaded avatars and videos
+│
+├── admin/
+│   └── index.php              # Admin panel (prayer, media, announcements, events)
 │
 └── database/
-    └── schema.sql             # CREATE TABLE + seed data
+    ├── schema.sql             # Core tables + seed data (run first)
+    ├── admins.sql             # admins table
+    ├── members.sql            # members table
+    ├── add_profile_picture.sql
+    ├── announcements.sql
+    ├── comments.sql
+    ├── event_registrations.sql
+    ├── member_follows.sql
+    ├── notifications.sql
+    ├── add_broadcast_notifications.sql
+    ├── posts_shares.sql
+    ├── add_posted_by.sql
+    ├── add_media_member_id_v2.sql
+    └── add_article_member_id.sql
 ```
-
-## Layer Responsibilities
-
-| Layer | Responsibility |
-|---|---|
-| **Model** | Plain PHP 8 classes, typed properties, `toArray()` |
-| **Repository** | All SQL — hydrates rows into Model objects |
-| **Service** | Business rules, validation, orchestration |
-| **Controller** | Parses HTTP input, calls Service, returns JSON |
-| **API Router** | Pattern-matches route → Controller method |
-| **View** | HTML partials; dynamic content fetched by JS |
 
 ## Setup
 
 1. Start Apache + MySQL in XAMPP.
-2. Create the database and run seed data:
+2. Copy `config/database.example.php` to `config/database.php` and set credentials.
+3. Run migrations in order:
    ```
    mysql -u root daybreak < database/schema.sql
+   mysql -u root daybreak < database/admins.sql
+   mysql -u root daybreak < database/members.sql
+   mysql -u root daybreak < database/add_profile_picture.sql
+   mysql -u root daybreak < database/announcements.sql
+   mysql -u root daybreak < database/comments.sql
+   mysql -u root daybreak < database/event_registrations.sql
+   mysql -u root daybreak < database/member_follows.sql
+   mysql -u root daybreak < database/notifications.sql
+   mysql -u root daybreak < database/add_broadcast_notifications.sql
+   mysql -u root daybreak < database/posts_shares.sql
+   mysql -u root daybreak < database/add_posted_by.sql
+   mysql -u root daybreak < database/add_media_member_id_v2.sql
+   mysql -u root daybreak < database/add_article_member_id.sql
    ```
-   Or paste `schema.sql` into phpMyAdmin.
-3. Make sure `mod_rewrite` is enabled in Apache.
-4. Visit: `http://localhost/DigitalEvangelization/`
+4. Ensure `mod_rewrite` is enabled in Apache.
+5. Visit: `http://localhost/DigitalEvangelization/`
+
+Default admin: `admin` / `admin123` — **change immediately after first login**.
 
 ## API Endpoints
 
@@ -102,13 +95,31 @@ DigitalEvangelization/
 |--------|------|-------------|
 | GET | `/api/media` | All media (optional `?type=sermon\|devotional\|...`) |
 | GET | `/api/media/featured` | Currently featured message |
+| POST | `/api/media` | Create media (admin) |
+| PATCH | `/api/media/{id}` | Update media (admin) |
+| DELETE | `/api/media/{id}` | Delete media (admin) |
 | GET | `/api/articles` | All articles |
 | GET | `/api/articles/{id}` | Single article |
+| POST | `/api/articles` | Create article (admin) |
 | GET | `/api/prayers` | Approved prayer requests |
-| POST | `/api/prayers` | Submit a new request |
+| POST | `/api/prayers` | Submit a prayer request |
 | POST | `/api/prayers/{id}/pray` | Increment pray count |
+| POST | `/api/prayers/{id}/approve` | Approve prayer (admin) |
+| POST | `/api/prayers/{id}/reject` | Reject prayer (admin) |
 | GET | `/api/events/weekly` | Recurring weekly schedule |
 | GET | `/api/events/upcoming` | Upcoming one-off events |
-| POST | `/api/donations` | Initiate a donation |
-| GET | `/api/donations/stats` | Total given |
+| GET | `/api/events/all` | All events with registration counts |
+| POST | `/api/events/{id}/register` | Register for event |
+| DELETE | `/api/events/{id}/register` | Cancel registration |
+| GET | `/api/announcements` | All announcements |
+| POST | `/api/announcements` | Create announcement (admin) |
+| GET | `/api/comments/{type}/{id}` | Comments for a post/article/media |
+| POST | `/api/comments` | Post a comment |
+| GET | `/api/notifications` | Member notifications |
+| GET | `/api/notifications/unread-count` | Unread notification count |
+| GET | `/api/member/profile` | Current member profile |
+| PATCH | `/api/member/profile` | Update display name |
+| POST | `/api/member/profile/update` | Full profile update |
+| POST | `/api/member/{id}/follow` | Follow a member |
+| DELETE | `/api/member/{id}/follow` | Unfollow a member |
 | POST | `/api/contact` | Send a contact message |

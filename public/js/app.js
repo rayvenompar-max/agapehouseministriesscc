@@ -3839,6 +3839,12 @@ function saveMyPrayer(prayer) {
   localStorage.setItem(myPrayerStorageKey(), JSON.stringify(list));
 }
 
+function removeMyPrayer(id) {
+  const list = getMyPrayers().filter(p => String(p.id) !== String(id));
+  localStorage.setItem(myPrayerStorageKey(), JSON.stringify(list));
+  renderMyPrayerList();
+}
+
 // Open / close drawer
 function openPrayerDrawer() {
   const drawer = document.getElementById('prayerDrawer');
@@ -3872,15 +3878,18 @@ function renderMyPrayerList() {
   }
 
   listEl.innerHTML = prayers.map(p => `
-    <div class="my-prayer-item">
+    <div class="my-prayer-item" data-prayer-id="${escHtml(String(p.id))}">
       <div class="my-prayer-item-header">
         <span class="my-prayer-cat">${escHtml(p.category)}</span>
         <span class="my-prayer-time">${formatTimeAgo(p.submitted_at)}</span>
       </div>
       <div class="my-prayer-body">${escHtml(p.body)}</div>
-      <span class="my-prayer-status ${escHtml(p.status)}">
-        ${{ approved: '✓ On the wall', pending: '⏳ Pending', rejected: '✗ Not posted' }[p.status] || p.status}
-      </span>
+      <div class="my-prayer-item-footer">
+        <span class="my-prayer-status ${escHtml(p.status)}">
+          ${{ approved: '✓ On the wall', pending: '⏳ Pending', rejected: '✗ Not posted' }[p.status] || p.status}
+        </span>
+        <button class="my-prayer-delete-btn" data-delete-id="${escHtml(String(p.id))}" aria-label="Remove this prayer request" title="Remove">✕</button>
+      </div>
     </div>
   `).join('');
 }
@@ -3982,6 +3991,17 @@ async function updateFollowStats() {
   if (closeBtn)  closeBtn.addEventListener('click', closePrayerDrawer);
   if (backdrop)  backdrop.addEventListener('click', closePrayerDrawer);
   if (submitBtn) submitBtn.addEventListener('click', submitDrawerPrayer);
+
+  // Delete a saved prayer request from the list
+  const listEl = document.getElementById('myPrayerList');
+  if (listEl) {
+    listEl.addEventListener('click', e => {
+      const btn = e.target.closest('.my-prayer-delete-btn');
+      if (!btn) return;
+      const id = btn.dataset.deleteId;
+      if (id) removeMyPrayer(id);
+    });
+  }
 
   // Character counter
   if (reqEl && counter) {
