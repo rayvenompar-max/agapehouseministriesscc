@@ -52,7 +52,7 @@ class PrayerService
 
         return [
             'success' => true,
-            'message' => 'Your request has been posted to the wall.',
+            'message' => 'Your prayer request has been submitted and is pending review.',
             'id'      => $request->id,
         ];
     }

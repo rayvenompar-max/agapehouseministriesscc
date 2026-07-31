@@ -48,6 +48,7 @@ class MediaService
 
     /**
      * Create a new media item.
+     * Member submissions default to 'pending'; admin posts are 'approved' immediately.
      */
     public function create(array $data): array
     {
@@ -77,9 +78,39 @@ class MediaService
             'published_at' => isset($data['published_at']) && $data['published_at'] !== ''
                                 ? $data['published_at']
                                 : date('Y-m-d H:i:s'),
+            // Admin posts go live immediately; member submissions need approval
+            'status'       => $data['status'] ?? 'pending',
         ];
 
         return $this->repo->create($fields)->toArray();
+    }
+
+    /** Return media items pending admin approval. */
+    public function getPending(): array
+    {
+        return array_map(fn($m) => $m->toArray(), $this->repo->findPending());
+    }
+
+    /** Approve a media item so it appears publicly. */
+    public function approve(int $id): array
+    {
+        $item = $this->repo->findById($id);
+        if (!$item) {
+            throw new \InvalidArgumentException("Media #{$id} not found.");
+        }
+        $this->repo->updateStatus($id, 'approved');
+        return ['success' => true];
+    }
+
+    /** Reject a media item. */
+    public function reject(int $id): array
+    {
+        $item = $this->repo->findById($id);
+        if (!$item) {
+            throw new \InvalidArgumentException("Media #{$id} not found.");
+        }
+        $this->repo->updateStatus($id, 'rejected');
+        return ['success' => true];
     }
 
     /**

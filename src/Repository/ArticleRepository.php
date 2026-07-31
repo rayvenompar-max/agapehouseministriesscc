@@ -27,7 +27,28 @@ class ArticleRepository
                     ) AS poster_username,
                     (SELECT COUNT(*) FROM comments c WHERE c.target_type = \'article\' AND c.target_id = a.id) AS comment_count
              FROM articles a
+             WHERE a.status = \'approved\'
              ORDER BY a.published_at DESC'
+        );
+        return array_map([$this, 'hydrate'], $stmt->fetchAll());
+    }
+
+    /** Return articles pending admin approval. */
+    public function findPending(): array
+    {
+        $stmt = $this->db->query(
+            'SELECT a.*,
+                    COALESCE(
+                        (SELECT mem.profile_picture FROM members mem WHERE mem.id = a.member_id LIMIT 1),
+                        (SELECT mem.profile_picture FROM members mem WHERE mem.display_name = a.posted_by LIMIT 1)
+                    ) AS poster_picture,
+                    COALESCE(
+                        (SELECT mem.username FROM members mem WHERE mem.id = a.member_id LIMIT 1),
+                        (SELECT mem.username FROM members mem WHERE mem.display_name = a.posted_by LIMIT 1)
+                    ) AS poster_username
+             FROM articles a
+             WHERE a.status = \'pending\'
+             ORDER BY a.created_at ASC'
         );
         return array_map([$this, 'hydrate'], $stmt->fetchAll());
     }
@@ -60,14 +81,15 @@ class ArticleRepository
         ?string $publishedAt,
         string  $postedBy = 'Agape House',
         ?int    $memberId = null,
+        string  $status   = 'pending',
     ): ?Article {
         $published = $publishedAt
             ? date('Y-m-d H:i:s', strtotime($publishedAt))
             : date('Y-m-d H:i:s');
 
         $stmt = $this->db->prepare(
-            'INSERT INTO articles (title, excerpt, body, read_minutes, published_at, posted_by, member_id)
-             VALUES (:title, :excerpt, :body, :read_minutes, :published_at, :posted_by, :member_id)'
+            'INSERT INTO articles (title, excerpt, body, read_minutes, published_at, posted_by, member_id, status)
+             VALUES (:title, :excerpt, :body, :read_minutes, :published_at, :posted_by, :member_id, :status)'
         );
         $stmt->execute([
             'title'        => $title,
@@ -77,10 +99,22 @@ class ArticleRepository
             'published_at' => $published,
             'posted_by'    => $postedBy,
             'member_id'    => $memberId,
+            'status'       => $status,
         ]);
 
         $id = (int) $this->db->lastInsertId();
         return $id ? $this->findById($id) : null;
+    }
+
+    /** Update the approval status of an article. */
+    public function updateStatus(int $id, string $status): bool
+    {
+        if (!in_array($status, ['pending', 'approved', 'rejected'], true)) {
+            throw new \InvalidArgumentException('Invalid status value.');
+        }
+        $stmt = $this->db->prepare('UPDATE articles SET status = :status WHERE id = :id');
+        $stmt->execute(['status' => $status, 'id' => $id]);
+        return $stmt->rowCount() > 0;
     }
 
     private function hydrate(array $row): Article
@@ -97,6 +131,7 @@ class ArticleRepository
             posterPicture:       $row['poster_picture']  ?? null,
             posterUsername:      $row['poster_username'] ?? null,
             commentCount:  (int) ($row['comment_count']  ?? 0),
+            status:              $row['status']          ?? 'approved',
         );
     }
 }

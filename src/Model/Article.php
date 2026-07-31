@@ -22,6 +22,7 @@ class Article
         public readonly ?string $posterPicture = null,
         public readonly ?string $posterUsername = null,
         public readonly int     $commentCount = 0,
+        public readonly string  $status = 'approved',
     ) {}
 
     public function toArray(): array
@@ -38,6 +39,7 @@ class Article
             'poster_picture' => $this->posterPicture,
             'poster_username'=> $this->posterUsername,
             'comment_count'  => $this->commentCount,
+            'status'         => $this->status,
         ];
     }
 }

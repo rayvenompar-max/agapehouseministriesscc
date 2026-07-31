@@ -26,6 +26,7 @@ class Media
         public readonly bool    $featured,
         public readonly string  $publishedAt,
         public readonly int     $commentCount = 0,
+        public readonly string  $status = 'approved',
     ) {}
 
     /** Human-readable duration: 38 min */
@@ -85,6 +86,7 @@ class Media
             'featured'          => $this->featured,
             'published_at'      => $this->publishedAt,
             'comment_count'     => $this->commentCount,
+            'status'            => $this->status,
         ];
     }
 }

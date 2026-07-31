@@ -127,6 +127,15 @@ $params = [];
 if ($method === 'GET' && matchRoute('/media/featured', $path)) {
     $mediaCtrl->getFeatured();
 
+} elseif ($method === 'GET' && matchRoute('/media/pending', $path)) {
+    $mediaCtrl->getPending();
+
+} elseif ($method === 'POST' && matchRoute('/media/{id}/approve', $path, $params)) {
+    $mediaCtrl->approve((int) $params['id']);
+
+} elseif ($method === 'POST' && matchRoute('/media/{id}/reject', $path, $params)) {
+    $mediaCtrl->reject((int) $params['id']);
+
 } elseif ($method === 'POST' && matchRoute('/media/upload', $path)) {
     // Handle video file upload — returns { status, data: { video_url } }
     $uploadDir = BASE_PATH . '/public/uploads/videos/';
@@ -190,6 +199,15 @@ if ($method === 'GET' && matchRoute('/media/featured', $path)) {
     $mediaCtrl->create();
 
 // ---- Articles ----
+} elseif ($method === 'GET' && matchRoute('/articles/pending', $path)) {
+    $articleCtrl->getPending();
+
+} elseif ($method === 'POST' && matchRoute('/articles/{id}/approve', $path, $params)) {
+    $articleCtrl->approve((int) $params['id']);
+
+} elseif ($method === 'POST' && matchRoute('/articles/{id}/reject', $path, $params)) {
+    $articleCtrl->reject((int) $params['id']);
+
 } elseif ($method === 'GET' && matchRoute('/articles/{id}', $path, $params)) {
     $articleCtrl->getOne((int) $params['id']);
 

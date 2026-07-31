@@ -4,8 +4,14 @@
  *
  * Handles API requests for the Watch & Listen section.
  *
- * GET  /api/media          → getListing()
- * GET  /api/media/featured → getFeatured()
+ * GET    /api/media            → getListing()   (approved only)
+ * GET    /api/media/featured   → getFeatured()  (approved only)
+ * GET    /api/media/pending    → getPending()   (admin)
+ * POST   /api/media            → create()       (member/admin; member goes pending)
+ * PATCH  /api/media/{id}       → update()
+ * DELETE /api/media/{id}       → delete()
+ * POST   /api/media/{id}/approve → approve()   (admin)
+ * POST   /api/media/{id}/reject  → reject()    (admin)
  */
 declare(strict_types=1);
 
@@ -34,8 +40,6 @@ class MediaController extends BaseController
         $featured = $this->service->getFeatured();
 
         if (!$featured) {
-            // Return 200 with null data — "no featured" is a normal empty state,
-            // not a real error. A 404 causes noisy browser console warnings.
             $this->success(null, 'No featured media.');
             return;
         }
@@ -52,8 +56,21 @@ class MediaController extends BaseController
         $this->success($item);
     }
 
+    /** Return media items pending admin approval. */
+    public function getPending(): void
+    {
+        $this->success($this->service->getPending());
+    }
+
     public function create(): void
     {
+        $isAdmin  = !empty($_SESSION['admin']['id']);
+        $isMember = !empty($_SESSION['member']['id']);
+
+        if (!$isAdmin && !$isMember) {
+            $this->error('You must be signed in to upload media.', 401);
+        }
+
         $body = $this->getJsonBody();
         if (!$body) {
             $this->error('Request body is required.');
@@ -72,9 +89,15 @@ class MediaController extends BaseController
             $body['member_id'] = (int) $_SESSION['member']['id'];
         }
 
+        // Admins post directly as approved; member submissions require approval
+        $body['status'] = $isAdmin ? 'approved' : 'pending';
+
         try {
             $result = $this->service->create($body);
-            $this->success($result, 'Media created.', 201);
+            $message = $isAdmin
+                ? 'Media created.'
+                : 'Video submitted for review. It will appear once an admin approves it.';
+            $this->success($result, $message, 201);
         } catch (\InvalidArgumentException $e) {
             $this->error($e->getMessage());
         }
@@ -136,6 +159,28 @@ class MediaController extends BaseController
             } else {
                 $this->error('Media not found.', 404);
             }
+        } catch (\InvalidArgumentException $e) {
+            $this->error($e->getMessage(), 404);
+        }
+    }
+
+    /** Approve a pending media item (admin action). */
+    public function approve(int $id): void
+    {
+        try {
+            $result = $this->service->approve($id);
+            $this->success($result, 'Media approved and published.');
+        } catch (\InvalidArgumentException $e) {
+            $this->error($e->getMessage(), 404);
+        }
+    }
+
+    /** Reject a pending media item (admin action). */
+    public function reject(int $id): void
+    {
+        try {
+            $result = $this->service->reject($id);
+            $this->success($result, 'Media rejected.');
         } catch (\InvalidArgumentException $e) {
             $this->error($e->getMessage(), 404);
         }

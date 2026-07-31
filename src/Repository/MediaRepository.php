@@ -15,7 +15,7 @@ class MediaRepository
 {
     public function __construct(private readonly PDO $db) {}
 
-    /** Return all media, optionally filtered by type. */
+    /** Return all media, optionally filtered by type. Only returns approved content. */
     public function findAll(?string $type = null): array
     {
         if ($type) {
@@ -24,7 +24,7 @@ class MediaRepository
                         (SELECT COUNT(*) FROM comments c WHERE c.target_type = \'media\' AND c.target_id = m.id) AS comment_count
                  FROM media m
                  LEFT JOIN members mem ON mem.display_name = m.posted_by
-                 WHERE m.type = :type ORDER BY m.published_at DESC'
+                 WHERE m.type = :type AND m.status = \'approved\' ORDER BY m.published_at DESC'
             );
             $stmt->execute(['type' => $type]);
         } else {
@@ -33,10 +33,22 @@ class MediaRepository
                         (SELECT COUNT(*) FROM comments c WHERE c.target_type = \'media\' AND c.target_id = m.id) AS comment_count
                  FROM media m
                  LEFT JOIN members mem ON mem.display_name = m.posted_by
-                 ORDER BY m.published_at DESC'
+                 WHERE m.status = \'approved\' ORDER BY m.published_at DESC'
             );
         }
 
+        return array_map([$this, 'hydrate'], $stmt->fetchAll());
+    }
+
+    /** Return pending media awaiting admin approval. */
+    public function findPending(): array
+    {
+        $stmt = $this->db->query(
+            'SELECT m.*, mem.profile_picture AS poster_picture, mem.username AS poster_username
+             FROM media m
+             LEFT JOIN members mem ON mem.display_name = m.posted_by
+             WHERE m.status = \'pending\' ORDER BY m.created_at ASC'
+        );
         return array_map([$this, 'hydrate'], $stmt->fetchAll());
     }
 
@@ -47,7 +59,7 @@ class MediaRepository
             'SELECT m.*, mem.profile_picture AS poster_picture, mem.username AS poster_username
              FROM media m
              LEFT JOIN members mem ON mem.display_name = m.posted_by
-             WHERE m.featured = 1 ORDER BY m.published_at DESC LIMIT 1'
+             WHERE m.featured = 1 AND m.status = \'approved\' ORDER BY m.published_at DESC LIMIT 1'
         );
         $row = $stmt->fetch();
         return $row ? $this->hydrate($row) : null;
@@ -68,12 +80,13 @@ class MediaRepository
 
     /**
      * Insert a new media row and return the newly created Media object.
+     * Member-submitted content starts as 'pending'; admin-submitted goes straight to 'approved'.
      */
     public function create(array $fields): Media
     {
         $stmt = $this->db->prepare(
-            'INSERT INTO media (title, description, type, series, posted_by, member_id, duration, thumbnail, video_url, featured, published_at)
-             VALUES (:title, :description, :type, :series, :posted_by, :member_id, :duration, :thumbnail, :video_url, :featured, :published_at)'
+            'INSERT INTO media (title, description, type, series, posted_by, member_id, duration, thumbnail, video_url, featured, published_at, status)
+             VALUES (:title, :description, :type, :series, :posted_by, :member_id, :duration, :thumbnail, :video_url, :featured, :published_at, :status)'
         );
         $stmt->execute([
             'title'        => $fields['title'],
@@ -87,6 +100,7 @@ class MediaRepository
             'video_url'    => $fields['video_url']    ?? '',
             'featured'     => $fields['featured']     ?? 0,
             'published_at' => $fields['published_at'] ?? date('Y-m-d H:i:s'),
+            'status'       => $fields['status']       ?? 'pending',
         ]);
         $id = (int) $this->db->lastInsertId();
         return $this->findById($id);
@@ -115,6 +129,17 @@ class MediaRepository
         return $stmt->rowCount() > 0;
     }
 
+    /** Update the approval status of a media item. */
+    public function updateStatus(int $id, string $status): bool
+    {
+        if (!in_array($status, ['pending', 'approved', 'rejected'], true)) {
+            throw new \InvalidArgumentException('Invalid status value.');
+        }
+        $stmt = $this->db->prepare('UPDATE media SET status = :status WHERE id = :id');
+        $stmt->execute(['status' => $status, 'id' => $id]);
+        return $stmt->rowCount() > 0;
+    }
+
     private function hydrate(array $row): Media
     {
         return new Media(
@@ -133,6 +158,7 @@ class MediaRepository
             featured:      (bool) $row['featured'],
             publishedAt:          $row['published_at'],
             commentCount:  (int) ($row['comment_count']  ?? 0),
+            status:               $row['status']          ?? 'approved',
         );
     }
 }

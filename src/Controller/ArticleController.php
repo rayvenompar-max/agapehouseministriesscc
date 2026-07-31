@@ -2,8 +2,12 @@
 /**
  * Controller\ArticleController
  *
- * GET /api/articles        → getAll()
- * GET /api/articles/{id}   → getOne()
+ * GET  /api/articles            → getAll()
+ * GET  /api/articles/{id}       → getOne()
+ * POST /api/articles            → create()   (member or admin; member posts go pending)
+ * GET  /api/articles/pending    → getPending()
+ * POST /api/articles/{id}/approve → approve()
+ * POST /api/articles/{id}/reject  → reject()
  */
 declare(strict_types=1);
 
@@ -31,8 +35,22 @@ class ArticleController extends BaseController
         $this->success($article);
     }
 
+    /** Return articles awaiting approval (admin only). */
+    public function getPending(): void
+    {
+        $this->success($this->service->getPending());
+    }
+
     public function create(): void
     {
+        // Must be logged in as a member or admin to post
+        $isAdmin  = !empty($_SESSION['admin']['id']);
+        $isMember = !empty($_SESSION['member']['id']);
+
+        if (!$isAdmin && !$isMember) {
+            $this->error('You must be signed in to submit an article.', 401);
+        }
+
         $data = json_decode(file_get_contents('php://input'), true) ?? [];
 
         $title        = trim($data['title']        ?? '');
@@ -57,7 +75,39 @@ class ArticleController extends BaseController
         if ($excerpt === '') { $this->error('Excerpt is required.',       422); return; }
         if ($body === '')    { $this->error('Article body is required.',  422); return; }
 
-        $article = $this->service->create($title, $excerpt, $body, $readMinutes, $publishedAt, $postedBy, $memberId);
-        $this->success($article, 'Article published successfully.', 201);
+        // Admins post directly as approved; member submissions go into the pending queue
+        $status = $isAdmin ? 'approved' : 'pending';
+
+        $article = $this->service->create(
+            $title, $excerpt, $body, $readMinutes, $publishedAt, $postedBy, $memberId, $status
+        );
+
+        $message = $isAdmin
+            ? 'Article published successfully.'
+            : 'Article submitted for review. It will appear once an admin approves it.';
+
+        $this->success($article, $message, 201);
+    }
+
+    /** Approve a pending article (admin action). */
+    public function approve(int $id): void
+    {
+        try {
+            $result = $this->service->approve($id);
+            $this->success($result, 'Article approved and published.');
+        } catch (\InvalidArgumentException $e) {
+            $this->error($e->getMessage(), 404);
+        }
+    }
+
+    /** Reject a pending article (admin action). */
+    public function reject(int $id): void
+    {
+        try {
+            $result = $this->service->reject($id);
+            $this->success($result, 'Article rejected.');
+        } catch (\InvalidArgumentException $e) {
+            $this->error($e->getMessage(), 404);
+        }
     }
 }

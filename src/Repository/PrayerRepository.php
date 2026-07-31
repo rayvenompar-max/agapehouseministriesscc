@@ -49,7 +49,7 @@ class PrayerRepository
             'name'     => $name,
             'category' => $category,
             'body'     => $body,
-            'status'   => 'approved',   // auto-approved, posts immediately
+            'status'   => 'pending',   // requires admin approval before showing on the wall
         ]);
 
         return $this->findById((int) $this->db->lastInsertId());

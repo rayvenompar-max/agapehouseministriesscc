@@ -418,10 +418,12 @@ $isLoggedIn   = true;
 <div class="tab-bar">
   <div class="inner">
     <button class="tab-btn active" data-tab="prayers">🙏 Prayer Requests</button>
-    <button class="tab-btn" data-tab="media">🎬 Media / Videos</button>
+    <button class="tab-btn" data-tab="articles">📝 Articles</button>
+    <button class="tab-btn" data-tab="media-pending">🎬 Videos</button>
+    <button class="tab-btn" data-tab="media">🎞 All Media</button>
     <button class="tab-btn" data-tab="announcements">📢 Announcements</button>
     <button class="tab-btn" data-tab="events">📅 Events</button>
-    <button class="tab-btn" data-tab="quizzes">📝 Quizzes</button>
+    <button class="tab-btn" data-tab="quizzes">🧩 Quizzes</button>
   </div>
 </div>
 
@@ -433,9 +435,21 @@ $isLoggedIn   = true;
     <div id="pendingList"><div class="loading-state">Loading…</div></div>
   </div>
 
+  <!-- ── Articles Pending Panel ── -->
+  <div class="tab-panel" id="tab-articles">
+    <div class="section-title">Pending Articles</div>
+    <div id="articlePendingList"><div class="loading-state">Loading…</div></div>
+  </div>
+
+  <!-- ── Videos Pending Panel ── -->
+  <div class="tab-panel" id="tab-media-pending">
+    <div class="section-title">Pending Videos</div>
+    <div id="videoPendingList"><div class="loading-state">Loading…</div></div>
+  </div>
+
   <!-- ── Media Panel ── -->
   <div class="tab-panel" id="tab-media">
-    <div class="section-title">Media · Video URLs</div>
+    <div class="section-title">All Approved Media · Video URLs</div>
     <p style="margin-bottom:20px; font-size:14px; color:var(--ink-soft);">
       Click <strong>Edit</strong> on any row to set or update its YouTube / video URL.
       Paste a full YouTube link like <code style="background:var(--paper);padding:2px 6px;border-radius:4px;font-size:13px;">https://www.youtube.com/watch?v=XXXXX</code>.
@@ -732,7 +746,163 @@ async function handlePrayer(id, action) {
 
 loadPending();
 
-// ── Media Panel ───────────────────────────────────────────────────────────────
+// ── Articles Pending Panel ────────────────────────────────────────────────────
+async function loadArticlesPending() {
+  const container = document.getElementById('articlePendingList');
+  try {
+    const res  = await fetch(API + '/articles/pending');
+    const json = await res.json();
+
+    if (json.status !== 'success' || !json.data.length) {
+      container.innerHTML = '<div class="empty-state">No pending articles — all clear!</div>';
+      return;
+    }
+
+    container.innerHTML = json.data.map(a => `
+      <div class="prayer-card" data-id="${a.id}">
+        <div class="p-meta">
+          <div>
+            <span class="p-name">${escHtml(a.posted_by)}</span>
+            <span class="cat-badge">${escHtml(a.read_minutes)} min read</span>
+          </div>
+          <div>${new Date(a.published_at).toLocaleString()}</div>
+        </div>
+        <div style="font-weight:600; font-size:15px; margin-bottom:6px; color:var(--night);">${escHtml(a.title)}</div>
+        <div class="p-body" style="font-style:italic; color:var(--ink-soft);">${escHtml(a.excerpt)}</div>
+        <details style="margin-bottom:14px;">
+          <summary style="cursor:pointer; font-size:13px; color:var(--horizon); margin-bottom:6px;">Read full body</summary>
+          <div style="font-size:13px; line-height:1.7; white-space:pre-wrap; border-top:1px solid var(--line); padding-top:10px; margin-top:6px;">${escHtml(a.body)}</div>
+        </details>
+        <div class="prayer-actions">
+          <button class="btn-approve" onclick="handleArticle(${a.id}, 'approve')">✓ Approve &amp; Publish</button>
+          <button class="btn-reject"  onclick="handleArticle(${a.id}, 'reject')">✗ Reject</button>
+        </div>
+      </div>
+    `).join('');
+  } catch (e) {
+    container.innerHTML = '<div class="empty-state">Could not load pending articles.</div>';
+  }
+}
+
+async function handleArticle(id, action) {
+  if (action === 'reject' && !confirm('Reject this article?')) return;
+  const card = document.querySelector(`#articlePendingList .prayer-card[data-id="${id}"]`);
+  try {
+    const res  = await fetch(API + `/articles/${id}/${action}`, { method: 'POST' });
+    const json = await res.json();
+    if (json.status === 'success') {
+      card.style.transition = 'opacity 0.3s';
+      card.style.opacity    = '0';
+      setTimeout(() => {
+        card.remove();
+        if (!document.querySelector('#articlePendingList .prayer-card')) {
+          document.getElementById('articlePendingList').innerHTML =
+            '<div class="empty-state">No pending articles — all clear!</div>';
+        }
+      }, 300);
+    } else {
+      alert('Error: ' + json.message);
+    }
+  } catch (e) {
+    alert('Network error.');
+  }
+}
+
+// Lazy-load articles tab when first clicked
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  if (btn.dataset.tab === 'articles') {
+    btn.addEventListener('click', () => {
+      if (!document.getElementById('articlePendingList')._loaded) {
+        document.getElementById('articlePendingList')._loaded = true;
+        loadArticlesPending();
+      }
+    });
+  }
+});
+
+// ── Videos Pending Panel ──────────────────────────────────────────────────────
+async function loadVideosPending() {
+  const container = document.getElementById('videoPendingList');
+  try {
+    const res  = await fetch(API + '/media/pending');
+    const json = await res.json();
+
+    if (json.status !== 'success' || !json.data.length) {
+      container.innerHTML = '<div class="empty-state">No pending videos — all clear!</div>';
+      return;
+    }
+
+    container.innerHTML = json.data.map(v => {
+      const hasUrl = v.video_url && v.video_url.trim();
+      return `
+        <div class="prayer-card" data-id="${v.id}">
+          <div class="p-meta">
+            <div>
+              <span class="p-name">${escHtml(v.posted_by)}</span>
+              <span class="cat-badge type-${escHtml(v.type)}">${escHtml(v.type)}</span>
+              ${v.series ? `<span class="cat-badge" style="margin-left:4px;">${escHtml(v.series)}</span>` : ''}
+            </div>
+            <div>${new Date(v.published_at).toLocaleString()}</div>
+          </div>
+          <div style="font-weight:600; font-size:15px; margin-bottom:6px; color:var(--night);">${escHtml(v.title)}</div>
+          <div class="p-body">${escHtml(v.description)}</div>
+          ${hasUrl ? `
+            <div style="margin-bottom:14px;">
+              <a href="${escHtml(v.video_url)}" target="_blank" rel="noopener"
+                 style="font-size:13px; color:var(--horizon); word-break:break-all;">${escHtml(v.video_url)}</a>
+            </div>` : `
+            <div style="margin-bottom:14px; font-size:13px; color:#c62828; font-style:italic;">No video URL provided</div>`}
+          <div class="prayer-actions">
+            <button class="btn-approve" onclick="handleVideo(${v.id}, 'approve')">✓ Approve &amp; Publish</button>
+            <button class="btn-reject"  onclick="handleVideo(${v.id}, 'reject')">✗ Reject</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  } catch (e) {
+    container.innerHTML = '<div class="empty-state">Could not load pending videos.</div>';
+  }
+}
+
+async function handleVideo(id, action) {
+  if (action === 'reject' && !confirm('Reject this video?')) return;
+  const card = document.querySelector(`#videoPendingList .prayer-card[data-id="${id}"]`);
+  try {
+    const res  = await fetch(API + `/media/${id}/${action}`, { method: 'POST' });
+    const json = await res.json();
+    if (json.status === 'success') {
+      card.style.transition = 'opacity 0.3s';
+      card.style.opacity    = '0';
+      setTimeout(() => {
+        card.remove();
+        if (!document.querySelector('#videoPendingList .prayer-card')) {
+          document.getElementById('videoPendingList').innerHTML =
+            '<div class="empty-state">No pending videos — all clear!</div>';
+        }
+        // Reload approved media list if it's already been loaded
+        if (document.getElementById('mediaList')._loaded) {
+          loadMedia();
+        }
+      }, 300);
+    } else {
+      alert('Error: ' + json.message);
+    }
+  } catch (e) {
+    alert('Network error.');
+  }
+}
+
+// Lazy-load videos pending tab when first clicked
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  if (btn.dataset.tab === 'media-pending') {
+    btn.addEventListener('click', () => {
+      if (!document.getElementById('videoPendingList')._loaded) {
+        document.getElementById('videoPendingList')._loaded = true;
+        loadVideosPending();
+      }
+    });
+  }
+});
 let allMedia = [];
 
 async function loadMedia() {
@@ -746,6 +916,7 @@ async function loadMedia() {
   }
 
   allMedia = json.data;
+  container._loaded = true;
 
   const rows = json.data.map(m => {
     const hasUrl = m.video_url && m.video_url.trim();
