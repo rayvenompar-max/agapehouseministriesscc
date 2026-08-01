@@ -73,6 +73,17 @@ class EventRepository
         return $this->findById((int) $this->db->lastInsertId());
     }
 
+    /** Delete an event and its registrations. */
+    public function delete(int $id): bool
+    {
+        // Registrations are cascade-deleted if the FK is set; otherwise delete manually.
+        $this->db->prepare('DELETE FROM event_registrations WHERE event_id = :id')
+                 ->execute(['id' => $id]);
+        $stmt = $this->db->prepare('DELETE FROM events WHERE id = :id');
+        $stmt->execute(['id' => $id]);
+        return $stmt->rowCount() > 0;
+    }
+
     // ── Registrations ──────────────────────────────────────────────────────────
 
     /**

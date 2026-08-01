@@ -5,6 +5,10 @@
  */
 declare(strict_types=1);
 
+// Keep sessions alive for 8 hours (XAMPP default is 24 min — too short)
+ini_set('session.gc_maxlifetime', '28800');
+ini_set('session.cookie_lifetime', '28800');
+
 session_start(); // Enable sessions for admin authentication
 
 define('BASE_PATH', __DIR__);

@@ -185,6 +185,20 @@ foreach ($pages as $page) {
   </div>
 </div>
 
+<!-- ── Post Pending Approval Modal ──────────────────────────────────────── -->
+<div class="article-modal" id="pendingApprovalModal" hidden role="dialog" aria-modal="true" aria-labelledby="pendingApprovalTitle">
+  <div class="article-modal-backdrop" id="pendingApprovalBackdrop"></div>
+  <div class="article-modal-box pending-approval-modal">
+    <div class="pending-approval-icon" aria-hidden="true"><i data-lucide="clock"></i></div>
+    <h2 class="pending-approval-title" id="pendingApprovalTitle">Post Submitted!</h2>
+    <p class="pending-approval-body" id="pendingApprovalBody">
+      Your post has been received and is waiting for admin approval.<br>
+      It will appear publicly once it's reviewed.
+    </p>
+    <button type="button" class="btn btn-primary pending-approval-ok" id="pendingApprovalOkBtn">Got it</button>
+  </div>
+</div>
+
 <!-- Post Detail Modal (opened from notifications) -->
 <div class="pdm-overlay" id="postDetailModal" hidden role="dialog" aria-modal="true" aria-labelledby="pdmTitle">
   <div class="pdm-backdrop" id="pdmBackdrop"></div>

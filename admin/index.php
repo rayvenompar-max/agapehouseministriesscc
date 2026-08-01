@@ -389,6 +389,31 @@ $isLoggedIn   = true;
     .quiz-form-msg { font-size: 13px; margin-top: 10px; min-height: 18px; text-align: center; }
     .quiz-form-msg.ok  { color: #4caf50; }
     .quiz-form-msg.err { color: #ef5350; }
+
+    /* ── Confirm Dialog Modal ── */
+    .confirm-modal { position: fixed; inset: 0; z-index: 600; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .confirm-modal[hidden] { display: none; }
+    .confirm-backdrop { position: absolute; inset: 0; background: rgba(10,27,51,.6); backdrop-filter: blur(3px); }
+    .confirm-box {
+      position: relative; background: var(--white); border-radius: 12px;
+      padding: 32px 28px 24px; width: 100%; max-width: 400px;
+      box-shadow: 0 20px 60px rgba(10,27,51,.25); border: 1px solid var(--line);
+      text-align: center;
+    }
+    .confirm-icon {
+      width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-size: 22px; margin: 0 auto 16px; background: rgba(198,40,40,.1);
+    }
+    .confirm-box h4 { font-family: 'Fraunces', serif; font-size: 17px; font-weight: 600; color: var(--night); margin-bottom: 8px; }
+    .confirm-box p  { font-size: 14px; color: var(--ink-soft); margin-bottom: 24px; line-height: 1.5; }
+    .confirm-actions { display: flex; gap: 10px; justify-content: center; }
+    .confirm-actions .btn-cancel { min-width: 100px; }
+    .confirm-actions .btn-confirm-ok {
+      min-width: 100px; padding: 10px 20px; background: #c62828; color: var(--white);
+      border: none; border-radius: var(--radius); font-weight: 600; font-size: 14px;
+      cursor: pointer; font-family: inherit; transition: background .2s;
+    }
+    .confirm-actions .btn-confirm-ok:hover { background: #a31a1a; }
   </style>
 </head>
 <body>
@@ -676,8 +701,47 @@ $isLoggedIn   = true;
   </div>
 </div>
 
+<!-- ── Confirm Dialog Modal ── -->
+<div class="confirm-modal" id="confirmModal" hidden>
+  <div class="confirm-backdrop" id="confirmBackdrop"></div>
+  <div class="confirm-box">
+    <div class="confirm-icon" id="confirmIcon">⚠️</div>
+    <h4 id="confirmTitle">Are you sure?</h4>
+    <p  id="confirmMessage">This action cannot be undone.</p>
+    <div class="confirm-actions">
+      <button class="btn-cancel"     id="confirmCancelBtn">Cancel</button>
+      <button class="btn-confirm-ok" id="confirmOkBtn">Confirm</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const API = '/DigitalEvangelization/api';
+
+// ── Confirm Modal helper ──────────────────────────────────────────────────────
+let _confirmResolve = null;
+
+function showConfirm({ title = 'Are you sure?', message = 'This action cannot be undone.', okLabel = 'Confirm', danger = true } = {}) {
+  return new Promise(resolve => {
+    _confirmResolve = resolve;
+    document.getElementById('confirmTitle').textContent   = title;
+    document.getElementById('confirmMessage').textContent = message;
+    document.getElementById('confirmOkBtn').textContent   = okLabel;
+    document.getElementById('confirmOkBtn').style.background = danger ? '#c62828' : 'var(--night)';
+    document.getElementById('confirmOkBtn').onmouseover = function() { this.style.background = danger ? '#a31a1a' : 'var(--dusk)'; };
+    document.getElementById('confirmOkBtn').onmouseout  = function() { this.style.background = danger ? '#c62828' : 'var(--night)'; };
+    document.getElementById('confirmModal').hidden = false;
+  });
+}
+
+function _closeConfirm(result) {
+  document.getElementById('confirmModal').hidden = true;
+  if (_confirmResolve) { _confirmResolve(result); _confirmResolve = null; }
+}
+
+document.getElementById('confirmOkBtn').addEventListener('click',    () => _closeConfirm(true));
+document.getElementById('confirmCancelBtn').addEventListener('click', () => _closeConfirm(false));
+document.getElementById('confirmBackdrop').addEventListener('click',  () => _closeConfirm(false));
 
 function escHtml(str) {
   const d = document.createElement('div');
@@ -725,7 +789,10 @@ async function loadPending() {
 }
 
 async function handlePrayer(id, action) {
-  if (action === 'reject' && !confirm('Reject this prayer request?')) return;
+  if (action === 'reject') {
+    const ok = await showConfirm({ title: 'Reject prayer request?', message: 'This request will be removed from the pending list.', okLabel: 'Reject' });
+    if (!ok) return;
+  }
   const card = document.querySelector(`.prayer-card[data-id="${id}"]`);
   const res  = await fetch(API + `/prayers/${id}/${action}`, { method: 'POST' });
   const json = await res.json();
@@ -785,7 +852,10 @@ async function loadArticlesPending() {
 }
 
 async function handleArticle(id, action) {
-  if (action === 'reject' && !confirm('Reject this article?')) return;
+  if (action === 'reject') {
+    const ok = await showConfirm({ title: 'Reject this article?', message: 'The article will be removed from the pending list.', okLabel: 'Reject' });
+    if (!ok) return;
+  }
   const card = document.querySelector(`#articlePendingList .prayer-card[data-id="${id}"]`);
   try {
     const res  = await fetch(API + `/articles/${id}/${action}`, { method: 'POST' });
@@ -865,7 +935,10 @@ async function loadVideosPending() {
 }
 
 async function handleVideo(id, action) {
-  if (action === 'reject' && !confirm('Reject this video?')) return;
+  if (action === 'reject') {
+    const ok = await showConfirm({ title: 'Reject this video?', message: 'The video will be removed from the pending list.', okLabel: 'Reject' });
+    if (!ok) return;
+  }
   const card = document.querySelector(`#videoPendingList .prayer-card[data-id="${id}"]`);
   try {
     const res  = await fetch(API + `/media/${id}/${action}`, { method: 'POST' });
@@ -1140,7 +1213,8 @@ document.getElementById('annFormSave').addEventListener('click', async () => {
 });
 
 async function deleteAnn(id) {
-  if (!confirm('Delete this announcement? This cannot be undone.')) return;
+  const ok = await showConfirm({ title: 'Delete announcement?', message: 'This cannot be undone.', okLabel: 'Delete' });
+  if (!ok) return;
   const res  = await fetch(API + '/announcements/' + id, { method: 'DELETE' });
   const json = await res.json();
   if (json.status === 'success') {
@@ -1170,6 +1244,8 @@ async function loadAdminEvents() {
     const res  = await fetch(API + '/events/all');
     const json = await res.json();
 
+    container._loaded = true;
+
     if (json.status !== 'success' || !json.data.length) {
       container.innerHTML = '<div class="empty-state">No events found.</div>';
       return;
@@ -1193,14 +1269,51 @@ async function loadAdminEvents() {
             </div>
           </div>
           <span class="event-admin-count">${count} registrant${count !== 1 ? 's' : ''}</span>
-          <button class="btn-view-reg" onclick="loadRegistrants(${e.id}, ${escHtml(JSON.stringify(e.title))})">
+          <button class="btn-view-reg" onclick="loadRegistrants(${e.id}, this.dataset.title)" data-title="${escHtml(e.title)}">
             View Registrants
+          </button>
+          <button class="btn-ann-delete" onclick="deleteEvent(${e.id})" style="white-space:nowrap;">
+            Delete
           </button>
         </div>
       `;
     }).join('');
   } catch (err) {
     container.innerHTML = '<div class="empty-state">Could not load events.</div>';
+  }
+}
+
+async function deleteEvent(id) {
+  const ok = await showConfirm({
+    title:   'Delete this event?',
+    message: 'All registrations for this event will also be removed. This cannot be undone.',
+    okLabel: 'Delete',
+  });
+  if (!ok) return;
+
+  try {
+    const res  = await fetch(API + `/events/${id}`, { method: 'DELETE' });
+    const json = await res.json();
+    if (json.status === 'success') {
+      const card = document.querySelector(`.event-admin-card[data-id="${id}"]`);
+      if (card) {
+        card.style.transition = 'opacity 0.3s';
+        card.style.opacity    = '0';
+        setTimeout(() => {
+          card.remove();
+          // Hide the registrant box if it was open for this event
+          document.getElementById('eventsRegistrantBox').style.display = 'none';
+          if (!document.querySelector('.event-admin-card')) {
+            document.getElementById('eventsAdminList').innerHTML =
+              '<div class="empty-state">No events found.</div>';
+          }
+        }, 300);
+      }
+    } else {
+      alert('Error: ' + json.message);
+    }
+  } catch (e) {
+    alert('Network error.');
   }
 }
 
@@ -1411,8 +1524,9 @@ function loadQuizAdmin() {
   `).join('');
 }
 
-function deleteQuiz(idx) {
-  if (!confirm('Delete this quiz? This cannot be undone.')) return;
+async function deleteQuiz(idx) {
+  const ok = await showConfirm({ title: 'Delete this quiz?', message: 'This cannot be undone.', okLabel: 'Delete' });
+  if (!ok) return;
   const list = getStoredQuizzes();
   list.splice(idx, 1);
   saveStoredQuizzes(list);

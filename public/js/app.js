@@ -86,6 +86,57 @@ function animatedModalClose(overlayEl, callback) {
   }, 240);
 }
 
+// ─── Pending Approval Modal ──────────────────────────────────────────────────
+function showPendingApprovalModal(message, { title, icon } = {}) {
+  const modal = document.getElementById('pendingApprovalModal');
+  if (!modal) return;
+  const body = document.getElementById('pendingApprovalBody');
+  if (body && message) body.innerHTML = message;
+  const titleEl = document.getElementById('pendingApprovalTitle');
+  if (titleEl && title) titleEl.textContent = title;
+  const iconEl = modal.querySelector('.pending-approval-icon i[data-lucide]');
+  if (iconEl && icon) {
+    iconEl.setAttribute('data-lucide', icon);
+    if (typeof lucide !== 'undefined') lucide.createIcons({ nodes: [iconEl.parentElement] });
+  }
+  modal.hidden = false;
+  lockScroll();
+  document.getElementById('pendingApprovalOkBtn')?.focus();
+}
+
+function resetPendingApprovalModal() {
+  const titleEl = document.getElementById('pendingApprovalTitle');
+  if (titleEl) titleEl.textContent = 'Post Submitted!';
+  const modal = document.getElementById('pendingApprovalModal');
+  const iconEl = modal?.querySelector('.pending-approval-icon i[data-lucide]');
+  if (iconEl) {
+    iconEl.setAttribute('data-lucide', 'clock');
+    if (typeof lucide !== 'undefined') lucide.createIcons({ nodes: [iconEl.parentElement] });
+  }
+}
+
+function closePendingApprovalModal() {
+  const modal = document.getElementById('pendingApprovalModal');
+  if (!modal) return;
+  animatedModalClose(modal, () => {
+    unlockScroll();
+    resetPendingApprovalModal();
+  });
+}
+
+// Wires up the pending approval modal close handlers (called once on DOMContentLoaded)
+(function initPendingApprovalModal() {
+  document.getElementById('pendingApprovalOkBtn')
+    ?.addEventListener('click', closePendingApprovalModal);
+  document.getElementById('pendingApprovalBackdrop')
+    ?.addEventListener('click', closePendingApprovalModal);
+  // Escape key support
+  document.addEventListener('keydown', (e) => {
+    const modal = document.getElementById('pendingApprovalModal');
+    if (e.key === 'Escape' && modal && !modal.hidden) closePendingApprovalModal();
+  });
+})();
+
 // ─── Utilities ───────────────────────────────────────────────────────────────
 
 async function apiFetch(path, options = {}) {
@@ -811,7 +862,8 @@ async function submitAddVideo(e) {
     });
 
     if (res.status === 'success') {
-      showFormMsg(msg, 'Video published!', 'success');
+      const isPending = res.message && res.message.toLowerCase().includes('review');
+
       document.getElementById('addVideoForm').reset();
       _uploadedVideoUrl = null;
       resetFileUpload();
@@ -821,13 +873,26 @@ async function submitAddVideo(e) {
       now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
       document.getElementById('vidDate').value = now.toISOString().slice(0, 16);
 
-      // Reload the grid with the current active filter
-      setTimeout(async () => {
+      if (isPending) {
+        // Member submission — close the form then show the pending approval modal
         closeAddVideoModal();
+        showPendingApprovalModal(
+          'Your video has been received and is waiting for admin approval.<br>It will appear publicly once it\'s reviewed.'
+        );
+        // Still refresh the grid in the background (pending items won't show, but keeps state fresh)
         const activePill = document.querySelector('#mediaFilterRow .filter-pill.active');
         const activeType = activePill ? (activePill.dataset.type || null) : null;
-        await loadMediaGrid(activeType);
-      }, 800);
+        loadMediaGrid(activeType);
+      } else {
+        // Admin post — show inline success then close
+        showFormMsg(msg, 'Video published!', 'success');
+        setTimeout(async () => {
+          closeAddVideoModal();
+          const activePill = document.querySelector('#mediaFilterRow .filter-pill.active');
+          const activeType = activePill ? (activePill.dataset.type || null) : null;
+          await loadMediaGrid(activeType);
+        }, 800);
+      }
     } else {
       showFormMsg(msg, res.message || 'Could not publish. Try again.', 'error');
     }
@@ -1167,14 +1232,17 @@ async function loadArticles() {
   const list = document.getElementById('articleList');
   const res  = await apiFetch('/articles');
 
+  // Always init the modal so the "+ Add Article" button works
+  // regardless of whether any articles exist yet
+  initArticleModal();
+  initAddArticleModal();
+
   if (res.status !== 'success' || !res.data.length) {
     list.innerHTML = '<p style="color:var(--text-on-light-dim);padding:20px 0;">No articles found.</p>';
     return;
   }
 
   renderArticleList(res.data);
-  initArticleModal();
-  initAddArticleModal();
 }
 
 function renderArticleList(articles) {
@@ -1238,7 +1306,12 @@ function renderArticleList(articles) {
 
 // ── Article Reader Modal ──────────────────────────────────────────────────────
 
+let _articleModalInited = false;
+
 function initArticleModal() {
+  if (_articleModalInited) return;
+  _articleModalInited = true;
+
   document.getElementById('articleModalClose').addEventListener('click', closeArticleModal);
   document.getElementById('articleModalBackdrop').addEventListener('click', closeArticleModal);
   document.addEventListener('keydown', e => {
@@ -1281,7 +1354,12 @@ function closeArticleModal() {
 
 // ── Add Article Modal ─────────────────────────────────────────────────────────
 
+let _addArticleModalInited = false;
+
 function initAddArticleModal() {
+  if (_addArticleModalInited) return;
+  _addArticleModalInited = true;
+
   // Set default datetime to now (local)
   const now = new Date();
   now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
@@ -1296,6 +1374,11 @@ function initAddArticleModal() {
 }
 
 function openAddArticleModal() {
+  // Redirect to login if session has expired
+  if (!window.CURRENT_MEMBER) {
+    window.location.href = (window.APP_BASE_URL || '') + '/member/login';
+    return;
+  }
   document.getElementById('addArticleModal').hidden = false;
   lockScroll();
   document.getElementById('artTitle').focus();
@@ -1336,19 +1419,35 @@ async function submitAddArticle(e) {
     });
 
     if (res.status === 'success') {
-      showFormMsg(msg, 'Article published!', 'success');
+      const isPending = res.message && res.message.toLowerCase().includes('review');
+
       document.getElementById('addArticleForm').reset();
       // Set default date again after reset
       const now = new Date();
       now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
       document.getElementById('artDate').value = now.toISOString().slice(0, 16);
 
-      // Reload the article list
-      setTimeout(async () => {
+      if (isPending) {
+        // Member submission — close the form then show the pending approval modal
         closeAddArticleModal();
-        const listRes = await apiFetch('/articles');
-        if (listRes.status === 'success') renderArticleList(listRes.data);
-      }, 1000);
+        showPendingApprovalModal(
+          'Your article has been received and is waiting for admin approval.<br>It will appear publicly once it\'s reviewed.'
+        );
+      } else {
+        // Admin post — show inline success then close and reload
+        showFormMsg(msg, 'Article published!', 'success');
+        setTimeout(async () => {
+          closeAddArticleModal();
+          const listRes = await apiFetch('/articles');
+          if (listRes.status === 'success') renderArticleList(listRes.data);
+        }, 1000);
+      }
+    } else if (res.status === 'error' && res.message && res.message.toLowerCase().includes('signed in')) {
+      // Session expired — tell the user and redirect to login
+      showFormMsg(msg, 'Your session has expired. Redirecting to sign in…', 'error');
+      setTimeout(() => {
+        window.location.href = (window.APP_BASE_URL || '') + '/member/login';
+      }, 1800);
     } else {
       showFormMsg(msg, res.message || 'Could not publish. Try again.', 'error');
     }
@@ -1867,10 +1966,15 @@ function bindPrayerForm() {
       });
 
       if (res.status === 'success') {
-        showPrayerMsg(msg, '✓ Your request has been posted to the wall.', 'success');
         document.getElementById('preq').value  = '';
         document.getElementById('pcat').selectedIndex = 0;
         updateCharCounter(0);
+
+        // Show modal confirmation (same pattern as Read & Watch)
+        showPendingApprovalModal(
+          'Your prayer request has been posted to the wall.<br>Others in the community can now pray alongside you.',
+          { title: 'Request Posted!', icon: 'heart-handshake' }
+        );
 
         // Reload the wall so the new request shows up immediately
         setTimeout(async () => {
@@ -4825,13 +4929,25 @@ function showPdMsg(text, isError) {
   async function pollUnread() {
     if (!window.CURRENT_MEMBER) return;
     try {
-      const res = await apiFetch('/notifications/unread-count');
+      const raw = await fetch(BASE_URL + '/notifications/unread-count', {
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      // Session expired — stop polling and reload so PHP renders the correct auth state
+      if (raw.status === 401) {
+        clearInterval(_pollTimer);
+        _pollTimer = null;
+        window.location.href = (window.APP_BASE_URL || '') + '/member/login';
+        return;
+      }
+      const res = await raw.json();
       if (res.status === 'success') setBadge(res.data.unread);
-    } catch { /* silent */ }
+    } catch { /* silent — network error */ }
   }
 
   // Initial count fetch (lightweight — no full list)
-  pollUnread();
+  // Defer slightly so the page session is fully established before the first poll
+  setTimeout(pollUnread, 500);
   _pollTimer = setInterval(pollUnread, 30_000);
 
   // ── Open the post in the unified Post Detail Modal ───────────────────────

@@ -100,6 +100,21 @@ class EventController extends BaseController
         $this->success($this->service->getAllEventsWithCounts());
     }
 
+    /** DELETE /api/events/{id} — admin: delete an event and its registrations. */
+    public function deleteEvent(int $eventId): void
+    {
+        if (empty($_SESSION['admin'])) {
+            $this->error('Admin access required.', 403);
+            return;
+        }
+        $deleted = $this->service->deleteEvent($eventId);
+        if ($deleted) {
+            $this->success([], 'Event deleted.');
+        } else {
+            $this->error('Event not found.', 404);
+        }
+    }
+
     public function create(): void
     {
         $data = $this->getJsonBody();

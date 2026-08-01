@@ -41,6 +41,9 @@ set_exception_handler(function (Throwable $e): void {
 
 // Start session so protected routes can read $_SESSION['member']
 if (session_status() === PHP_SESSION_NONE) {
+    // Match the lifetime set in index.php (8 hours)
+    ini_set('session.gc_maxlifetime', '28800');
+    ini_set('session.cookie_lifetime', '28800');
     session_start();
 }
 
@@ -260,6 +263,9 @@ if ($method === 'GET' && matchRoute('/media/featured', $path)) {
 
 } elseif ($method === 'POST' && matchRoute('/events', $path)) {
     $eventCtrl->create();
+
+} elseif ($method === 'DELETE' && matchRoute('/events/{id}', $path, $params)) {
+    $eventCtrl->deleteEvent((int) $params['id']);
 
 // ---- Contact ----
 } elseif ($method === 'POST' && matchRoute('/contact', $path)) {

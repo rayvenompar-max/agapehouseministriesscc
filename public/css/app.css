@@ -2034,6 +2034,42 @@ h1.hero-title em { font-style: italic; font-weight: 500; color: var(--sun-light)
   justify-content: center;
 }
 
+/* --- PENDING APPROVAL MODAL --------------------------------------------------- */
+#pendingApprovalModal { align-items: center; }
+.pending-approval-modal {
+  max-width: 420px !important;
+  text-align: center;
+  padding: 44px 36px 36px;
+}
+.pending-approval-icon {
+  font-size: 52px;
+  line-height: 1;
+  margin-bottom: 20px;
+  display: block;
+}
+.pending-approval-icon svg {
+  width: 52px;
+  height: 52px;
+  stroke: var(--horizon);
+  stroke-width: 1.5;
+}
+.pending-approval-title {
+  font-family: var(--display);
+  font-size: 1.55rem;
+  color: var(--ink);
+  margin: 0 0 12px;
+}
+.pending-approval-body {
+  font-size: 15px;
+  color: var(--ink-soft);
+  line-height: 1.65;
+  margin: 0 0 28px;
+}
+.pending-approval-ok {
+  width: 100%;
+  justify-content: center;
+}
+
 /* --- MEMBER PROFILE MODAL ----------------------------------------------------- */
 .member-profile-modal { position: fixed; inset: 0; z-index: 1100; display: flex; align-items: center; justify-content: center; padding: 20px; }
 .member-profile-modal[hidden] { display: none; }

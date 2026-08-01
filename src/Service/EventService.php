@@ -95,6 +95,12 @@ class EventService
         return $this->repo->findAllWithRegistrationCounts();
     }
 
+    /** Delete an event and all its registrations (admin use). */
+    public function deleteEvent(int $eventId): bool
+    {
+        return $this->repo->delete($eventId);
+    }
+
     public function create(
         string $title,
         string $description,
