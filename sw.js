@@ -9,7 +9,7 @@
  *   - Images                            → Cache-first with long TTL
  */
 
-const CACHE_VERSION = 'daybreak-v4';
+const CACHE_VERSION = 'daybreak-v5';
 const STATIC_CACHE  = CACHE_VERSION + '-static';
 const IMAGE_CACHE   = CACHE_VERSION + '-images';
 

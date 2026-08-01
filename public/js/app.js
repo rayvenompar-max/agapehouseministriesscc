@@ -545,7 +545,7 @@ async function loadFeatured() {
     : m.type;
   document.getElementById('featuredTitle').textContent = m.title;
   document.getElementById('featuredDesc').textContent  = m.description;
-  document.getElementById('featuredBtn').textContent   = `▶ Watch now · ${m.duration_label}`;
+  document.getElementById('featuredBtn').innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle;margin-right:4px"><polygon points="6 3 20 12 6 21 6 3"/></svg> Watch now · ${m.duration_label}`;
 
   // Make entire featured card clickable
   const card = document.getElementById('mediaFeatured');
@@ -594,7 +594,7 @@ async function loadMediaGrid(type) {
         ${thumbUrl ? `<img src="${escHtml(thumbUrl)}" alt="${escHtml(m.title)}" loading="lazy" onerror="this.style.display='none'">` : ''}
         <span class="thumb-tag">${escHtml(typeLabel)}</span>
         <div class="thumb-overlay">
-          <div class="thumb-play">▶</div>
+          <div class="thumb-play"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21 6 3"/></svg></div>
         </div>
         <span class="duration">${escHtml(m.duration_label)}</span>
       </div>
@@ -1166,7 +1166,7 @@ function openVideoModal(media) {
     // No URL — show placeholder
     player.innerHTML = `
       <div class="video-no-url">
-        <span>▶</span>
+        <span><svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21 6 3"/></svg></span>
         <p>No video URL configured for this item.</p>
       </div>
     `;
@@ -3078,7 +3078,7 @@ function buildFeedCard(item) {
   el.className = `feed-card feed-card--${item.type}`;
   el.dataset.itemId = item.id;
 
-  const typeLabel  = { watch: '▶ Video', read: '📖 Article', notice: '📢 Announcement' }[item.type];
+  const typeLabel  = { watch: '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle"><polygon points="6 3 20 12 6 21 6 3"/></svg> Video', read: '📖 Article', notice: '📢 Announcement' }[item.type];
 
   const dateStr = item.date ? formatTimeAgo(item.date) : '';
   const excerpt = item.excerpt
@@ -3124,7 +3124,7 @@ function buildFeedCard(item) {
     if (item.thumb) {
       thumbHtml = `<div class="feed-card-thumb"><img src="${escHtml(item.thumb)}" alt="" loading="lazy"></div>`;
     } else {
-      thumbHtml = `<div class="feed-card-thumb-placeholder">▶</div>`;
+      thumbHtml = `<div class="feed-card-thumb-placeholder"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21 6 3"/></svg></div>`;
     }
   }
 
@@ -3324,6 +3324,10 @@ loadHomeFeed();
 // Init video modal close/backdrop listeners once at startup
 // (needed when videos are opened from the home feed before the Watch page loads)
 initVideoModal();
+
+// Init article modal close/backdrop listeners once at startup
+// (needed when articles are opened from the home feed before the Read page loads)
+initArticleModal();
 
 
 // ─── Comment Drawer ───────────────────────────────────────────────────────────
@@ -5242,5 +5246,108 @@ function showPdMsg(text, isError) {
     const d = document.createElement('div');
     d.textContent = str ?? '';
     return d.innerHTML;
+  }
+})();
+
+
+// ─── Hero Verse Carousel ─────────────────────────────────────────────────────
+// Fades verses upward in and out one at a time, cycling indefinitely.
+// Starts when the home hero becomes visible (hero-animate class is added).
+(function initVerseCarousel() {
+  const DISPLAY_MS  = 4000;  // how long each verse stays fully visible
+  const EXIT_MS     = 600;   // matches verseOut animation duration
+
+  let _timer   = null;
+  let _current = 0;
+  let _busy    = false;      // prevent overlap during transition
+
+  function getCarousel() {
+    return document.getElementById('heroVerseCarousel');
+  }
+
+  function goToVerse(idx) {
+    if (_busy) return;
+    const carousel = getCarousel();
+    if (!carousel) return;
+
+    const items = carousel.querySelectorAll('.hero-verse-item');
+    const dots  = carousel.querySelectorAll('.hvd-dot');
+    const count = items.length;
+    if (!count) return;
+
+    idx = ((idx % count) + count) % count;
+    _busy = true;
+
+    const outItem = items[_current];
+
+    // Step 1: play exit animation on current verse
+    outItem.classList.remove('hero-verse-item--active');
+    outItem.classList.add('hero-verse-item--leaving');
+
+    setTimeout(() => {
+      // Step 2: clean up leaving, show next verse
+      outItem.classList.remove('hero-verse-item--leaving');
+      _current = idx;
+
+      items[_current].classList.add('hero-verse-item--active');
+
+      // Update dots
+      dots.forEach((dot, i) => {
+        dot.classList.toggle('hvd-dot--active', i === _current);
+      });
+
+      _busy = false;
+    }, EXIT_MS);
+  }
+
+  function advance() {
+    goToVerse(_current + 1);
+  }
+
+  function startCycle() {
+    if (_timer) return;
+    _timer = setInterval(advance, DISPLAY_MS + EXIT_MS);
+  }
+
+  function stopCycle() {
+    if (_timer) {
+      clearInterval(_timer);
+      _timer = null;
+    }
+  }
+
+  function resetCarousel() {
+    stopCycle();
+    _busy    = false;
+    _current = 0;
+    const carousel = getCarousel();
+    if (!carousel) return;
+    carousel.querySelectorAll('.hero-verse-item').forEach((item, i) => {
+      item.classList.remove('hero-verse-item--active', 'hero-verse-item--leaving');
+      if (i === 0) item.classList.add('hero-verse-item--active');
+    });
+    carousel.querySelectorAll('.hvd-dot').forEach((dot, i) => {
+      dot.classList.toggle('hvd-dot--active', i === 0);
+    });
+  }
+
+  // Watch for hero-animate being added/removed on #page-home
+  const pageHome = document.getElementById('page-home');
+  if (!pageHome) return;
+
+  const observer = new MutationObserver(() => {
+    if (pageHome.classList.contains('hero-animate')) {
+      resetCarousel();
+      setTimeout(startCycle, 900);
+    } else {
+      stopCycle();
+    }
+  });
+
+  observer.observe(pageHome, { attributes: true, attributeFilter: ['class'] });
+
+  // Start immediately if already active on load
+  if (pageHome.classList.contains('active') || pageHome.classList.contains('hero-animate')) {
+    setTimeout(startCycle, 900);
   }
 })();

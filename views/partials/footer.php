@@ -17,6 +17,7 @@
         <a data-page="read">Read</a>
         <a data-page="bible">Bible</a>
         <a data-page="prayer">Prayer Wall</a>
+        <a data-page="quizzes">Quizzes</a>
         <a data-page="events">Events</a>
         <a data-page="announcement">Announcements</a>
       </div>
@@ -27,7 +28,7 @@
       </div>
       <div class="col">
         <h4>Follow</h4>
-        <a href="#">Facebook</a>
+        <a href="https://www.facebook.com/agapnistries">Facebook</a>
         <a href="#">YouTube</a>
         <a href="#">TikTok</a>
       </div>

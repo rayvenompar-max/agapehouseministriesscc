@@ -25,9 +25,9 @@
         </div>
       </div>
 
-      <!-- Right: light verses -->
-      <div class="hero-verses">
-        <div class="hero-verse-item">
+      <!-- Right: cycling verse carousel -->
+      <div class="hero-verses hero-verses--carousel" id="heroVerseCarousel" aria-live="polite" aria-atomic="true">
+        <div class="hero-verse-item hero-verse-item--active">
           <blockquote class="hero-verse-text">"You are the light of the world. A town built on a hill cannot be hidden."</blockquote>
           <cite class="hero-verse-ref">Matthew 5:14</cite>
         </div>
@@ -38,6 +38,12 @@
         <div class="hero-verse-item">
           <blockquote class="hero-verse-text">"I am the light of the world. Whoever follows me will never walk in darkness."</blockquote>
           <cite class="hero-verse-ref">John 8:12</cite>
+        </div>
+        <!-- Dot indicators -->
+        <div class="hero-verse-dots" aria-hidden="true">
+          <span class="hvd-dot hvd-dot--active"></span>
+          <span class="hvd-dot"></span>
+          <span class="hvd-dot"></span>
         </div>
       </div>
 
@@ -229,7 +235,7 @@
           <div class="sci-row"><i data-lucide="clock"></i> <span>Sun Service 1PM - 4PM · Wed 5PM · Fri 5PM · Sat 5PM</span></div>
         </div>
         <div class="sidebar-socials">
-          <a href="#" class="sidebar-social-btn" title="Facebook">
+          <a href="https://www.facebook.com/agapnistries" class="sidebar-social-btn" title="Facebook">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>
             Facebook
           </a>
@@ -237,9 +243,9 @@
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M22.54 6.42a2.78 2.78 0 00-1.95-1.97C18.88 4 12 4 12 4s-6.88 0-8.59.45A2.78 2.78 0 001.46 6.42 29 29 0 001 12a29 29 0 00.46 5.58 2.78 2.78 0 001.95 1.97C5.12 20 12 20 12 20s6.88 0 8.59-.45a2.78 2.78 0 001.95-1.97A29 29 0 0023 12a29 29 0 00-.46-5.58zM9.75 15.02V8.98L15.5 12l-5.75 3.02z"/></svg>
             YouTube
           </a>
-          <a href="#" class="sidebar-social-btn" title="Instagram">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
-            Instagram
+          <a href="#" class="sidebar-social-btn" title="TikTok">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.18 8.18 0 0 0 4.78 1.52V6.75a4.85 4.85 0 0 1-1.01-.06z"/></svg>
+            TikTok
           </a>
         </div>
         <button class="sidebar-see-all warm-see-all" data-page="connect" style="margin-top:10px;">Get in touch →</button>
