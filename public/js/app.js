@@ -567,7 +567,7 @@ async function loadMediaGrid(type) {
   grid.innerHTML = res.data.map(m => {
     const thumbUrl       = resolveThumbnail(m);
     const ADMIN_DISPLAY  = 'Agape House Ministries';
-    const ADMIN_LOGO_URL = window.APP_BASE_URL + '/public/images/agape.png';
+    const ADMIN_LOGO_URL = window.APP_BASE_URL + '/public/images/agape1.jpg';
     const isAdminPoster  = !m.poster_username && (
       !m.posted_by ||
       m.posted_by === 'admin' ||
@@ -1255,7 +1255,7 @@ function renderArticleList(articles) {
     const when    = diffD === 0 ? 'TODAY' : diffD === 1 ? 'YESTERDAY' : `${diffD} DAYS AGO`;
 
     const ADMIN_DISPLAY  = 'Agape House Ministries';
-    const ADMIN_LOGO_URL = window.APP_BASE_URL + '/public/images/agape.png';
+    const ADMIN_LOGO_URL = window.APP_BASE_URL + '/public/images/agape1.jpg';
     const isAdminPoster  = !a.poster_username && (
       !a.posted_by ||
       a.posted_by === 'admin' ||
@@ -3086,7 +3086,7 @@ function buildFeedCard(item) {
 
   // Poster info — remap the raw "admin" account to the ministry brand
   const ADMIN_DISPLAY  = 'Agape House Ministries';
-  const ADMIN_LOGO_URL = window.APP_BASE_URL + '/public/images/agape.png';
+  const ADMIN_LOGO_URL = window.APP_BASE_URL + '/public/images/agape1.jpg';
   const isAdminPoster  = !item.authorUsername && (
     !item.author ||
     item.author === 'admin' ||
@@ -4822,7 +4822,7 @@ function showPdMsg(text, isError) {
     // Broadcast notifications (new_event / new_announcement) use the church logo + name
     let avatarHtml;
     if (isBroadcast) {
-      const logoSrc = (window.APP_BASE_URL || '') + '/public/images/agape.png';
+      const logoSrc = (window.APP_BASE_URL || '') + '/public/images/agape1.jpg';
       avatarHtml = `<div class="notif-avatar-wrap">
            <div class="notif-avatar notif-avatar-system">
              <img src="${logoSrc}" alt="Agape House Ministries">

@@ -1,11 +1,11 @@
-<footer>
+<footer class="footer--warm">
   <div class="footer-inner">
     <div class="foot-brand">
       <div class="foot-brand-logo">
-        <img src="<?= BASE_URL ?>/public/images/agape.png" alt="Agape House Ministries Logo" class="foot-logo-img">
+        <img class="foot-brand-glyph" src="<?= BASE_URL ?>/public/images/agape1.jpg" alt="Agape House">
         <div class="foot-brand-text">
-          <span class="brand-name">Agape House</span>
-          <span class="foot-brand-tag">Ministries · San Carlos</span>
+          <span class="brand-name">Agape House Ministries</span>
+          <span class="foot-brand-tag">San Carlos</span>
         </div>
       </div>
       <p class="foot-brand-desc">Agape House Ministries — San Carlos<br>built for wherever you happen to be.</p>
@@ -13,7 +13,7 @@
     <div class="cols">
       <div class="col">
         <h4>Explore</h4>
-        <a data-page="watch">Watch &amp; Listen</a> 
+        <a data-page="watch">Watch &amp; Listen</a>
         <a data-page="read">Read</a>
         <a data-page="bible">Bible</a>
         <a data-page="prayer">Prayer Wall</a>

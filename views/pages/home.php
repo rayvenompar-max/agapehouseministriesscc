@@ -1,59 +1,55 @@
 <section class="page active" id="page-home">
 
   <!-- ── Hero ─────────────────────────────────────────────────────────────── -->
-  <div class="hero">
+  <div class="hero hero--warm">
+    <!-- Animated sun glow -->
+    <div class="hw-sun" aria-hidden="true"></div>
+    <!-- Spinning ray SVG -->
+    <svg class="hw-rays" viewBox="0 0 900 900" aria-hidden="true">
+      <g fill="none" stroke="#D9A544" stroke-width="2" id="hwRayGroup"></g>
+    </svg>
+
     <div class="hero-inner hero-inner--split">
 
-      <!-- Left: existing content -->
+      <!-- Left: main content -->
       <div class="hero-left">
-        <div class="eyebrow">Gospel Ministry</div>
-        <h1 class="hero-title">"Towards the Green Pasture:<br><em>A Journey of Faith, Hope, and Restoration."</em></h1>
-        <p class="hero-psalm">Psalm 23:1–6</p>
+        <p class="eyebrow">Gospel Ministry</p>
+        <h1 class="hero-title">"The <em>Joy</em> of the Lord <br> is your <em>Strength</em>."</h1>
+        <p class="hero-psalm">Nehemiah 8:10</p>
         <p class="hero-sub">
           Agape House Ministries — sermons, devotionals, and a community praying for one another.
         </p>
         <div class="hero-actions">
-          <button class="btn btn-primary" data-page="watch">▶ Watch the latest message</button>
-          <button class="btn btn-ghost btn-sm" data-page="read">Read today's devotional</button>
+          <button class="btn btn-warm-solid" data-page="watch">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+            Watch the latest message
+          </button>
+          <button class="btn btn-warm-ghost" data-page="read">Read today's devotional</button>
         </div>
       </div>
 
       <!-- Right: light verses -->
       <div class="hero-verses">
-        <blockquote class="hero-verse-text">"You are the light of the world. A town built on a hill cannot be hidden."</blockquote>
-        <cite class="hero-verse-ref">Matthew 5:14</cite>
-
-        <blockquote class="hero-verse-text">"Let your light shine before others, that they may see your good deeds and glorify your Father in heaven."</blockquote>
-        <cite class="hero-verse-ref">Matthew 5:16</cite>
-
-        <blockquote class="hero-verse-text">"I am the light of the world. Whoever follows me will never walk in darkness."</blockquote>
-        <cite class="hero-verse-ref">John 8:12</cite>
+        <div class="hero-verse-item">
+          <blockquote class="hero-verse-text">"You are the light of the world. A town built on a hill cannot be hidden."</blockquote>
+          <cite class="hero-verse-ref">Matthew 5:14</cite>
+        </div>
+        <div class="hero-verse-item">
+          <blockquote class="hero-verse-text">"Let your light shine before others, that they may see your good deeds and glorify your Father in heaven."</blockquote>
+          <cite class="hero-verse-ref">Matthew 5:16</cite>
+        </div>
+        <div class="hero-verse-item">
+          <blockquote class="hero-verse-text">"I am the light of the world. Whoever follows me will never walk in darkness."</blockquote>
+          <cite class="hero-verse-ref">John 8:12</cite>
+        </div>
       </div>
 
     </div>
-
-    <!-- Sun disc: bottom center of the full hero -->
-    <div class="horizon-stage">
-      <div class="sun-wrap">
-        <div class="sun-ray sun-ray--r1"></div>
-        <div class="sun-ray sun-ray--r2"></div>
-        <div class="sun-ray sun-ray--r3"></div>
-        <div class="sun-ray sun-ray--r4"></div>
-        <div class="sun-ray sun-ray--r5"></div>
-        <div class="sun-ray sun-ray--r6"></div>
-        <div class="sun-ray sun-ray--r7"></div>
-        <div class="sun-ray sun-ray--r8"></div>
-        <div class="sun-ray sun-ray--r9"></div>
-        <div class="sun-disc"></div>
-      </div>
-      <div class="horizon-line"></div>
-    </div>
-
   </div>
 
 
   <!-- ── Feed Layout (3-column) ───────────────────────────────────────────── -->
-  <div class="feed-layout">
+  <div class="feed-layout feed-layout--warm">
 
     <!-- ════════════════════════════════════════════════════════════════════
          LEFT SIDEBAR
@@ -76,8 +72,9 @@
 
       <?php if ($isLoggedInMember): ?>
       <!-- ── Profile card — OUTSIDE scroll container so always visible ── -->
-      <div class="sidebar-card sidebar-profile-card">
-        <div class="sidebar-profile-hero">
+      <div class="sidebar-card sidebar-profile-card warm-profile-card">
+        <div class="warm-profile-cover"></div>
+        <div class="warm-profile-body">
           <div class="sidebar-avatar-lg" id="sidebarAvatarLg">
             <?php if ($memberPicture): ?>
               <img src="<?= $memberPicture ?>" alt="<?= $memberInitial ?>">
@@ -85,37 +82,35 @@
               <?= $memberInitial ?>
             <?php endif; ?>
           </div>
-          <div>
-            <div class="sidebar-profile-name"><?= $memberName ?></div>
-            <div class="sidebar-profile-role">
-              <span class="sidebar-role-dot"></span>Member · Agape House
-            </div>
+          <h3 class="warm-profile-name"><?= $memberName ?></h3>
+          <div class="warm-profile-role">
+            <span class="sidebar-role-dot"></span>Member · Agape House
           </div>
-        </div>
-        <div class="sidebar-profile-stats">
-          <div class="sp-stat"><span id="leftStatFollowing">—</span><small>Following</small></div>
-          <div class="sp-stat-div"></div>
-          <div class="sp-stat"><span id="leftStatFollowers">—</span><small>Followers</small></div>
-        </div>
-        <div class="sidebar-profile-links">
-          <button class="sidebar-profile-link" id="openMyPrayersBtn">
-            <span class="spli"><i data-lucide="hand-heart"></i></span> My Prayer Requests
-          </button>
-          <button class="sidebar-profile-link" data-page="prayer">
-            <span class="spli"><i data-lucide="users"></i></span> Prayer Wall
-          </button>
-          <button class="sidebar-profile-link" id="openMyProfileBtn">
-            <span class="spli"><i data-lucide="user"></i></span> My Profile
-          </button>
+          <div class="warm-profile-stats">
+            <div class="wps-item"><strong id="leftStatFollowing">—</strong><span>Following</span></div>
+            <div class="wps-div"></div>
+            <div class="wps-item"><strong id="leftStatFollowers">—</strong><span>Followers</span></div>
+          </div>
+          <div class="sidebar-profile-links">
+            <button class="sidebar-profile-link" id="openMyPrayersBtn">
+              <span class="spli"><i data-lucide="hand-heart"></i></span> My Prayer Requests
+            </button>
+            <button class="sidebar-profile-link" data-page="prayer">
+              <span class="spli"><i data-lucide="users"></i></span> Prayer Wall
+            </button>
+            <button class="sidebar-profile-link" id="openMyProfileBtn">
+              <span class="spli"><i data-lucide="user"></i></span> My Profile
+            </button>
+          </div>
         </div>
       </div>
       <?php else: ?>
       <!-- ── Guest sign-in prompt — also outside scroll container ── -->
-      <div class="sidebar-card sidebar-signin-prompt">
-        <div class="sidebar-brand-mark"></div>
+      <div class="sidebar-card sidebar-signin-prompt warm-signin-prompt">
+        <div class="warm-signin-glyph"></div>
         <strong>Welcome to Agape House</strong>
         <p>Sign in to like, comment, save posts, and join the community.</p>
-        <a href="<?= BASE_URL ?>/member/login" class="btn btn-primary" style="width:100%;justify-content:center;">Sign in</a>
+        <a href="<?= BASE_URL ?>/member/login" class="btn btn-warm-solid" style="width:100%;justify-content:center;">Sign in</a>
         <a href="<?= BASE_URL ?>/member/register" class="sidebar-register-link">Create an account →</a>
       </div>
       <?php endif; ?>
@@ -165,7 +160,7 @@
          ════════════════════════════════════════════════════════════════════ -->
     <main class="feed-main">
       <div class="feed-main-header">
-        <div class="eyebrow">What's new</div>
+        <p class="eyebrow warm-eyebrow">What's New</p>
         <h2>Latest From <em>The Ministry</em></h2>
       </div>
 
@@ -188,16 +183,16 @@
     <div class="feed-sidebar-inner">
 
       <!-- ── Upcoming Events ── -->
-      <div class="sidebar-card">
+      <div class="sidebar-card warm-sidebar-card">
         <div class="sidebar-section-title"><i data-lucide="calendar"></i> Upcoming Events</div>
         <div id="rsidebarEvents" class="sidebar-upcoming">
           <div class="sidebar-loading-sm"><span class="feed-spinner"></span></div>
         </div>
-        <button class="sidebar-see-all" data-page="events">See all events →</button>
+        <button class="sidebar-see-all warm-see-all" data-page="events">See all events →</button>
       </div>
 
       <!-- ── Verse of the Day ── -->
-      <div class="sidebar-card sidebar-verse-card">
+      <div class="sidebar-card sidebar-verse-card warm-verse-card">
         <div class="sidebar-section-title"><i data-lucide="sparkles"></i> Verse of the Day</div>
         <blockquote class="sidebar-verse-text">
           "<?= htmlspecialchars($votd['text']) ?>"
@@ -206,34 +201,34 @@
       </div>
 
       <!-- ── Prayer Wall preview ── -->
-      <div class="sidebar-card">
+      <div class="sidebar-card warm-sidebar-card">
         <div class="sidebar-section-title"><i data-lucide="heart-handshake"></i> Prayer Wall</div>
         <div id="rsidebarPrayers" class="rside-prayer-list">
           <div class="sidebar-loading-sm"><span class="feed-spinner"></span></div>
         </div>
-        <button class="sidebar-see-all" data-page="prayer">Visit the wall →</button>
+        <button class="sidebar-see-all warm-see-all" data-page="prayer">Visit the wall →</button>
       </div>
 
       <!-- ── Latest Sermon Series ── -->
-      <div class="sidebar-card" id="rsidebarSeriesCard" hidden>
+      <div class="sidebar-card warm-sidebar-card" id="rsidebarSeriesCard" hidden>
         <div class="sidebar-section-title"><i data-lucide="film"></i> Current Series</div>
         <div id="rsidebarSeries"></div>
       </div>
 
       <!-- ── Announcements digest ── -->
-      <div class="sidebar-card">
+      <div class="sidebar-card warm-sidebar-card">
         <div class="sidebar-section-title"><i data-lucide="pin"></i> Announcements</div>
         <div id="rsidebarAnn" class="rside-ann-list">
           <div class="sidebar-loading-sm"><span class="feed-spinner"></span></div>
         </div>
-        <button class="sidebar-see-all" data-page="announcement">See all →</button>
+        <button class="sidebar-see-all warm-see-all" data-page="announcement">See all →</button>
       </div>
 
       <!-- ── Connect / Contact card ── -->
-      <div class="sidebar-card sidebar-connect-card">
+      <div class="sidebar-card sidebar-connect-card warm-sidebar-card">
         <div class="sidebar-section-title"><i data-lucide="map-pin"></i> Find Us</div>
         <div class="sidebar-connect-info">
-          <div class="sci-row"><i data-lucide="church"></i> <span>San Carlos City, Negros Occidental</span></div>
+          <div class="sci-row"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px"><path d="M18 22V10L12 2 6 10v12"/><path d="M9 22V12h6v10"/><path d="M12 2v4"/><circle cx="12" cy="7" r="1" fill="currentColor" stroke="none"/></svg> <span>San Carlos City, Negros Occidental</span></div>
           <div class="sci-row"><i data-lucide="clock"></i> <span>Sun Service 1PM - 4PM · Wed 5PM · Fri 5PM · Sat 5PM</span></div>
         </div>
         <div class="sidebar-socials">
@@ -250,7 +245,7 @@
             Instagram
           </a>
         </div>
-        <button class="sidebar-see-all" data-page="connect" style="margin-top:10px;">Get in touch →</button>
+        <button class="sidebar-see-all warm-see-all" data-page="connect" style="margin-top:10px;">Get in touch →</button>
       </div>
 
     </div><!-- /.feed-sidebar-inner -->
@@ -453,8 +448,7 @@
   </div>
 </div>
 
-<!-- ── Comment Drawer ──────────────────────────────────────────────────────── -->
-<div id="commentDrawer" class="comment-drawer" hidden>
+<!-- ── Comment Drawer ──────────────────────────────────────────────────────── --><div id="commentDrawer" class="comment-drawer" hidden>
   <div class="comment-drawer-backdrop"></div>
   <div class="comment-drawer-panel">
     <div class="comment-drawer-header">
@@ -473,5 +467,22 @@
     </div>
   </div>
 </div>
+
+<!-- ── Warm hero ray generation ── -->
+<script>
+(function() {
+  var g = document.getElementById('hwRayGroup');
+  if (!g) return;
+  var count = 20;
+  for (var i = 0; i < count; i++) {
+    var angle = (360 / count) * i;
+    var line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('x1', '450'); line.setAttribute('y1', '450');
+    line.setAttribute('x2', '450'); line.setAttribute('y2', '30');
+    line.setAttribute('transform', 'rotate(' + angle + ' 450 450)');
+    g.appendChild(line);
+  }
+})();
+</script>
 
 </section>

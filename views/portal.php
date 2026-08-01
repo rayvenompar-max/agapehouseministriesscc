@@ -16,7 +16,7 @@
     /* NAV */
     nav{display:flex;align-items:center;justify-content:space-between;padding:0 48px;height:60px;background:var(--night);position:sticky;top:0;z-index:100;}
     .brand{display:flex;align-items:center;gap:12px;}
-    .brand .mark{width:30px;height:30px;border-radius:50%;background:radial-gradient(circle at 35% 30%,var(--sun-light),var(--sun) 60%,var(--horizon) 100%);flex-shrink:0;}
+    .brand .mark{width:30px;height:30px;border-radius:50%;object-fit:cover;flex-shrink:0;}
     .brand .word{font-family:var(--display);font-weight:600;font-size:19px;color:var(--white);line-height:1;}
     .brand .tag{font-family:var(--mono);font-size:9px;letter-spacing:.14em;color:#8FA9C4;text-transform:uppercase;margin-top:3px;}
     .navlinks{display:flex;align-items:center;gap:28px;}
@@ -131,7 +131,7 @@ $memberSince  = $memberRecord ? date('Y', strtotime($memberRecord->createdAt)) :
 <!-- NAV -->
 <nav>
   <a href="<?= BASE_URL ?>/" class="brand">
-    <div class="mark"></div>
+    <img class="mark" src="<?= BASE_URL ?>/public/images/agape1.jpg" alt="Agape House">
     <div><div class="word">Agape House</div><div class="tag">San Carlos · Ministries</div></div>
   </a>
   <div class="navlinks">

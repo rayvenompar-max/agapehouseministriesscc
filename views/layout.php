@@ -26,7 +26,7 @@
 <meta name="description" content="A digital home for the Gospel — sermons, articles, prayer, events and more from Agape House Ministries San Carlos.">
 <meta property="og:title" content="Agape House Ministries San Carlos">
 <meta property="og:description" content="A digital home for the Gospel — sermons, articles, prayer, events and more.">
-<meta property="og:image" content="<?= BASE_URL ?>/public/images/agape.png">
+<meta property="og:image" content="<?= BASE_URL ?>/public/images/agape1.jpg">
 <meta property="og:type" content="website">
 
 <!-- Fonts ------------------------------------------------------------------>
@@ -266,7 +266,7 @@ window.CURRENT_MEMBER = <?= json_encode(
 <div id="pwaInstallBanner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;
   background:#0A1B33;border-top:1px solid rgba(127,196,232,.25);
   padding:14px 20px;align-items:center;gap:12px;flex-wrap:wrap;">
-  <img src="/DigitalEvangelization/public/images/agape.png" alt="Agape House"
+  <img src="/DigitalEvangelization/public/images/agape1.jpg" alt="Agape House"
        style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;">
   <div style="flex:1;min-width:0;">
     <div style="font-size:13px;font-weight:600;color:#fff;font-family:'Work Sans',sans-serif;">
