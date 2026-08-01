@@ -4,10 +4,7 @@
   <div class="hero hero--warm">
     <!-- Animated sun glow -->
     <div class="hw-sun" aria-hidden="true"></div>
-    <!-- Spinning ray SVG -->
-    <svg class="hw-rays" viewBox="0 0 900 900" aria-hidden="true">
-      <g fill="none" stroke="#D9A544" stroke-width="2" id="hwRayGroup"></g>
-    </svg>
+
 
     <div class="hero-inner hero-inner--split">
 
@@ -468,21 +465,6 @@
   </div>
 </div>
 
-<!-- ── Warm hero ray generation ── -->
-<script>
-(function() {
-  var g = document.getElementById('hwRayGroup');
-  if (!g) return;
-  var count = 20;
-  for (var i = 0; i < count; i++) {
-    var angle = (360 / count) * i;
-    var line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    line.setAttribute('x1', '450'); line.setAttribute('y1', '450');
-    line.setAttribute('x2', '450'); line.setAttribute('y2', '30');
-    line.setAttribute('transform', 'rotate(' + angle + ' 450 450)');
-    g.appendChild(line);
-  }
-})();
-</script>
+
 
 </section>

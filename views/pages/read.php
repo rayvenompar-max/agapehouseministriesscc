@@ -4,36 +4,29 @@
   <div class="page-hero page-hero--read">
     <div class="page-hero-inner">
       <div class="eyebrow read-hero-eyebrow">Read</div>
-      <h2 class="read-hero-title">Devotionals &amp; <em>reflections</em></h2>
+      <h2 class="read-hero-title">Devotionals &amp; <em>reflections.</em></h2>
       <p class="lede read-hero-lede">Short, honest writing to carry with you through the day.</p>
     </div>
 
-    <!-- Sun disc + rays -->
-    <div class="page-hero-horizon-stage" aria-hidden="true">
-      <div class="sun-wrap">
-        <div class="sun-ray sun-ray--r1"></div>
-        <div class="sun-ray sun-ray--r2"></div>
-        <div class="sun-ray sun-ray--r3"></div>
-        <div class="sun-ray sun-ray--r4"></div>
-        <div class="sun-ray sun-ray--r5"></div>
-        <div class="sun-ray sun-ray--r6"></div>
-        <div class="sun-ray sun-ray--r7"></div>
-        <div class="sun-ray sun-ray--r8"></div>
-        <div class="sun-ray sun-ray--r9"></div>
-        <div class="sun-disc"></div>
-      </div>
+    <!-- Spark orb + animated rings -->
+    <div class="read-spark-wrap" aria-hidden="true">
+      <div class="read-spark-ring"></div>
+      <div class="read-spark-ring read-spark-ring--delay"></div>
+      <div class="read-spark"></div>
     </div>
   </div>
 
-  <div class="section-wrap" style="padding-top:40px; padding-bottom:80px;">
-    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
-      <h3 style="font-family:var(--display); font-size:18px; color:var(--ink-soft); font-weight:500;">Latest articles</h3>
-      <button class="btn btn-dark" id="openAddArticleBtn">+ Add Article</button>
-    </div>
+  <div class="read-content-bg">
+    <div class="section-wrap" style="padding-top:40px; padding-bottom:80px;">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+        <h3 style="font-family:var(--display); font-size:18px; font-weight:500;">Latest articles</h3>
+        <button class="btn btn-dark" id="openAddArticleBtn">+ Add Article</button>
+      </div>
 
-    <!-- Article list — populated by JS -->
-    <div id="articleList">
-      <p style="color:var(--ink-soft); padding:20px 0;">Loading articles…</p>
+      <!-- Article list — populated by JS -->
+      <div id="articleList">
+        <p style="padding:20px 0; color:#6B6058;">Loading articles…</p>
+      </div>
     </div>
   </div>
 

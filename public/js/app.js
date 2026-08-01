@@ -592,6 +592,7 @@ async function loadMediaGrid(type) {
     <div class="media-card" data-id="${m.id}">
       <div class="thumb" style="cursor:pointer;" role="button" aria-label="Play ${escHtml(m.title)}">
         ${thumbUrl ? `<img src="${escHtml(thumbUrl)}" alt="${escHtml(m.title)}" loading="lazy" onerror="this.style.display='none'">` : ''}
+        <span class="thumb-tag">${escHtml(typeLabel)}</span>
         <div class="thumb-overlay">
           <div class="thumb-play">▶</div>
         </div>

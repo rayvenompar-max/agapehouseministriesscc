@@ -4,42 +4,39 @@
   <div class="page-hero page-hero--watch">
     <div class="page-hero-inner">
       <div class="eyebrow watch-hero-eyebrow">Watch &amp; Listen</div>
-      <h2 class="watch-hero-title">Every message, <em>a small daybreak.</em></h2>
-      <p class="lede watch-hero-lede">New teaching every Sunday. Short devotionals through the week. Wherever you are, the light finds you.</p>
+      <h2 class="watch-hero-title">Faith that speaks. <br><em>Hope that lasts.</em></br></h2>
+      <p class="lede watch-hero-lede">Watch inspiring sermons, read daily devotionals, and grow together in God's Word.</p>
     </div>
 
-    <!-- Sun disc + rays (same as home hero) -->
-    <div class="page-hero-horizon-stage" aria-hidden="true">
-      <div class="sun-wrap">
-        <div class="sun-ray sun-ray--r1"></div>
-        <div class="sun-ray sun-ray--r2"></div>
-        <div class="sun-ray sun-ray--r3"></div>
-        <div class="sun-ray sun-ray--r4"></div>
-        <div class="sun-ray sun-ray--r5"></div>
-        <div class="sun-ray sun-ray--r6"></div>
-        <div class="sun-ray sun-ray--r7"></div>
-        <div class="sun-ray sun-ray--r8"></div>
-        <div class="sun-ray sun-ray--r9"></div>
-        <div class="sun-disc"></div>
+    <!-- Spark orb + animated rings + audio waves -->
+    <div class="watch-spark-wrap" aria-hidden="true">
+      <div class="watch-spark-ring"></div>
+      <div class="watch-spark-ring watch-spark-ring--delay"></div>
+      <div class="watch-spark"></div>
+      <div class="watch-waves">
+        <span></span><span></span><span></span>
+        <span></span><span></span><span></span>
       </div>
     </div>
   </div>
 
   <!-- ── Grid ─────────────────────────────────────────────────────────────── -->
-  <div class="section-wrap" style="padding-top:40px;">
-    <!-- Filter rail -->
-    <div class="filter-row" id="mediaFilterRow">
-      <button class="filter-pill active" data-type="">All</button>
-      <button class="filter-pill" data-type="sermon">Sermons</button>
-      <button class="filter-pill" data-type="devotional">Devotionals</button>
-      <button class="filter-pill" data-type="testimony">Testimonies</button>
-      <button class="filter-pill" data-type="worship">Worship</button>
-      <button class="btn btn-dark" id="openAddVideoBtn" style="margin-left:auto;">+ Add Video</button>
-    </div>
+  <div class="watch-content-bg">
+    <div class="section-wrap" style="padding-top:40px;">
+      <!-- Filter rail -->
+      <div class="filter-row" id="mediaFilterRow">
+        <button class="filter-pill active" data-type="">All</button>
+        <button class="filter-pill" data-type="sermon">Sermons</button>
+        <button class="filter-pill" data-type="devotional">Devotionals</button>
+        <button class="filter-pill" data-type="testimony">Testimonies</button>
+        <button class="filter-pill" data-type="worship">Worship</button>
+        <button class="btn btn-dark" id="openAddVideoBtn" style="margin-left:auto;">+ Add Video</button>
+      </div>
 
-    <!-- Card grid -->
-    <div class="card-grid" id="mediaGrid" style="padding-bottom:80px;">
-      <p style="color:var(--ink-soft); padding:20px 0;">Loading media…</p>
+      <!-- Card grid -->
+      <div class="card-grid" id="mediaGrid" style="padding-bottom:80px;">
+        <p style="color:#6B6058; padding:20px 0;">Loading media…</p>
+      </div>
     </div>
   </div>
 
@@ -57,7 +54,7 @@
     </p>
     <div id="deleteVideoMsg" hidden></div>
     <div class="delete-confirm-actions">
-      <button type="button" class="btn btn-ghost-dark" id="deleteCancelBtn">Cancel</button>
+      <button type="button" class="btn-modal-cancel" id="deleteCancelBtn">Cancel</button>
       <button type="button" class="btn btn-danger" id="deleteConfirmBtn">Yes, Delete</button>
     </div>
   </div>
@@ -82,13 +79,16 @@
         </div>
         <div class="form-group">
           <label for="editVidType">Type <span class="form-hint">(required)</span></label>
-          <select id="editVidType">
-            <option value="">— choose —</option>
-            <option value="sermon">Sermon</option>
-            <option value="devotional">Devotional</option>
-            <option value="testimony">Testimony</option>
-            <option value="worship">Worship</option>
-          </select>
+          <div class="select-wrap">
+            <select id="editVidType">
+              <option value="">— choose —</option>
+              <option value="sermon">Sermon</option>
+              <option value="devotional">Devotional</option>
+              <option value="testimony">Testimony</option>
+              <option value="worship">Worship</option>
+            </select>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
         </div>
         <div class="form-group">
           <label for="editVidSeries">Series <span class="form-hint">(optional)</span></label>
@@ -103,11 +103,14 @@
           <input type="text" id="editVidUrl" placeholder="https://youtu.be/…">
         </div>
         <div id="editVideoMsg" hidden></div>
-        <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:4px;">
-          <button type="button" class="btn btn-ghost-dark" id="editVideoCancelBtn">Cancel</button>
-          <button type="submit" class="btn btn-primary" id="editVideoSubmitBtn">Save Changes</button>
-        </div>
       </form>
+    </div>
+    <div class="article-modal-foot">
+      <button type="button" class="btn-modal-cancel" id="editVideoCancelBtn">Cancel</button>
+      <button type="submit" form="editVideoForm" class="btn-modal-publish" id="editVideoSubmitBtn">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+        Save Changes
+      </button>
     </div>
   </div>
 </div>
@@ -131,13 +134,16 @@
         </div>
         <div class="form-group">
           <label for="vidType">Type <span class="form-hint">(required)</span></label>
-          <select id="vidType">
-            <option value="">— choose —</option>
-            <option value="sermon">Sermon</option>
-            <option value="devotional">Devotional</option>
-            <option value="testimony">Testimony</option>
-            <option value="worship">Worship</option>
-          </select>
+          <div class="select-wrap">
+            <select id="vidType">
+              <option value="">— choose —</option>
+              <option value="sermon">Sermon</option>
+              <option value="devotional">Devotional</option>
+              <option value="testimony">Testimony</option>
+              <option value="worship">Worship</option>
+            </select>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
         </div>
         <div class="form-group">
           <label for="vidSeries">Series <span class="form-hint">(optional)</span></label>
@@ -175,16 +181,19 @@
             </div>
           </div>
         </div>
-        <div class="form-group">
+        <div class="form-group" style="margin-bottom:4px;">
           <label for="vidDate">Published</label>
           <input type="datetime-local" id="vidDate">
         </div>
         <div id="addVideoMsg" hidden></div>
-        <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:4px;">
-          <button type="button" class="btn btn-ghost-dark" id="addVideoCancelBtn">Cancel</button>
-          <button type="submit" class="btn btn-primary" id="addVideoSubmitBtn">Publish Video</button>
-        </div>
       </form>
+    </div>
+    <div class="article-modal-foot">
+      <button type="button" class="btn-modal-cancel" id="addVideoCancelBtn">Cancel</button>
+      <button type="submit" form="addVideoForm" class="btn-modal-publish" id="addVideoSubmitBtn">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+        Publish Video
+      </button>
     </div>
   </div>
 </div>

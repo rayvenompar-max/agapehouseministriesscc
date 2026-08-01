@@ -4,34 +4,28 @@
   <div class="page-hero page-hero--bible">
     <div class="page-hero-inner">
       <div class="eyebrow bible-hero-eyebrow">Scripture</div>
-      <h2 class="bible-hero-title">Search the <em>Bible</em></h2>
-      <p class="lede bible-hero-lede">Look up a reference like "John 3:16", or search by topic — love, fear, hope, and more.</p>
+      <h2 class="bible-hero-title">Find God's <em>Promise.</em></h2>
+      <p class="lede bible-hero-lede">Find Bible verses by reference, keyword, or topic to deepen your understanding of God's Word.</p>
     </div>
 
-    <!-- Sun disc + rays -->
-    <div class="page-hero-horizon-stage" aria-hidden="true">
-      <div class="sun-wrap">
-        <div class="sun-ray sun-ray--r1"></div>
-        <div class="sun-ray sun-ray--r2"></div>
-        <div class="sun-ray sun-ray--r3"></div>
-        <div class="sun-ray sun-ray--r4"></div>
-        <div class="sun-ray sun-ray--r5"></div>
-        <div class="sun-ray sun-ray--r6"></div>
-        <div class="sun-ray sun-ray--r7"></div>
-        <div class="sun-ray sun-ray--r8"></div>
-        <div class="sun-ray sun-ray--r9"></div>
-        <div class="sun-disc"></div>
-      </div>
+    <!-- Spark orb + animated rings + wave bars -->
+    <div class="bible-spark-wrap" aria-hidden="true">
+      <div class="bible-spark-ring"></div>
+      <div class="bible-spark-ring bible-spark-ring--delay"></div>
+      <div class="bible-spark"></div>
+      
     </div>
   </div>
 
-  <div class="section-wrap bible-layout" style="padding-top:40px; padding-bottom:80px;">
+  <!-- ── Two-column body ───────────────────────────────────────────────────── -->
+  <div class="bible-content-bg">
+  <div class="bible-body">
 
-    <!-- ── Left sidebar: search + topics ─────────────────────────────────── -->
+    <!-- Left sidebar: search + topic pills -->
     <aside class="bible-sidebar">
       <div class="bible-search-bar">
         <input id="bibleQuery" type="text" placeholder='Try "John 3:16" or "peace"' autocomplete="off">
-        <button id="bibleSearchBtn" class="btn btn-primary">Search</button>
+        <button id="bibleSearchBtn" class="btn btn-dark">Search</button>
       </div>
       <p class="bible-hint">Showing the World English Bible (public domain).</p>
 
@@ -48,9 +42,10 @@
       </div>
     </aside>
 
-    <!-- ── Main: verse of the day + results ──────────────────────────────── -->
+    <!-- Right main: VOTD + results -->
     <main class="bible-main">
-      <!-- Verse of the day -->
+
+      <!-- Verse of the Day -->
       <div class="votd-card reveal" id="votdCard">
         <span class="votd-label">Verse of the Day</span>
         <blockquote id="votdText">Loading…</blockquote>
@@ -62,7 +57,10 @@
         <span id="bibleResultCount"></span>
       </div>
       <div id="bibleResults"></div>
+
     </main>
 
-  </div>
+  </div><!-- /.bible-body -->
+  </div><!-- /.bible-content-bg -->
+
 </section>
