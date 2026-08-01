@@ -846,7 +846,7 @@ h1.hero-title em { font-style: italic; font-weight: 500; color: var(--sun-light)
 /* Verse card */
 .sidebar-verse-card { background: linear-gradient(160deg, var(--night) 0%, var(--dusk) 100%); border-color: rgba(127,196,232,.15); }
 .sidebar-verse-card .sidebar-section-title { color: var(--sun-light); }
-.sidebar-verse-text { font-family: var(--display); font-style: italic; font-size: 13px; color: #DCEBF6; line-height: 1.65; margin: 0 0 8px; }
+.sidebar-verse-text { font-family: var(--display); font-style: italic; font-size: 12px; color: #DCEBF6; line-height: 1.6; margin: 6px 0 8px; padding: 0; }
 .sidebar-verse-ref { font-family: var(--manrope); font-weight: 600; font-size: 11px; color: var(--sun-light); font-style: normal; letter-spacing: .06em; }
 
 /* Feed main */
@@ -3165,6 +3165,8 @@ nav.primary.open .nav-dropdown button svg {
 
 /* -- Sidebar section title icons -- */
 .sidebar-section-title {
+  font-size: 13px;
+  font-weight: 700;
   display: flex;
   align-items: center;
   gap: 6px;
