@@ -970,13 +970,13 @@ h1.hero-title em { font-style: italic; font-weight: 500; color: var(--sun-light)
 .feed-card {
   background: var(--white); border: 1px solid var(--line); border-radius: 8px;
   display: flex; flex-direction: column;
-  box-shadow: 0 0 18px 4px rgba(42,20,55,.18);
+  box-shadow: 0 2px 12px rgba(42,20,55,.10);
   transition: box-shadow .3s var(--ease-out), border-color .3s var(--ease-out);
   cursor: pointer;
   position: relative;
   overflow: visible; /* allow hearts to float above the card */
 }
-.feed-card:hover { box-shadow: 0 0 32px 8px rgba(42,20,55,.45), 0 4px 20px -6px rgba(42,20,55,.3); border-color: rgba(100,60,130,.35); }
+.feed-card:hover { box-shadow: 0 4px 20px rgba(42,20,55,.18); border-color: rgba(100,60,130,.25); }
 
 /* Clip the top corners on the poster/thumb so card looks rounded without overflow:hidden */
 .feed-card > .feed-card-poster:first-child,
@@ -2653,9 +2653,10 @@ h1.hero-title em { font-style: italic; font-weight: 500; color: var(--sun-light)
 .verse-card {
   background: var(--white); border: 1px solid var(--line); border-left: 3px solid var(--horizon);
   border-radius: 4px; padding: 20px 22px; margin-bottom: 16px;
-  transition: box-shadow .2s;
+  box-shadow: 0 2px 12px rgba(42,20,55,.10);
+  transition: box-shadow .3s var(--ease-out), border-color .3s var(--ease-out);
 }
-.verse-card:hover { box-shadow: 0 4px 16px -6px rgba(10,27,51,.15); }
+.verse-card:hover { box-shadow: 0 4px 20px rgba(42,20,55,.18); border-color: rgba(100,60,130,.25); }
 .verse-ref { font-family: var(--manrope); font-weight: 600; font-size: 11px; color: var(--horizon); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 10px; font-weight: 600; }
 .verse-text { font-size: 16px; line-height: 1.65; color: var(--ink); margin-bottom: 14px; }
 .verse-text mark { background: rgba(62,124,177,.2); color: var(--horizon); font-weight: 600; padding: 2px 0; border-radius: 2px; }
@@ -2739,10 +2740,10 @@ h1.hero-title em { font-style: italic; font-weight: 500; color: var(--sun-light)
   border-radius: 10px;
   padding: 18px 22px;
   margin-bottom: 14px;
-  box-shadow: 0 4px 14px rgba(42,36,28,.04);
-  transition: box-shadow .2s;
+  box-shadow: 0 2px 12px rgba(42,20,55,.10);
+  transition: box-shadow .3s var(--ease-out), border-color .3s var(--ease-out);
 }
-.prayer-item:hover { box-shadow: 0 6px 20px rgba(42,36,28,.09); }
+.prayer-item:hover { box-shadow: 0 4px 20px rgba(42,20,55,.18); border-color: rgba(100,60,130,.25); border-left-color: #C1542E; }
 .prayer-item .head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
 .prayer-item .who  { font-family: var(--display); font-weight: 700; font-size: 15px; color: #241C1F; }
 .prayer-item .cat  { font-family: var(--mono); font-size: 10px; color: #C1542E; text-transform: uppercase; letter-spacing: .08em; font-weight: 600; }
@@ -2838,10 +2839,10 @@ h1.hero-title em { font-style: italic; font-weight: 500; color: var(--sun-light)
 .event-card {
   background: #FFFDF8; border: 1px solid #E9E1D2; border-radius: 14px; overflow: hidden;
   display: flex; flex-direction: column;
-  box-shadow: 0 6px 18px rgba(42,36,28,.05);
-  transition: transform .3s var(--ease-out), box-shadow .3s var(--ease-out);
+  box-shadow: 0 2px 12px rgba(42,20,55,.10);
+  transition: transform .3s var(--ease-out), box-shadow .3s var(--ease-out), border-color .3s var(--ease-out);
 }
-.event-card:hover { transform: translateY(-4px); box-shadow: 0 16px 32px -12px rgba(42,36,28,.18); }
+.event-card:hover { transform: translateY(-4px); box-shadow: 0 4px 20px rgba(42,20,55,.18); border-color: rgba(100,60,130,.25); }
 
 .event-date-block {
   background: #20142A; color: #FBF6EC;
@@ -3522,7 +3523,7 @@ footer .col a:hover { color: var(--sun-light); padding-left: 3px; }
   transition: background .15s;
 }
 .ann-item:last-child { border-bottom: none; }
-.ann-item:hover { background: var(--paper); margin: 0 -16px; padding-left: 16px; padding-right: 16px; border-radius: 6px; }
+.ann-item:hover { background: #FBF6EC; margin: 0 -16px; padding-left: 16px; padding-right: 16px; border-radius: 6px; }
 
 .ann-date-block {
   text-align: center;
@@ -3751,6 +3752,11 @@ footer .col a:hover { color: var(--sun-light); padding-left: 3px; }
   position: relative;
   overflow: hidden;
   margin-bottom: 24px;
+  box-shadow: 0 2px 12px rgba(42,20,55,.10);
+  transition: box-shadow .3s var(--ease-out);
+}
+.bible-main .votd-card:hover {
+  box-shadow: 0 4px 20px rgba(42,20,55,.18);
 }
 .bible-main .votd-label {
   display: block;
@@ -3985,7 +3991,12 @@ footer .col a:hover { color: var(--sun-light); padding-left: 3px; }
 /* Pinned banner — warm tones */
 .ann-pinned {
   background: #FFFDF8; border-color: #E9E1D2;
-  box-shadow: 0 8px 24px rgba(42,36,28,.06);
+  box-shadow: 0 2px 12px rgba(42,20,55,.10);
+  transition: box-shadow .3s var(--ease-out), border-color .3s var(--ease-out);
+}
+.ann-pinned:hover {
+  box-shadow: 0 4px 20px rgba(42,20,55,.18);
+  border-color: rgba(100,60,130,.25);
 }
 .ann-pinned-icon {
   background: linear-gradient(135deg, var(--ev-gold), var(--ev-ember));
@@ -4924,7 +4935,8 @@ nav.primary.open .nav-dropdown button svg {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  transition: transform .2s ease, box-shadow .2s ease;
+  box-shadow: 0 2px 12px rgba(42,20,55,.10);
+  transition: transform .2s ease, box-shadow .3s var(--ease-out), border-color .3s var(--ease-out);
 }
 .quiz-card::before {
   content: "";
@@ -4939,7 +4951,8 @@ nav.primary.open .nav-dropdown button svg {
 }
 .quiz-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 16px 34px rgba(20,10,20,.28);
+  box-shadow: 0 4px 20px rgba(42,20,55,.18);
+  border-color: rgba(100,60,130,.25);
 }
 
 /* Daily challenge variant */
