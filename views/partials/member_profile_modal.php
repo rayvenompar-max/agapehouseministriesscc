@@ -21,18 +21,28 @@
 
     <!-- Body with profile info -->
     <div class="member-profile-modal-body">
-      <div class="mpm-section-title">Profile info</div>
+      <div class="mpm-section-title">Profile Info</div>
       
       <div class="mpm-info-row">
-        <span class="mpm-info-icon"><i data-lucide="user"></i></span>
+        <span class="mpm-info-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+        </span>
         <div>
-          <div class="mpm-info-label">Display name</div>
+          <div class="mpm-info-label">Display Name</div>
           <div class="mpm-info-value" id="mpmDisplayName">—</div>
         </div>
       </div>
 
       <div class="mpm-info-row">
-        <span class="mpm-info-icon"><i data-lucide="at-sign"></i></span>
+        <span class="mpm-info-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M16 8a4 4 0 1 0-1.17 6.83c.36.36.94.36 1.3 0M16 8v3a2.5 2.5 0 0 0 5 0V12a9 9 0 1 0-4.5 7.79"/>
+          </svg>
+        </span>
         <div>
           <div class="mpm-info-label">Username</div>
           <div class="mpm-info-value" id="mpmUsernameVal">—</div>
@@ -40,9 +50,14 @@
       </div>
 
       <div class="mpm-info-row">
-        <span class="mpm-info-icon"><i data-lucide="calendar"></i></span>
+        <span class="mpm-info-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2"/>
+            <path d="M16 2v4M8 2v4M3 10h18"/>
+          </svg>
+        </span>
         <div>
-          <div class="mpm-info-label">Member since</div>
+          <div class="mpm-info-label">Member Since</div>
           <div class="mpm-info-value" id="mpmMemberSince">—</div>
         </div>
       </div>
@@ -60,7 +75,10 @@
         </div>
       </div>
 
-      <button class="mpm-follow-btn" id="mpmFollowBtn" hidden>Follow</button>
+      <div class="mpm-action-buttons">
+        <button class="mpm-follow-btn" id="mpmFollowBtn" hidden>Follow</button>
+        <button class="mpm-message-btn" id="mpmMessageBtn" hidden>Message</button>
+      </div>
     </div>
 
   </div>

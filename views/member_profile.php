@@ -25,187 +25,174 @@ $visitorPic    = !empty($visitor['profile_picture']) ? htmlspecialchars($visitor
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><?= $displayName ?> — <?= htmlspecialchars(APP_NAME) ?></title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600&family=Source+Sans+3:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
-    :root{--night:#0A1B33;--dusk:#1B3E68;--horizon:#3E7CB1;--sun:#7FC4E8;--sun-light:#D3EEFB;--paper:#F3F7FA;--ink:#14202E;--ink-soft:#55677A;--line:#DCE6ED;--white:#FFFFFF;--display:'Fraunces',serif;--body:'Work Sans',sans-serif;--mono:'IBM Plex Mono',monospace;--ease-out:cubic-bezier(.16,1,.3,1);}
-    *{box-sizing:border-box;margin:0;padding:0;}
-    body{background:var(--paper);color:var(--ink);font-family:var(--body);-webkit-font-smoothing:antialiased;}
-    a{color:inherit;text-decoration:none;}
-
-    /* NAV */
-    nav{display:flex;align-items:center;justify-content:space-between;padding:0 48px;height:60px;background:var(--night);position:sticky;top:0;z-index:100;}
-    .brand{display:flex;align-items:center;gap:12px;}
-    .brand .mark{width:30px;height:30px;border-radius:50%;object-fit:cover;flex-shrink:0;}
-    .brand .word{font-family:var(--display);font-weight:600;font-size:19px;color:var(--white);line-height:1;}
-    .brand .tag{font-family:var(--mono);font-size:9px;letter-spacing:.14em;color:#8FA9C4;text-transform:uppercase;margin-top:3px;}
-    .navlinks{display:flex;align-items:center;gap:28px;}
-    .navlinks a{font-size:13px;color:#C3D3E2;font-weight:500;padding:4px 0;transition:color .25s;}
-    .navlinks a:hover{color:var(--white);}
-    .account-pill{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.06);border:1px solid #2A4667;padding:5px 8px 5px 5px;border-radius:100px;cursor:pointer;transition:border-color .2s;}
-    .account-pill:hover{border-color:var(--sun);}
-    .nav-avatar{width:26px;height:26px;border-radius:50%;background:linear-gradient(160deg,var(--sun-light),var(--horizon));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--night);overflow:hidden;flex-shrink:0;}
-    .nav-avatar img{width:26px;height:26px;border-radius:50%;object-fit:cover;display:block;}
-    .account-pill span{font-size:12px;color:var(--white);font-weight:500;}
-    .account-pill .chev{font-size:9px;color:#8FA9C4;margin-right:2px;}
-    .nav-right{position:relative;}
-    .dropdown{display:none;position:absolute;right:0;top:calc(100% + 8px);background:var(--white);border:1px solid var(--line);border-radius:8px;min-width:160px;box-shadow:0 8px 24px rgba(10,27,51,.15);overflow:hidden;}
-    .dropdown.open{display:block;}
-    .dropdown a,.dropdown button{display:block;width:100%;text-align:left;padding:11px 16px;font-size:13px;color:var(--ink);background:none;border:none;cursor:pointer;font-family:inherit;transition:background .15s;}
-    .dropdown a:hover,.dropdown button:hover{background:var(--paper);}
-    .dropdown button{color:#c62828;}
-    .dropdown hr{border:none;border-top:1px solid var(--line);}
-    .nav-login-btn{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--white);background:var(--horizon);padding:8px 18px;border-radius:100px;transition:background .2s;}
-    .nav-login-btn:hover{background:var(--dusk);}
-    @media(max-width:900px){.navlinks{display:none;}nav{padding:0 22px;}}
-
-    /* HERO */
-    .profile-hero{background:linear-gradient(180deg,var(--night) 0%,var(--dusk) 70%,var(--horizon) 100%);padding:60px 48px 50px;text-align:center;}
-    .profile-avatar-wrap{position:relative;display:inline-block;margin-bottom:20px;}
-    .profile-avatar{width:96px;height:96px;border-radius:50%;background:linear-gradient(160deg,var(--sun-light),var(--horizon));display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:38px;font-weight:700;color:var(--night);overflow:hidden;border:3px solid rgba(255,255,255,.15);}
-    .profile-avatar img{width:96px;height:96px;border-radius:50%;object-fit:cover;display:block;}
-    .profile-name{font-family:var(--display);font-weight:600;font-size:clamp(1.8rem,4vw,2.4rem);color:var(--white);}
-    .profile-username{font-family:var(--mono);font-size:13px;color:#9FBEDB;margin-top:6px;letter-spacing:.04em;}
-    .profile-since{font-family:var(--mono);font-size:11px;color:#7AA5C8;margin-top:10px;letter-spacing:.08em;text-transform:uppercase;}
-    .profile-badge{display:inline-flex;align-items:center;gap:7px;background:rgba(127,196,232,.12);border:1px solid rgba(127,196,232,.25);color:var(--sun-light);font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;padding:5px 14px;border-radius:100px;margin-top:14px;}
-    .profile-badge::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--sun-light);}
-    @media(max-width:900px){.profile-hero{padding:48px 22px 40px;}}
-
-    /* OWN PROFILE EDIT BUTTON */
-    .edit-own-btn{display:inline-block;margin-top:18px;font-family:var(--mono);font-size:12px;font-weight:600;color:var(--white);border:1px solid rgba(255,255,255,.3);padding:9px 22px;border-radius:100px;transition:background .2s,border-color .2s;}
-    .edit-own-btn:hover{background:rgba(255,255,255,.1);border-color:var(--white);}
-
-    /* BODY */
-    .profile-body{max-width:680px;margin:0 auto;padding:44px 48px 80px;}
-    @media(max-width:900px){.profile-body{padding:36px 22px 60px;}}
-
-    /* INFO CARD */
-    .info-card{background:var(--white);border:1px solid var(--line);border-radius:8px;padding:28px 30px;margin-bottom:24px;}
-    .info-card-title{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:16px;}
-    .info-row{display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid var(--line);}
-    .info-row:last-child{border-bottom:none;padding-bottom:0;}
-    .info-row:first-of-type{padding-top:0;}
-    .info-icon{width:32px;height:32px;border-radius:6px;background:var(--paper);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
-    .info-label{font-family:var(--mono);font-size:11px;color:var(--ink-soft);margin-bottom:2px;text-transform:uppercase;letter-spacing:.06em;}
-    .info-value{font-size:14px;color:var(--ink);font-weight:500;}
-
-    /* BACK LINK */
-    .back-link{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12px;color:var(--ink-soft);margin-bottom:28px;transition:color .2s;}
-    .back-link:hover{color:var(--horizon);}
-    .back-link::before{content:'←';}
+    :root{--plum:#332039;--plum-deep:#20142A;--plum-black:#150D1B;--mauve:#4A3155;--ember:#C1542E;--coral:#E08152;--gold:#D9A544;--sage:#6E8F6E;--cream:#FBF6EC;--paper:#FFFDF8;--ink:#241C1F;--ink-soft:#6B6058;--line:#E9E1D2;}
+    *{box-sizing:border-box;}
+    html,body{height:100%;margin:0;}
+    body{font-family:'Source Sans 3',sans-serif;color:var(--ink);display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(115deg,var(--plum-black) 0%,var(--plum-deep) 40%,var(--mauve) 100%);padding:24px;}
+    
+    /* MODAL BACKDROP */
+    .backdrop{position:fixed;inset:0;background:rgba(21,13,27,0.55);backdrop-filter:blur(3px);z-index:1;}
+    
+    /* MODAL */
+    .modal{position:relative;z-index:2;width:100%;max-width:420px;background:var(--paper);border-radius:20px;box-shadow:0 30px 70px rgba(20,10,20,0.5);overflow:hidden;animation:rise 0.4s cubic-bezier(.16,1,.3,1);}
+    @keyframes rise{from{opacity:0;transform:translateY(14px) scale(0.98);}to{opacity:1;transform:translateY(0) scale(1);}}
+    
+    /* PROFILE BANNER */
+    .profile-banner{position:relative;background:linear-gradient(160deg,var(--plum-black) 0%,var(--plum-deep) 45%,var(--plum) 75%,var(--mauve) 100%);padding:44px 28px 30px;text-align:center;overflow:hidden;}
+    .profile-banner::before{content:"";position:absolute;left:50%;top:-30%;transform:translateX(-50%);width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(217,165,68,0.16),transparent 70%);}
+    
+    /* CLOSE BUTTON */
+    .close-btn{position:absolute;top:16px;right:16px;width:30px;height:30px;border-radius:50%;border:none;background:rgba(255,255,255,0.1);color:rgba(251,246,236,0.85);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2;transition:background 0.18s ease;}
+    .close-btn:hover{background:rgba(255,255,255,0.2);}
+    
+    /* BANNER AVATAR */
+    .banner-avatar{width:88px;height:88px;border-radius:50%;margin:0 auto 16px;background:linear-gradient(135deg,var(--coral),var(--ember));box-shadow:0 0 0 4px rgba(255,255,255,0.15),0 12px 30px rgba(20,10,20,0.4);position:relative;z-index:1;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-size:38px;font-weight:700;color:var(--paper);overflow:hidden;}
+    .banner-avatar img{width:88px;height:88px;border-radius:50%;object-fit:cover;display:block;}
+    
+    /* PROFILE INFO */
+    .profile-banner h2{font-family:'Fraunces',serif;font-weight:600;font-size:23px;color:#FBF6EC;margin:0 0 4px;position:relative;z-index:1;}
+    .profile-banner .handle{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:rgba(251,246,236,0.55);margin:0 0 6px;position:relative;z-index:1;}
+    .profile-banner .since{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(251,246,236,0.4);margin:0 0 18px;position:relative;z-index:1;}
+    
+    /* MEMBER BADGE */
+    .member-badge{display:inline-flex;align-items:center;gap:7px;padding:7px 16px;border-radius:999px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.16);font-size:12px;font-weight:700;color:#FBF6EC;position:relative;z-index:1;}
+    .member-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--gold);}
+    
+    /* PROFILE BODY */
+    .profile-body{padding:26px 28px 28px;}
+    .section-label{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:0.12em;text-transform:uppercase;font-weight:700;color:var(--ember);margin:0 0 14px;}
+    
+    /* INFO ROW */
+    .info-row{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);}
+    .info-row:last-of-type{border-bottom:none;}
+    .info-row svg{color:var(--ember);flex-shrink:0;margin-top:2px;}
+    .info-row .label{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:3px;}
+    .info-row .value{font-size:14px;font-weight:600;color:var(--ink);}
+    
+    /* STATS & FOLLOW */
+    .stats-follow{display:flex;align-items:center;justify-content:space-between;margin-top:20px;}
+    .stats{display:flex;gap:20px;}
+    .stat-item{text-align:left;}
+    .stat-item strong{display:block;font-family:'Fraunces',serif;font-size:16px;}
+    .stat-item span{font-size:11px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:0.03em;}
+    
+    /* FOLLOW BUTTON */
+    .btn-follow{padding:10px 26px;border-radius:999px;border:none;background:linear-gradient(135deg,var(--coral),var(--ember));color:#fff;font-weight:700;font-size:13px;cursor:pointer;box-shadow:0 8px 18px rgba(193,84,46,0.3);transition:transform 0.18s ease,filter 0.18s ease;}
+    .btn-follow:hover{transform:translateY(-1px);filter:brightness(1.06);}
+    .btn-follow.following{background:var(--paper);color:var(--ink);border:1.5px solid var(--line);box-shadow:none;}
+    .btn-follow.following:hover{border-color:var(--ember);color:var(--ember);background:var(--cream);}
+    
+    /* EDIT BUTTON (for own profile) */
+    .btn-edit{padding:10px 26px;border-radius:999px;border:1.5px solid rgba(255,255,255,0.3);background:transparent;color:#FBF6EC;font-weight:700;font-size:13px;cursor:pointer;transition:background 0.18s ease,border-color 0.18s ease;margin-top:14px;}
+    .btn-edit:hover{background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.5);}
+    
+    @media(max-width:440px){.modal{max-width:100%;}}
   </style>
 </head>
 <body>
 
-<!-- NAV -->
-<nav>
-  <a href="<?= BASE_URL ?>/" class="brand">
-    <img class="mark" src="<?= BASE_URL ?>/public/images/agape1.jpg" alt="Agape House">
-    <div>
-      <div class="word">Agape House</div>
-      <div class="tag">San Carlos · Ministries</div>
-    </div>
-  </a>
-  <div class="navlinks">
-    <a href="<?= BASE_URL ?>/">Home</a>
-    <a href="<?= BASE_URL ?>/#watch">Watch</a>
-    <a href="<?= BASE_URL ?>/#read">Read</a>
-    <a href="<?= BASE_URL ?>/#bible">Bible</a>
-    <a href="<?= BASE_URL ?>/#prayer">Prayer</a>
-    <a href="<?= BASE_URL ?>/#events">Events</a>
-  </div>
+<!-- BACKDROP -->
+<div class="backdrop" onclick="window.history.back();"></div>
 
-  <?php if ($memberAuth->isLoggedIn()): ?>
-  <div class="nav-right">
-    <div class="account-pill" onclick="document.getElementById('navDropdown').classList.toggle('open')">
-      <div class="nav-avatar">
-        <?php if ($visitorPic): ?>
-          <img src="<?= $visitorPic ?>" alt="<?= $visitorName ?>">
-        <?php else: ?>
-          <?= $visitorInitial ?>
-        <?php endif; ?>
-      </div>
-      <span><?= $visitorName ?></span>
-      <span class="chev">▾</span>
-    </div>
-    <div class="dropdown" id="navDropdown">
-      <a href="<?= BASE_URL ?>/portal">My Account</a>
-      <hr>
-      <form method="POST" action="<?= BASE_URL ?>/member/logout" style="margin:0;">
-        <button type="submit">Sign out</button>
-      </form>
-    </div>
-  </div>
-  <?php else: ?>
-  <a href="<?= BASE_URL ?>/member/login" class="nav-login-btn">Sign in</a>
-  <?php endif; ?>
-</nav>
-
-<!-- HERO -->
-<div class="profile-hero">
-  <div class="profile-avatar-wrap">
-    <div class="profile-avatar">
+<!-- MODAL -->
+<div class="modal">
+  <!-- PROFILE BANNER -->
+  <div class="profile-banner">
+    <button class="close-btn" aria-label="Close" onclick="window.history.back();">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+    
+    <div class="banner-avatar">
       <?php if ($pictureSrc): ?>
         <img src="<?= $pictureSrc ?>" alt="<?= $displayName ?>">
       <?php else: ?>
         <?= $initial ?>
       <?php endif; ?>
     </div>
+    
+    <h2><?= $displayName ?></h2>
+    <p class="handle">@<?= $username ?></p>
+    <p class="since">Member since <?= $memberSince ?></p>
+    <span class="member-badge">
+      <span class="dot"></span> Agape House Member
+    </span>
+    
+    <?php if ($isOwnProfile): ?>
+      <div>
+        <a href="<?= BASE_URL ?>/portal" class="btn-edit">Edit my profile</a>
+      </div>
+    <?php endif; ?>
   </div>
 
-  <div class="profile-name"><?= $displayName ?></div>
-  <div class="profile-username">@<?= $username ?></div>
-  <div class="profile-since">Member since <?= $memberSince ?></div>
-  <div><span class="profile-badge">Agape House Member</span></div>
-
-  <?php if ($isOwnProfile): ?>
-    <div><a href="<?= BASE_URL ?>/portal" class="edit-own-btn">Edit my profile</a></div>
-  <?php endif; ?>
-</div>
-
-<!-- BODY -->
-<div class="profile-body">
-  <a class="back-link" href="<?= BASE_URL ?>/">Back to home</a>
-
-  <div class="info-card">
-    <div class="info-card-title">Profile info</div>
-
+  <!-- PROFILE BODY -->
+  <div class="profile-body">
+    <p class="section-label">Profile Info</p>
+    
     <div class="info-row">
-      <div class="info-icon"><i data-lucide="user"></i></div>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+        <circle cx="12" cy="7" r="4"/>
+      </svg>
       <div>
-        <div class="info-label">Display name</div>
-        <div class="info-value"><?= $displayName ?></div>
+        <div class="label">Display Name</div>
+        <div class="value"><?= $displayName ?></div>
       </div>
     </div>
 
     <div class="info-row">
-      <div class="info-icon"><i data-lucide="at-sign"></i></div>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M16 8a4 4 0 1 0-1.17 6.83c.36.36.94.36 1.3 0M16 8v3a2.5 2.5 0 0 0 5 0V12a9 9 0 1 0-4.5 7.79"/>
+      </svg>
       <div>
-        <div class="info-label">Username</div>
-        <div class="info-value">@<?= $username ?></div>
+        <div class="label">Username</div>
+        <div class="value">@<?= $username ?></div>
       </div>
     </div>
 
     <div class="info-row">
-      <div class="info-icon"><i data-lucide="calendar"></i></div>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2"/>
+        <path d="M16 2v4M8 2v4M3 10h18"/>
+      </svg>
       <div>
-        <div class="info-label">Member since</div>
-        <div class="info-value"><?= $memberSince ?></div>
+        <div class="label">Member since</div>
+        <div class="value"><?= $memberSince ?></div>
       </div>
+    </div>
+
+    <div class="stats-follow">
+      <div class="stats">
+        <div class="stat-item">
+          <strong>0</strong>
+          <span>Following</span>
+        </div>
+        <div class="stat-item">
+          <strong>0</strong>
+          <span>Followers</span>
+        </div>
+      </div>
+      
+      <?php if (!$isOwnProfile && $memberAuth->isLoggedIn()): ?>
+        <button class="btn-follow" id="followBtn">Follow</button>
+      <?php endif; ?>
     </div>
   </div>
-
-  <?php if (!$memberAuth->isLoggedIn()): ?>
-  <p style="text-align:center;font-size:14px;color:var(--ink-soft);margin-top:32px;">
-    <a href="<?= BASE_URL ?>/member/login" style="color:var(--horizon);font-weight:600;">Sign in</a> to connect with members of Agape House.
-  </p>
-  <?php endif; ?>
 </div>
 
 <script>
-  document.addEventListener('click', function(e) {
-    const dd = document.getElementById('navDropdown');
-    if (dd && !e.target.closest('.nav-right')) dd.classList.remove('open');
-  });
+  const followBtn = document.getElementById('followBtn');
+  if (followBtn) {
+    followBtn.addEventListener('click', () => {
+      const isFollowing = followBtn.classList.toggle('following');
+      followBtn.textContent = isFollowing ? 'Following' : 'Follow';
+    });
+  }
 </script>
 </body>
 </html>

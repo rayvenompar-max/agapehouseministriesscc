@@ -4765,6 +4765,8 @@ function showPdMsg(text, isError) {
     document.getElementById('mpmFollowerCount').textContent = '—';
     const followBtn = document.getElementById('mpmFollowBtn');
     if (followBtn) followBtn.hidden = true;
+    const messageBtn = document.getElementById('mpmMessageBtn');
+    if (messageBtn) messageBtn.hidden = true;
 
     try {
       const BASE = window.APP_BASE_URL || '';
@@ -4801,6 +4803,8 @@ function showPdMsg(text, isError) {
       const isLoggedIn = !!window.CURRENT_MEMBER;
       const isOwnProfile = isLoggedIn && window.CURRENT_MEMBER.id === m.id;
 
+      const messageBtn = document.getElementById('mpmMessageBtn');
+
       if (isLoggedIn && !isOwnProfile && followBtn) {
         // Fetch follow status + counts
         try {
@@ -4813,6 +4817,9 @@ function showPdMsg(text, isError) {
             followBtn.textContent = isFollowing ? 'Unfollow' : 'Follow';
             followBtn.classList.toggle('mpm-follow-btn--following', isFollowing);
             followBtn.hidden = false;
+
+            // Show message button
+            if (messageBtn) messageBtn.hidden = false;
 
             // Remove old listener by replacing the button node
             const newBtn = followBtn.cloneNode(true);
