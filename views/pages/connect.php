@@ -20,7 +20,33 @@
     <!-- Contact form -->
     <div class="connect-form-card">
       <h2>Send a message</h2>
+      <?php
+      // Show member info if logged in
+      $isMemberLoggedIn = isset($memberAuth) && $memberAuth->isLoggedIn();
+      if ($isMemberLoggedIn):
+        $member      = $memberAuth->current();
+        $displayName = htmlspecialchars($member['display_name'] ?? $member['username'] ?? 'Member');
+        $email       = htmlspecialchars($member['email'] ?? '');
+        $initial     = strtoupper(mb_substr($member['display_name'] ?? $member['username'] ?? 'M', 0, 1));
+        $profilePic  = !empty($member['profile_picture']) ? htmlspecialchars($member['profile_picture']) : null;
+      ?>
+      <div style="display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--paper,#f5f5f0);border-radius:10px;margin-bottom:20px;">
+        <div style="width:42px;height:42px;border-radius:50%;background:var(--horizon,#e07b3a);color:#fff;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:600;flex-shrink:0;<?= $profilePic ? 'background:none;' : '' ?>">
+          <?php if ($profilePic): ?>
+            <img src="<?= $profilePic ?>" alt="<?= $initial ?>" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">
+          <?php else: ?>
+            <?= $initial ?>
+          <?php endif; ?>
+        </div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:600;font-size:15px;color:var(--night,#1a1a1a);"><?= $displayName ?></div>
+          <div style="font-size:13px;color:var(--ink-soft,#888);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><?= $email ?></div>
+        </div>
+      </div>
+      <?php endif; ?>
+
       <form id="contactForm" novalidate>
+        <?php if (!$isMemberLoggedIn): ?>
         <div class="field-row">
           <div class="field">
             <label for="cname">Name <span class="req">*</span></label>
@@ -33,6 +59,7 @@
             <span class="field-error" id="cemailError"></span>
           </div>
         </div>
+        <?php endif; ?>
         <div class="field">
           <label for="creason">Reason for reaching out</label>
           <div class="connect-select-wrap">
@@ -150,7 +177,7 @@
       </div>
 
       <p style="font-size:13px; color:var(--ink-soft); text-align:center; margin-top:24px; line-height:1.6;">
-        May God bless you for your generosity. 💛<br>
+        May God bless you for your generosity.<br>
         For other ways to give, please contact us through the form above.
       </p>
     </div>

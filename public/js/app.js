@@ -505,14 +505,14 @@ document.addEventListener('click', e => {
   if (myProfileBtn) {
     myProfileBtn.addEventListener('click', () => {
       closeDropdown();
-      document.getElementById('openMyProfileBtn')?.click();
+      openProfileDrawer();
     });
   }
 
   if (myPrayersBtn) {
     myPrayersBtn.addEventListener('click', () => {
       closeDropdown();
-      document.getElementById('openMyPrayersBtn')?.click();
+      openPrayerDrawer();
     });
   }
 })();
@@ -2563,6 +2563,9 @@ async function submitAddEvent(e) {
   const cmsg      = document.getElementById('cmsg');
   const countEl   = document.getElementById('cmsgCount');
 
+  // Only run if the contact form exists on this page
+  if (!form || !submitBtn || !msgBox || !cmsg || !countEl) return;
+
   // Live character counter
   cmsg.addEventListener('input', () => {
     const len = cmsg.value.length;
@@ -2570,18 +2573,24 @@ async function submitAddEvent(e) {
     countEl.style.color = len > 2800 ? '#fca5a5' : 'rgba(251,246,236,.4)';
   });
 
-  // Clear inline error on input
+  // Clear inline error on input (only for fields that exist)
   ['cname', 'cemail', 'cmsg'].forEach(id => {
-    document.getElementById(id).addEventListener('input', () => clearFieldError(id));
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('input', () => clearFieldError(id));
+    }
   });
 
   form.addEventListener('submit', handleContactSubmit);
 
   // "Start a live chat" — scroll to message field
-  document.getElementById('liveChatBtn').addEventListener('click', () => {
-    cmsg.focus();
-    cmsg.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  });
+  const liveChatBtn = document.getElementById('liveChatBtn');
+  if (liveChatBtn) {
+    liveChatBtn.addEventListener('click', () => {
+      cmsg.focus();
+      cmsg.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  }
 })();
 
 // ── Donate Modal ──────────────────────────────────────────────────────────────
@@ -2633,25 +2642,42 @@ async function handleContactSubmit(e) {
   const submitBtn = document.getElementById('contactSubmitBtn');
   const msgBox    = document.getElementById('contactMsg');
 
-  const name    = document.getElementById('cname').value.trim();
-  const email   = document.getElementById('cemail').value.trim();
+  // If member is logged in, use their data; otherwise read from form
+  const isMember = window.CURRENT_MEMBER ? true : false;
+  let name, email;
+
+  if (isMember) {
+    name  = window.CURRENT_MEMBER.display_name || window.CURRENT_MEMBER.username || 'Member';
+    email = window.CURRENT_MEMBER.email;
+  } else {
+    name  = document.getElementById('cname').value.trim();
+    email = document.getElementById('cemail').value.trim();
+  }
+
   const reason  = document.getElementById('creason').value;
   const message = document.getElementById('cmsg').value.trim();
 
   // Clear previous errors
-  ['cname', 'cemail', 'cmsg'].forEach(clearFieldError);
+  if (!isMember) {
+    ['cname', 'cemail'].forEach(clearFieldError);
+  }
+  clearFieldError('cmsg');
   msgBox.hidden = true;
 
   // Client-side validation
   let hasError = false;
-  if (!name) {
-    setFieldError('cname', 'Name is required.');
-    hasError = true;
+
+  if (!isMember) {
+    if (!name) {
+      setFieldError('cname', 'Name is required.');
+      hasError = true;
+    }
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setFieldError('cemail', 'A valid email address is required.');
+      hasError = true;
+    }
   }
-  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    setFieldError('cemail', 'A valid email address is required.');
-    hasError = true;
-  }
+
   if (message.length < 5) {
     setFieldError('cmsg', 'Message is too short (min 5 characters).');
     hasError = true;
@@ -2672,9 +2698,10 @@ async function handleContactSubmit(e) {
     if (res.status === 'success') {
       msgBox.className = 'form-msg form-msg--success';
       msgBox.textContent = res.data?.message || res.message || `Thanks, ${name}! We'll be in touch.`;
-      // Reset form
-      document.getElementById('contactForm').reset();
+      // Reset form (textarea only, leave name/email for guests)
+      document.getElementById('cmsg').value = '';
       document.getElementById('cmsgCount').textContent = '0 / 3000';
+      document.getElementById('creason').value = 'Just saying hi';
     } else {
       msgBox.className = 'form-msg form-msg--error';
       msgBox.textContent = res.message || 'Something went wrong. Please try again.';
@@ -4056,7 +4083,7 @@ function openPrayerDrawer() {
   drawer.hidden = false;
   lockScroll();
   renderMyPrayerList();
-  document.getElementById('drawerPreq').focus();
+  document.getElementById('drawerPreq')?.focus();
 }
 
 function closePrayerDrawer() {
@@ -4249,9 +4276,9 @@ async function updateFollowStats() {
   const counter   = document.getElementById('drawerPreqCounter');
   const hint      = document.getElementById('drawerPreqHint');
 
-  if (!openBtn) return; // only present when member is logged in
+  if (!document.getElementById('prayerDrawer')) return; // only present when member is logged in
 
-  openBtn.addEventListener('click', openPrayerDrawer);
+  if (openBtn)   openBtn.addEventListener('click', openPrayerDrawer);
   if (closeBtn)  closeBtn.addEventListener('click', closePrayerDrawer);
   if (backdrop)  backdrop.addEventListener('click', closePrayerDrawer);
   if (submitBtn) submitBtn.addEventListener('click', submitDrawerPrayer);
@@ -4536,9 +4563,9 @@ function showPdMsg(text, isError) {
   const backdrop = document.querySelector('#profileDrawer .profile-drawer-backdrop');
   const form     = document.getElementById('pdEditForm');
 
-  if (!openBtn) return; // only present when member is logged in
+  if (!document.getElementById('profileDrawer')) return; // only present when member is logged in
 
-  openBtn.addEventListener('click', openProfileDrawer);
+  if (openBtn)   openBtn.addEventListener('click', openProfileDrawer);
   if (closeBtn)  closeBtn.addEventListener('click', closeProfileDrawer);
   if (backdrop)  backdrop.addEventListener('click', closeProfileDrawer);
   if (form)      form.addEventListener('submit', submitProfileForm);
@@ -5022,9 +5049,10 @@ function showPdMsg(text, isError) {
       follow_back:      { svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>', color: '#F57C00' },
       new_event:        { svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>', color: '#039BE5' },
       new_announcement: { svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 17H2a3 3 0 0 0 3-3V9a7 7 0 0 1 14 0v5a3 3 0 0 0 3 3zm-8.27 4a2 2 0 0 1-3.46 0"/></svg>', color: '#F59E0B' },
+      contact_reply:    { svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>', color: '#e07b3a' },
     };
     const typeIcon = typeIconMap[n.type] || { svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>', color: '#757575' };
-    const isBroadcast = n.type === 'new_event' || n.type === 'new_announcement';
+    const isBroadcast = n.type === 'new_event' || n.type === 'new_announcement' || n.type === 'contact_reply';
 
     // Broadcast notifications (new_event / new_announcement) use the church logo + name
     let avatarHtml;
@@ -5057,6 +5085,7 @@ function showPdMsg(text, isError) {
       follow_back:      'followed you back',
       new_event:        'New Event',
       new_announcement: 'New Announcement',
+      contact_reply:    'Admin replied to your message',
     }[n.type] || 'interacted with your post';
 
     // For post-level actions show post title; for comment actions show the comment snippet
@@ -5099,6 +5128,9 @@ function showPdMsg(text, isError) {
       if (n.type === 'follow' || n.type === 'follow_back') {
         // Open the actor's profile modal
         if (n.actor_username) openMemberProfile(n.actor_username);
+      } else if (n.type === 'contact_reply') {
+        // Open member live chat modal for this contact thread
+        openMemberChatModal(n.target_id);
       } else {
         await openNotifTarget(n.target_type, n.target_id);
       }
@@ -5233,6 +5265,9 @@ function showPdMsg(text, isError) {
       } else if (targetType === 'event') {
         // Navigate to the Events section so the member can see the event
         navigateTo('events');
+
+      } else if (targetType === 'contact_message') {
+        openMemberChatModal(targetId);
       }
     } catch { /* silent — post may be deleted */ }
   }
@@ -5463,6 +5498,299 @@ function showPdMsg(text, isError) {
     d.textContent = str ?? '';
     return d.innerHTML;
   }
+})();
+
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  MESSAGES DROPDOWN
+// ═══════════════════════════════════════════════════════════════════════════
+(function initMessagesDropdown() {
+  const msgWrap    = document.getElementById('msgBellWrap');
+  const msgBtn     = document.getElementById('msgBellBtn');
+  const msgDropdown= document.getElementById('msgDropdown');
+  const msgBadge   = document.getElementById('msgBadge');
+  const msgList    = document.getElementById('msgList');
+
+  // Only active when member is logged in
+  if (!msgBtn || !window.CURRENT_MEMBER) return;
+
+  let _isOpen    = false;
+  let _pollTimer = null;
+
+  // ── Open / Close ──────────────────────────────────────────────────────────
+  function openDropdown() {
+    _isOpen = true;
+    msgDropdown.removeAttribute('hidden');
+    void msgDropdown.offsetWidth;
+    msgDropdown.classList.add('open');
+    msgBtn.setAttribute('aria-expanded', 'true');
+    loadMessages();
+  }
+
+  function closeDropdown() {
+    _isOpen = false;
+    msgDropdown.classList.remove('open');
+    msgBtn.setAttribute('aria-expanded', 'false');
+  }
+
+  msgBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    _isOpen ? closeDropdown() : openDropdown();
+  });
+
+  // Close when clicking outside
+  document.addEventListener('click', e => {
+    if (_isOpen && !msgWrap.contains(e.target)) closeDropdown();
+  });
+
+  // Close on Escape
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && _isOpen) closeDropdown();
+  });
+
+  // ── Fetch & render ────────────────────────────────────────────────────────
+  async function loadMessages() {
+    msgList.innerHTML = '<div class="msg-empty">Loading…</div>';
+    try {
+      const res = await apiFetch('/contact/threads');
+      if (res.status !== 'success') throw new Error();
+      const threads = res.data || [];
+      renderList(threads);
+      updateBadge(threads);
+    } catch {
+      msgList.innerHTML = '<div class="msg-empty">Could not load messages.</div>';
+    }
+  }
+
+  function renderList(threads) {
+    if (!threads || !threads.length) {
+      msgList.innerHTML = '<div class="msg-empty"><i data-lucide="inbox" class="msg-empty-icon"></i><span>No messages yet</span></div>';
+      lucide.createIcons({ nodes: [msgList] });
+      return;
+    }
+    msgList.innerHTML = '';
+    threads.forEach((t, i) => {
+      const el = buildItem(t);
+      el.style.animationDelay = `${i * 40}ms`;
+      msgList.appendChild(el);
+    });
+  }
+
+  function buildItem(thread) {
+    const wrap = document.createElement('div');
+    wrap.className = 'msg-item' + (thread.unread_admin_replies > 0 ? ' unread' : '');
+
+    // Use Agape House logo for all messages (admin conversations)
+    const logoSrc = (window.APP_BASE_URL || '') + '/public/images/agape1.jpg';
+
+    const timeStr = typeof formatTimeAgo === 'function' ? formatTimeAgo(thread.last_activity || thread.created_at) : '';
+    const preview = thread.message.length > 80 ? thread.message.substring(0, 80) + '…' : thread.message;
+
+    wrap.innerHTML = `
+      <div class="msg-item-icon">
+        <img src="${logoSrc}" alt="Agape House" />
+      </div>
+      <div class="msg-item-content">
+        <div class="msg-item-reason">${_esc(thread.reason)}</div>
+        <div class="msg-item-preview">${_esc(preview)}</div>
+        <div class="msg-item-time">${timeStr}</div>
+      </div>
+      ${thread.unread_admin_replies > 0 ? '<span class="msg-unread-dot"></span>' : ''}
+    `;
+
+    wrap.addEventListener('click', () => {
+      closeDropdown();
+      // Open the chat modal with this thread
+      if (typeof window.openMemberChatModal === 'function') {
+        window.openMemberChatModal(thread.id);
+        // Refresh badge after opening (user will see replies)
+        setTimeout(loadMessages, 500);
+      }
+    });
+
+    return wrap;
+  }
+
+  function updateBadge(threads) {
+    const unreadCount = threads.reduce((sum, t) => sum + (t.unread_admin_replies || 0), 0);
+    setBadge(unreadCount);
+  }
+
+  // ── Badge ─────────────────────────────────────────────────────────────────
+  let _lastBadgeCount = 0;
+  function setBadge(count) {
+    if (count > 0) {
+      const isNew = count > _lastBadgeCount;
+      msgBadge.textContent = count > 99 ? '99+' : String(count);
+      msgBadge.hidden = false;
+      if (isNew) {
+        msgBadge.classList.remove('pop');
+        void msgBadge.offsetWidth;
+        msgBadge.classList.add('pop');
+        msgBadge.addEventListener('animationend', () => msgBadge.classList.remove('pop'), { once: true });
+        
+        msgBtn.classList.remove('ringing');
+        void msgBtn.offsetWidth;
+        msgBtn.classList.add('ringing');
+        msgBtn.addEventListener('animationend', () => msgBtn.classList.remove('ringing'), { once: true });
+      }
+    } else {
+      msgBadge.hidden = true;
+    }
+    _lastBadgeCount = count;
+  }
+
+  // ── Poll for updates every 30 s ───────────────────────────────────────────
+  async function pollThreads() {
+    if (!window.CURRENT_MEMBER) return;
+    try {
+      const res = await apiFetch('/contact/threads');
+      if (res.status === 'success') {
+        const threads = res.data || [];
+        updateBadge(threads);
+      }
+    } catch { /* silent */ }
+  }
+
+  // Initial load
+  setTimeout(pollThreads, 800);
+  _pollTimer = setInterval(pollThreads, 30_000);
+
+  // Expose refresh function globally so chat modal can call it after sending a message
+  window._refreshMessagesBadge = pollThreads;
+
+  // Helper
+  function _esc(str) {
+    const d = document.createElement('div');
+    d.textContent = str ?? '';
+    return d.innerHTML;
+  }
+})();
+
+
+// ─── Member Live Chat Modal ───────────────────────────────────────────────────
+// Opened when a member clicks a contact_reply notification.
+// Shows the original message + full reply thread + an input for follow-ups.
+(function initMemberChat() {
+
+  // Modal element is injected into layout.php — see views/layout.php
+  const modal    = document.getElementById('memberChatModal');
+  if (!modal) return;   // only exists when member is logged in
+
+  const backdrop = document.getElementById('memberChatBackdrop');
+  const closeBtn = document.getElementById('memberChatClose');
+  const titleEl  = document.getElementById('memberChatTitle');
+  const metaEl   = document.getElementById('memberChatMeta');
+  const origEl   = document.getElementById('memberChatOriginal');
+  const threadEl = document.getElementById('memberChatThread');
+  const inputEl  = document.getElementById('memberChatInput');
+  const sendBtn  = document.getElementById('memberChatSend');
+  const msgEl    = document.getElementById('memberChatMsg');
+
+  let _activeId = null;
+
+  function buildBubble(msg) {
+    const isAdmin = msg.sender_type === 'admin';
+    const name    = isAdmin ? 'Agape House Admin' : 'You';
+    const time    = new Date(msg.created_at).toLocaleString('en-US', {
+      month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
+    });
+    const logoSrc = (window.APP_BASE_URL || '') + '/public/images/agape1.jpg';
+    const avatarHtml = isAdmin
+      ? `<img src="${logoSrc}" alt="Admin" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;">`
+      : '';
+
+    return `
+      <div style="display:flex;flex-direction:column;align-items:${isAdmin ? 'flex-start' : 'flex-end'};gap:2px;">
+        ${isAdmin ? `<div style="display:flex;align-items:center;gap:6px;">${avatarHtml}<span style="font-size:10px;color:var(--ink-soft);">Agape House</span></div>` : ''}
+        <div style="display:inline-block;max-width:70%;background:${isAdmin ? '#fff5ec' : '#CD7642'};
+                    color:${isAdmin ? 'var(--ink,#1a1a1a)' : '#fff'};
+                    border:${isAdmin ? '1px solid #f0d8c0' : 'none'};
+                    border-radius:${isAdmin ? '3px 10px 10px 10px' : '10px 10px 3px 10px'};
+                    padding:6px 10px;font-size:12px;line-height:1.4;word-wrap:break-word;overflow-wrap:break-word;">${escHtml(msg.body).trim()}</div>
+        <span style="font-size:10px;color:var(--ink-soft);opacity:0.7;">${time}</span>
+      </div>`;
+  }
+
+  window.openMemberChatModal = async function(contactMessageId) {
+    _activeId     = contactMessageId;
+    inputEl.value = '';
+    msgEl.textContent = '';
+    titleEl.textContent = 'Your conversation';
+    metaEl.textContent  = '';
+    origEl.textContent  = '';
+    threadEl.innerHTML  = '<div style="color:var(--ink-soft);font-size:13px;padding:8px 0;">Loading…</div>';
+
+    modal.hidden = false;
+    lockScroll();
+
+    try {
+      const res  = await apiFetch(`/contact/${contactMessageId}/thread`);
+      if (res.status !== 'success') throw new Error();
+      const { contact, messages } = res.data;
+
+      metaEl.textContent  = contact.reason;
+      origEl.textContent  = contact.message;
+
+      if (messages.length) {
+        threadEl.innerHTML = messages.map(buildBubble).join('');
+      } else {
+        threadEl.innerHTML = '<div style="color:var(--ink-soft);font-size:13px;">No replies yet.</div>';
+      }
+      threadEl.scrollTop = threadEl.scrollHeight;
+    } catch {
+      threadEl.innerHTML = '<div style="color:var(--ink-soft);font-size:13px;">Could not load conversation.</div>';
+    }
+  };
+
+  function closeModal() {
+    animatedModalClose(modal, () => {
+      unlockScroll();
+      _activeId = null;
+    });
+  }
+
+  closeBtn.addEventListener('click',   closeModal);
+  backdrop.addEventListener('click',   closeModal);
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && !modal.hidden) closeModal();
+  });
+
+  sendBtn.addEventListener('click', sendMessage);
+  inputEl.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); sendMessage(); }
+  });
+
+  async function sendMessage() {
+    const body = inputEl.value.trim();
+    if (!body || !_activeId) return;
+
+    sendBtn.disabled    = true;
+    msgEl.textContent   = '';
+
+    try {
+      const res = await apiFetch(`/contact/${_activeId}/message`, {
+        method: 'POST',
+        body:   JSON.stringify({ body }),
+      });
+      if (res.status === 'success') {
+        const hasPlaceholder = threadEl.querySelector('div[style*="No replies"]');
+        if (hasPlaceholder) threadEl.innerHTML = '';
+        threadEl.insertAdjacentHTML('beforeend', buildBubble(res.data));
+        threadEl.scrollTop = threadEl.scrollHeight;
+        inputEl.value       = '';
+        msgEl.textContent   = '✓ Sent';
+        setTimeout(() => { msgEl.textContent = ''; }, 2000);
+      } else {
+        msgEl.textContent = res.message || 'Could not send.';
+      }
+    } catch {
+      msgEl.textContent = 'Network error. Try again.';
+    } finally {
+      sendBtn.disabled    = false;
+    }
+  }
+
 })();
 
 

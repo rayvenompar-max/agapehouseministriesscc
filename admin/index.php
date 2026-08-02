@@ -495,6 +495,10 @@ $isLoggedIn   = true;
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
       Quizzes
     </button>
+    <button class="tab-btn" data-tab="messages">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      Messages
+    </button>
   </div>
 </div>
 
@@ -568,7 +572,51 @@ $isLoggedIn   = true;
     <div id="quizAdminList"><div class="loading-state">Loading…</div></div>
   </div>
 
+  <!-- ── Messages Panel ── -->
+  <div class="tab-panel" id="tab-messages">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:12px;">
+      <div class="section-title" style="margin-bottom:0;">Connect Messages</div>
+      <span id="msgUnreadBadge" style="font-size:12px; font-weight:600; padding:3px 10px; border-radius:20px; background:var(--horizon,#e07b3a); color:#fff; display:none;"></span>
+    </div>
+    <p style="margin-bottom:20px; font-size:14px; color:var(--ink-soft);">
+      Messages sent by visitors through the Connect form. Click <strong>Reply</strong> to open the live chat thread.
+    </p>
+    <div id="messagesList"><div class="loading-state">Loading…</div></div>
+  </div>
+
 </div><!-- /container -->
+
+<!-- ── Admin Chat Modal ──────────────────────────────────────────────────── -->
+<div class="ann-form-modal" id="adminChatModal" hidden>
+  <div class="ann-form-backdrop" id="adminChatBackdrop"></div>
+  <div class="ann-form-box" style="max-width:580px;display:flex;flex-direction:column;max-height:88vh;padding:24px;">
+    <!-- Header -->
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-shrink:0;margin-bottom:14px;">
+      <div>
+        <h3 id="adminChatTitle" style="margin:0;font-size:17px;font-family:'Fraunces',serif;">Chat</h3>
+        <p id="adminChatMeta" style="margin:3px 0 0;font-size:12px;color:var(--ink-soft,#888);"></p>
+      </div>
+      <button class="btn-cancel" id="adminChatClose" style="padding:5px 12px;font-size:13px;flex-shrink:0;">✕ Close</button>
+    </div>
+    <!-- Original message bubble -->
+    <div id="adminChatOriginal" style="background:var(--paper,#f5f0e8);border-radius:8px;padding:12px 14px;font-size:13px;line-height:1.65;margin-bottom:14px;border-left:3px solid #CD7642;flex-shrink:0;"></div>
+    <!-- Thread -->
+    <div id="adminChatThread" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:2px 0 6px;min-height:80px;"></div>
+    <!-- Guest notice -->
+    <div id="adminChatNoMember" style="font-size:12px;color:var(--ink-soft,#888);padding:8px 0 4px;display:none;">
+      ⚠ This visitor submitted without a member account — they won't receive a push notification, but the reply is saved in the thread.
+    </div>
+    <!-- Reply form -->
+    <div style="border-top:1px solid var(--border,#e8e3dc);padding-top:14px;flex-shrink:0;margin-top:10px;">
+      <textarea id="adminChatInput" rows="3" placeholder="Write your reply…" maxlength="3000"
+        style="width:100%;resize:vertical;font-family:inherit;font-size:14px;border:1.5px solid var(--border,#e8e3dc);border-radius:8px;padding:10px 12px;color:var(--ink,#1a1a1a);background:var(--surface,#fff);box-sizing:border-box;outline:none;"></textarea>
+      <div style="display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-top:10px;">
+        <span id="adminChatMsg" style="font-size:12px;color:#CD7642;flex:1;"></span>
+        <button class="btn-save" id="adminChatSend">Send reply</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- ── Announcement Form Modal ── -->
 <div class="ann-form-modal" id="annFormModal" hidden>
@@ -1747,6 +1795,212 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
       if (!document.getElementById('quizAdminList')._loaded) {
         document.getElementById('quizAdminList')._loaded = true;
         loadQuizAdmin();
+      }
+    });
+  }
+});
+
+// ── Messages Panel ────────────────────────────────────────────────────────────
+
+let _chatMsgId = null; // currently open contact_message id in admin chat
+
+async function loadMessages() {
+  const container = document.getElementById('messagesList');
+  const badge     = document.getElementById('msgUnreadBadge');
+
+  container.innerHTML = '<div class="loading-state">Loading…</div>';
+
+  try {
+    const res  = await fetch(API + '/contact');
+    const json = await res.json();
+
+    if (json.status !== 'success' || !json.data.length) {
+      container.innerHTML = '<div class="empty-state">No messages yet.</div>';
+      badge.style.display = 'none';
+      return;
+    }
+
+    const messages = json.data;
+    const unread   = messages.filter(m => m.status === 'unread').length;
+
+    if (unread > 0) {
+      badge.textContent   = unread + ' unread';
+      badge.style.display = 'inline-block';
+    } else {
+      badge.style.display = 'none';
+    }
+
+    const statusLabel = s =>
+      s === 'unread'  ? `<span style="font-size:11px;font-weight:700;color:var(--horizon,#e07b3a);">UNREAD</span>` :
+      s === 'replied' ? `<span style="font-size:11px;font-weight:600;color:#43a047;">replied</span>` :
+                        `<span style="font-size:11px;color:#888;">read</span>`;
+
+    container.innerHTML = messages.map(m => `
+      <div class="prayer-card msg-card" data-msg-id="${m.id}"
+           style="${m.status === 'unread' ? 'border-left:3px solid var(--horizon,#e07b3a);' : m.status === 'replied' ? 'border-left:3px solid #43a047;opacity:.92;' : 'opacity:.82;'}">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:8px;">
+          <div>
+            <span style="font-weight:600;font-size:15px;">${escHtml(m.name)}</span>
+            <span style="font-size:12px;color:var(--ink-soft);margin-left:8px;">${escHtml(m.email)}</span>
+            ${m.member_id ? `<span style="font-size:11px;padding:1px 6px;border-radius:10px;background:#e8f4fd;color:#1565c0;margin-left:6px;">member</span>` : ''}
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+            <span style="font-size:11px;padding:2px 8px;border-radius:12px;background:var(--paper,#f5f5f0);color:var(--ink-soft);">${escHtml(m.reason)}</span>
+            <span style="font-size:11px;color:var(--ink-soft);">${escHtml(formatDate(m.created_at))}</span>
+            ${statusLabel(m.status)}
+          </div>
+        </div>
+        <p style="font-size:14px;color:var(--ink,#1a1a1a);line-height:1.6;white-space:pre-wrap;margin:0 0 12px;">${escHtml(m.message)}</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn-approve msg-reply-btn" data-id="${m.id}" data-name="${escHtml(m.name)}" data-email="${escHtml(m.email)}" data-reason="${escHtml(m.reason)}" data-body="${escHtml(m.message)}" data-member="${m.member_id||0}" style="font-size:12px;padding:5px 14px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:4px"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Reply / Chat
+          </button>
+        </div>
+      </div>
+    `).join('');
+
+    container.querySelectorAll('.msg-reply-btn').forEach(btn => {
+      btn.addEventListener('click', () => openAdminChat(
+        parseInt(btn.dataset.id, 10),
+        btn.dataset.name,
+        btn.dataset.email,
+        btn.dataset.reason,
+        btn.dataset.body,
+        parseInt(btn.dataset.member, 10)
+      ));
+    });
+
+  } catch (err) {
+    container.innerHTML = `<div class="empty-state">Failed to load messages. ${escHtml(err.message)}</div>`;
+  }
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+       + ' ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+}
+
+// ── Admin Chat Modal ──────────────────────────────────────────────────────────
+
+const adminChatModal    = document.getElementById('adminChatModal');
+const adminChatBackdrop = document.getElementById('adminChatBackdrop');
+const adminChatClose    = document.getElementById('adminChatClose');
+const adminChatTitle    = document.getElementById('adminChatTitle');
+const adminChatMeta     = document.getElementById('adminChatMeta');
+const adminChatOriginal = document.getElementById('adminChatOriginal');
+const adminChatThread   = document.getElementById('adminChatThread');
+const adminChatNoMember = document.getElementById('adminChatNoMember');
+const adminChatInput    = document.getElementById('adminChatInput');
+const adminChatSend     = document.getElementById('adminChatSend');
+const adminChatMsg      = document.getElementById('adminChatMsg');
+
+function buildChatBubble(msg) {
+  const isAdmin = msg.sender_type === 'admin';
+  const name    = isAdmin ? 'Admin' : (escHtml(msg.sender_name) || 'Member');
+  const time    = formatDate(msg.created_at);
+  return `
+    <div style="display:flex;flex-direction:column;align-items:${isAdmin ? 'flex-end' : 'flex-start'};">
+      <div style="max-width:80%;background:${isAdmin ? '#CD7642' : 'var(--paper,#f5f0e8)'};
+                  color:${isAdmin ? '#fff' : 'var(--ink,#1a1a1a)'};
+                  border-radius:${isAdmin ? '14px 14px 4px 14px' : '14px 14px 14px 4px'};
+                  padding:10px 14px;font-size:13px;line-height:1.6;white-space:pre-wrap;word-break:break-word;">
+        ${escHtml(msg.body)}
+      </div>
+      <span style="font-size:11px;color:var(--ink-soft,#888);margin-top:3px;">${name} · ${time}</span>
+    </div>`;
+}
+
+async function openAdminChat(id, name, email, reason, originalBody, memberId) {
+  _chatMsgId = id;
+  adminChatTitle.textContent   = `Chat with ${name}`;
+  adminChatMeta.textContent    = `${email} · ${reason}`;
+  adminChatOriginal.textContent = originalBody;
+  adminChatInput.value          = '';
+  adminChatMsg.textContent      = '';
+  adminChatNoMember.style.display = memberId ? 'none' : 'block';
+  adminChatThread.innerHTML = '<div style="color:var(--ink-soft,#888);font-size:13px;">Loading thread…</div>';
+  adminChatModal.hidden = false;
+
+  // Load existing thread messages
+  try {
+    const res  = await fetch(API + `/contact/${id}/thread`);
+    const json = await res.json();
+    if (json.status === 'success' && json.data.messages.length) {
+      adminChatThread.innerHTML = json.data.messages.map(buildChatBubble).join('');
+    } else {
+      adminChatThread.innerHTML = '<div style="color:var(--ink-soft,#888);font-size:13px;">No replies yet — start the conversation.</div>';
+    }
+    adminChatThread.scrollTop = adminChatThread.scrollHeight;
+  } catch {
+    adminChatThread.innerHTML = '<div style="color:var(--ink-soft,#888);font-size:13px;">Could not load thread.</div>';
+  }
+}
+
+function closeAdminChat() {
+  adminChatModal.hidden = true;
+  _chatMsgId = null;
+}
+
+adminChatClose.addEventListener('click',    closeAdminChat);
+adminChatBackdrop.addEventListener('click', closeAdminChat);
+
+adminChatSend.addEventListener('click', async () => {
+  const body = adminChatInput.value.trim();
+  if (!body || !_chatMsgId) return;
+
+  adminChatSend.disabled    = true;
+  adminChatSend.textContent = 'Sending…';
+  adminChatMsg.textContent  = '';
+
+  try {
+    const res  = await fetch(API + `/contact/${_chatMsgId}/reply`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ body }),
+    });
+    const json = await res.json();
+
+    if (json.status === 'success') {
+      // Append new bubble
+      const hasEmpty = adminChatThread.querySelector('div[style*="No replies"]');
+      if (hasEmpty) adminChatThread.innerHTML = '';
+
+      adminChatThread.insertAdjacentHTML('beforeend', buildChatBubble(json.data));
+      adminChatThread.scrollTop = adminChatThread.scrollHeight;
+      adminChatInput.value      = '';
+      adminChatMsg.textContent  = '✓ Reply sent';
+      setTimeout(() => { adminChatMsg.textContent = ''; }, 2500);
+
+      // Refresh the message list so status updates to 'replied'
+      loadMessages();
+    } else {
+      adminChatMsg.textContent = json.message || 'Failed to send.';
+    }
+  } catch {
+    adminChatMsg.textContent = 'Network error. Try again.';
+  } finally {
+    adminChatSend.disabled    = false;
+    adminChatSend.textContent = 'Send reply';
+  }
+});
+
+// Submit with Ctrl/Cmd+Enter
+adminChatInput.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+    e.preventDefault();
+    adminChatSend.click();
+  }
+});
+
+// Lazy-load messages tab when first clicked
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  if (btn.dataset.tab === 'messages') {
+    btn.addEventListener('click', () => {
+      if (!document.getElementById('messagesList')._loaded) {
+        document.getElementById('messagesList')._loaded = true;
+        loadMessages();
       }
     });
   }

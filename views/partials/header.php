@@ -85,6 +85,22 @@
         $initial    = strtoupper(mb_substr($m['display_name'] ?? $m['username'] ?? 'M', 0, 1));
         $navPicture = !empty($m['profile_picture']) ? htmlspecialchars($m['profile_picture']) : null;
       ?>
+        <!-- Messages Icon -->
+        <div class="msg-bell-wrap" id="msgBellWrap">
+          <button class="msg-bell-btn" id="msgBellBtn" aria-label="Messages" aria-haspopup="true" aria-expanded="false">
+            <i data-lucide="message-circle"></i>
+            <span class="msg-badge" id="msgBadge" hidden>0</span>
+          </button>
+          <div class="msg-dropdown" id="msgDropdown" role="dialog" aria-label="Messages">
+            <div class="msg-panel-head">
+              <h3 class="msg-panel-title">Your Messages</h3>
+            </div>
+            <div class="msg-list" id="msgList">
+              <div class="msg-empty">Loading…</div>
+            </div>
+          </div>
+        </div>
+
         <!-- Notification Bell -->
         <div class="notif-bell-wrap" id="notifBellWrap">
           <button class="notif-bell-btn" id="notifBellBtn" aria-label="Notifications" aria-haspopup="true" aria-expanded="false">

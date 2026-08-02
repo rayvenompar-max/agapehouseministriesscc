@@ -21,7 +21,9 @@
  *   GET    /api/events/weekly
  *   GET    /api/events/upcoming
  *   POST   /api/events
+ *   GET    /api/contact
  *   POST   /api/contact
+ *   POST   /api/contact/{id}/read
  */
 declare(strict_types=1);
 
@@ -95,7 +97,7 @@ $mediaCtrl        = new MediaController(new MediaService(new MediaRepository($db
 $articleCtrl      = new ArticleController(new ArticleService(new ArticleRepository($db)));
 $prayerCtrl       = new PrayerController(new PrayerService(new PrayerRepository($db)));
 $eventCtrl        = new EventController(new EventService(new EventRepository($db), new NotificationRepository($db), new MemberRepository($db)));
-$contactCtrl      = new ContactController(new ContactService(new ContactRepository($db)));
+$contactCtrl      = new ContactController(new ContactService(new ContactRepository($db), new NotificationRepository($db)));
 $announcementCtrl = new AnnouncementController(new AnnouncementService(new AnnouncementRepository($db), new NotificationRepository($db), new MemberRepository($db)));
 $commentCtrl      = new CommentController(new CommentService(new CommentRepository($db)));
 $notifCtrl        = new NotificationController(new NotificationService(new NotificationRepository($db)));
@@ -268,6 +270,24 @@ if ($method === 'GET' && matchRoute('/media/featured', $path)) {
     $eventCtrl->deleteEvent((int) $params['id']);
 
 // ---- Contact ----
+} elseif ($method === 'GET' && matchRoute('/contact/threads', $path)) {
+    $contactCtrl->getThreads();
+
+} elseif ($method === 'GET' && matchRoute('/contact', $path)) {
+    $contactCtrl->list();
+
+} elseif ($method === 'POST' && matchRoute('/contact/{id}/read', $path, $params)) {
+    $contactCtrl->markRead((int) $params['id']);
+
+} elseif ($method === 'POST' && matchRoute('/contact/{id}/reply', $path, $params)) {
+    $contactCtrl->adminReply((int) $params['id']);
+
+} elseif ($method === 'GET' && matchRoute('/contact/{id}/thread', $path, $params)) {
+    $contactCtrl->getThread((int) $params['id']);
+
+} elseif ($method === 'POST' && matchRoute('/contact/{id}/message', $path, $params)) {
+    $contactCtrl->memberReply((int) $params['id']);
+
 } elseif ($method === 'POST' && matchRoute('/contact', $path)) {
     $contactCtrl->send();
 
