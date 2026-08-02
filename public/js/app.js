@@ -476,17 +476,46 @@ document.getElementById('menuToggle').addEventListener('click', () => {
   document.getElementById('primaryNav').classList.toggle('open');
 });
 
-// Member pill dropdown toggle
+// Member chip dropdown toggle
 document.addEventListener('click', e => {
-  const pill     = document.getElementById('navMemberPill');
+  const chip     = document.getElementById('navMemberPill');
   const dropdown = document.getElementById('navMemberDropdown');
-  if (!pill || !dropdown) return;
+  if (!chip || !dropdown) return;
   if (e.target.closest('#navMemberPill')) {
-    dropdown.classList.toggle('open');
+    const isOpen = dropdown.classList.toggle('open');
+    chip.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
   } else {
     dropdown.classList.remove('open');
+    chip.setAttribute('aria-expanded', 'false');
   }
 });
+
+// Dropdown nav shortcuts
+(function () {
+  const myProfileBtn = document.getElementById('dropdownMyProfile');
+  const myPrayersBtn = document.getElementById('dropdownMyPrayers');
+
+  function closeDropdown() {
+    const chip     = document.getElementById('navMemberPill');
+    const dropdown = document.getElementById('navMemberDropdown');
+    if (dropdown) dropdown.classList.remove('open');
+    if (chip)     chip.setAttribute('aria-expanded', 'false');
+  }
+
+  if (myProfileBtn) {
+    myProfileBtn.addEventListener('click', () => {
+      closeDropdown();
+      document.getElementById('openMyProfileBtn')?.click();
+    });
+  }
+
+  if (myPrayersBtn) {
+    myPrayersBtn.addEventListener('click', () => {
+      closeDropdown();
+      document.getElementById('openMyPrayersBtn')?.click();
+    });
+  }
+})();
 
 // Sign-out confirmation modal
 (function () {
@@ -500,7 +529,10 @@ document.addEventListener('click', e => {
   if (!signOutBtn || !modal) return;
 
   function openSignOut() {
-    document.getElementById('navMemberDropdown').classList.remove('open');
+    const dropdown = document.getElementById('navMemberDropdown');
+    const chip     = document.getElementById('navMemberPill');
+    if (dropdown) dropdown.classList.remove('open');
+    if (chip)     chip.setAttribute('aria-expanded', 'false');
     modal.hidden = false;
     lockScroll();
     cancelBtn.focus();
@@ -3366,9 +3398,14 @@ function openCommentDrawer(type, id, title, authorMemberId) {
 
 function closeCommentDrawer() {
   const drawer = document.getElementById('commentDrawer');
-  drawer.hidden = true;
-  unlockScroll();
-  _commentTarget = null;
+  if (!drawer || drawer.hidden) return;
+  drawer.classList.add('is-closing');
+  setTimeout(() => {
+    drawer.classList.remove('is-closing');
+    drawer.hidden = true;
+    unlockScroll();
+    _commentTarget = null;
+  }, 280);
 }
 
 // Close on backdrop click or X button
@@ -3392,7 +3429,11 @@ async function loadComments(type, id, listEl) {
 
 function renderCommentList(comments, listEl) {
   if (!comments.length) {
-    listEl.innerHTML = '<p class="comment-empty">No comments yet. Be the first!</p>';
+    listEl.innerHTML = `
+      <div class="comment-empty">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span>No comments yet. Be the first!</span>
+      </div>`;
     return;
   }
 
@@ -3427,26 +3468,24 @@ function buildCommentItem(c, listEl, rootId) {
     ? `<div class="comment-avatar comment-avatar--img"><img src="${escHtml(pic)}" alt="${escHtml(initial)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;"></div>`
     : `<div class="comment-avatar">${escHtml(initial)}</div>`;
 
-  // Avatar + bubble row
+  // Flat layout: avatar + content column (name+time, body, actions)
   wrap.innerHTML = `
-    <div class="comment-item-row">
-      ${avatarHtml}
-      <div class="comment-bubble">
-        <div class="comment-bubble-inner">
-          <div class="comment-author">${escHtml(name)}</div>
-          <div class="comment-body">${escHtml(c.body)}</div>
-        </div>
-        <div class="comment-meta">
+    ${avatarHtml}
+    <div class="comment-bubble">
+      <div class="comment-bubble-inner">
+        <div class="comment-head">
+          <span class="comment-author">${escHtml(name)}</span>
           <span class="comment-time">${formatTimeAgo(c.created_at)}</span>
-          ${isOwn ? `<button class="comment-delete-btn" data-id="${c.id}">Delete</button>` : ''}
         </div>
-        <div class="comment-actions">
-          <button class="comment-action-btn cmt-like-btn${liked ? ' liked' : ''}" title="Like">
-            <svg viewBox="0 0 24 24" fill="${liked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-            <span class="cmt-like-count">${likes > 0 ? likes : ''}</span>
-          </button>
-          ${isLoggedIn ? `<button class="comment-action-btn cmt-reply-btn" title="Reply">Reply</button>` : ''}
-        </div>
+        <div class="comment-body">${escHtml(c.body)}</div>
+      </div>
+      <div class="comment-actions">
+        <button class="comment-action-btn cmt-like-btn${liked ? ' liked' : ''}" title="Like">
+          <svg viewBox="0 0 24 24" fill="${liked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          <span class="cmt-like-count">${likes > 0 ? likes : ''}</span>
+        </button>
+        ${isLoggedIn ? `<button class="comment-action-btn cmt-reply-btn" title="Reply">Reply</button>` : ''}
+        ${isOwn ? `<button class="comment-delete-btn" data-id="${c.id}">Delete</button>` : ''}
       </div>
     </div>
   `;
@@ -3600,7 +3639,11 @@ async function deleteComment(commentId, itemEl) {
       itemEl.remove();
       const listEl = document.getElementById('commentList');
       if (!listEl.querySelector('.comment-item')) {
-        listEl.innerHTML = '<p class="comment-empty">No comments yet. Be the first!</p>';
+        listEl.innerHTML = `
+          <div class="comment-empty">
+            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <span>No comments yet. Be the first!</span>
+          </div>`;
       }
     }
   } catch {
@@ -3623,32 +3666,39 @@ function renderCommentForm(formWrap) {
   const pic     = window.CURRENT_MEMBER.profile_picture;
 
   const avatarHtml = pic
-    ? `<div class="comment-avatar comment-avatar--img" style="flex-shrink:0"><img src="${escHtml(pic)}" alt="${escHtml(initial)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;"></div>`
-    : `<div class="comment-avatar" style="flex-shrink:0">${escHtml(initial)}</div>`;
+    ? `<div class="comment-form-avatar"><img src="${escHtml(pic)}" alt="${escHtml(initial)}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;"></div>`
+    : `<div class="comment-form-avatar">${escHtml(initial)}</div>`;
 
   formWrap.innerHTML = `
     <div class="comment-form">
       ${avatarHtml}
-      <textarea class="comment-input" id="commentInput" placeholder="Write a comment…" rows="1"></textarea>
-      <button class="comment-submit-btn" id="commentSubmitBtn" title="Post" disabled>➤</button>
+      <div class="comment-input-wrap">
+        <input type="text" class="comment-input" id="commentInput" placeholder="Write a comment…" autocomplete="off">
+        <button class="comment-submit-btn" id="commentSubmitBtn" aria-label="Send">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+        </button>
+      </div>
     </div>
   `;
 
   const input  = formWrap.querySelector('#commentInput');
   const submit = formWrap.querySelector('#commentSubmitBtn');
 
+  // Send button starts inactive; activates when text is present
   input.addEventListener('input', () => {
-    submit.disabled = input.value.trim().length === 0;
+    submit.classList.toggle('active', input.value.trim().length > 0);
   });
 
   input.addEventListener('keydown', e => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      if (!submit.disabled) submitComment();
+      if (submit.classList.contains('active')) submitComment();
     }
   });
 
-  submit.addEventListener('click', submitComment);
+  submit.addEventListener('click', () => {
+    if (submit.classList.contains('active')) submitComment();
+  });
 }
 
 async function submitComment() {
@@ -3660,9 +3710,9 @@ async function submitComment() {
 
   if (!body) return;
 
-  submit.disabled = true;
-  const origIcon = submit.textContent;
-  submit.textContent = '…';
+  submit.classList.remove('active');
+  submit.style.opacity = '.4';
+  submit.style.pointerEvents = 'none';
 
   try {
     const res = await apiFetch('/comments', {
@@ -3676,12 +3726,11 @@ async function submitComment() {
 
     if (res.status === 'success') {
       input.value = '';
-      submit.disabled = true;
 
       const listEl = document.getElementById('commentList');
       // Remove empty state if present
-      const emptyMsg = listEl.querySelector('.comment-empty');
-      if (emptyMsg) emptyMsg.remove();
+      const emptyEl = listEl.querySelector('.comment-empty');
+      if (emptyEl) emptyEl.remove();
 
       const item = buildCommentItem(res.data, listEl);
       listEl.appendChild(item);
@@ -3709,8 +3758,10 @@ async function submitComment() {
   } catch {
     alert('Network error. Try again.');
   } finally {
-    submit.textContent = origIcon;
-    submit.disabled = input.value.trim().length === 0;
+    submit.style.opacity = '';
+    submit.style.pointerEvents = '';
+    // Re-activate if user typed something while submitting
+    if (input.value.trim().length > 0) submit.classList.add('active');
   }
 }
 
@@ -3983,41 +4034,87 @@ function closePrayerDrawer() {
 
 // Render the list of this member's saved prayers
 function renderMyPrayerList() {
-  const listEl = document.getElementById('myPrayerList');
+  const listEl    = document.getElementById('myPrayerList');
+  const subtitle  = document.getElementById('prayerDrawerSubtitle');
+  const countEl   = document.getElementById('myPrayerListCount');
   if (!listEl) return;
   const prayers = getMyPrayers();
 
+  // Update count badges
+  if (subtitle) subtitle.textContent = `${prayers.length} total`;
+  if (countEl)  countEl.textContent  = String(prayers.length);
+
+  const statusMeta = {
+    approved: { cls: 'approved', label: 'On the wall',
+      icon: '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' },
+    pending:  { cls: 'pending',  label: 'Pending',
+      icon: '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>' },
+    answered: { cls: 'answered', label: 'Answered',
+      icon: '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>' },
+    rejected: { cls: 'rejected', label: 'Not posted',
+      icon: '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' },
+  };
+
+  const listHead = `
+    <div class="prayer-list-head">
+      <span class="prayer-list-label">Your submitted requests</span>
+      <span class="prayer-list-count" id="myPrayerListCount">${prayers.length}</span>
+    </div>`;
+
   if (!prayers.length) {
-    listEl.innerHTML = '<p class="prayer-drawer-empty">You haven\'t submitted any requests yet.</p>';
+    listEl.innerHTML = listHead + '<p class="prayer-drawer-empty">You haven\'t submitted any requests yet.</p>';
     return;
   }
 
-  listEl.innerHTML = prayers.map(p => `
+  const cards = prayers.map(p => {
+    const meta    = statusMeta[p.status] || statusMeta.pending;
+    const anonBadge = p.anonymous
+      ? `<span class="my-prayer-anon-badge">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          Anonymous
+        </span>` : '';
+    return `
     <div class="my-prayer-item" data-prayer-id="${escHtml(String(p.id))}">
       <div class="my-prayer-item-header">
-        <span class="my-prayer-cat">${escHtml(p.category)}</span>
+        <div class="my-prayer-item-header-left">
+          <span class="my-prayer-cat">${escHtml(p.category)}</span>
+          ${anonBadge}
+        </div>
         <span class="my-prayer-time">${formatTimeAgo(p.submitted_at)}</span>
       </div>
-      <div class="my-prayer-body">${escHtml(p.body)}</div>
+      <p class="my-prayer-body">${escHtml(p.body)}</p>
       <div class="my-prayer-item-footer">
-        <span class="my-prayer-status ${escHtml(p.status)}">
-          ${{ approved: '✓ On the wall', pending: '⏳ Pending', rejected: '✗ Not posted' }[p.status] || p.status}
-        </span>
-        <button class="my-prayer-delete-btn" data-delete-id="${escHtml(String(p.id))}" aria-label="Remove this prayer request" title="Remove">✕</button>
+        <span class="my-prayer-status ${meta.cls}">${meta.icon} ${meta.label}</span>
+        <div class="my-prayer-actions">
+          <button class="my-prayer-icon-btn my-prayer-delete-trigger" aria-label="Remove">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+          </button>
+        </div>
       </div>
-    </div>
-  `).join('');
+      <div class="my-prayer-confirm-row">
+        <span>Remove this request?</span>
+        <div class="my-prayer-confirm-actions">
+          <button class="my-prayer-confirm-cancel">Cancel</button>
+          <button class="my-prayer-confirm-delete" data-delete-id="${escHtml(String(p.id))}">Remove</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  listEl.innerHTML = listHead + cards;
 }
 
 // Submit a new prayer from the drawer
 async function submitDrawerPrayer() {
-  const catEl  = document.getElementById('drawerPcat');
-  const reqEl  = document.getElementById('drawerPreq');
-  const msgEl  = document.getElementById('drawerPrayerMsg');
-  const btnEl  = document.getElementById('drawerPrayerSubmitBtn');
+  const catEl   = document.getElementById('drawerPcat');
+  const reqEl   = document.getElementById('drawerPreq');
+  const msgEl   = document.getElementById('drawerPrayerMsg');
+  const btnEl   = document.getElementById('drawerPrayerSubmitBtn');
+  const anonEl  = document.getElementById('drawerAnonToggle');
 
-  const category = catEl ? catEl.value : 'Healing';
-  const body     = reqEl ? reqEl.value.trim() : '';
+  const category  = catEl ? catEl.value : 'Healing';
+  const body      = reqEl ? reqEl.value.trim() : '';
+  const anonymous = anonEl ? anonEl.checked : false;
 
   // Validation
   msgEl.style.display = 'none';
@@ -4033,35 +4130,46 @@ async function submitDrawerPrayer() {
   btnEl.disabled    = true;
   btnEl.textContent = 'Posting…';
 
-  const memberName = window.CURRENT_MEMBER
-    ? (window.CURRENT_MEMBER.display_name || window.CURRENT_MEMBER.username || 'Anonymous')
-    : 'Anonymous';
+  const memberName = anonymous
+    ? 'Anonymous'
+    : (window.CURRENT_MEMBER
+        ? (window.CURRENT_MEMBER.display_name || window.CURRENT_MEMBER.username || 'Anonymous')
+        : 'Anonymous');
 
   try {
     const res = await apiFetch('/prayers', {
       method: 'POST',
-      body: JSON.stringify({ name: memberName, category, body }),
+      body: JSON.stringify({ name: memberName, category, body, anonymous }),
     });
 
     if (res.status === 'success') {
-      // Save to localStorage for "My requests" list
       saveMyPrayer({
         id:           res.data?.id ?? Date.now(),
         category,
         body,
+        anonymous,
         status:       'approved',
         submitted_at: new Date().toISOString(),
       });
 
       reqEl.value = '';
-      document.getElementById('drawerPreqCounter').textContent = '0/1000';
+      const counter = document.getElementById('drawerPreqCounter');
+      const hint    = document.getElementById('drawerPreqHint');
+      if (counter) { counter.textContent = '0/1000'; counter.classList.remove('ok'); }
+      if (hint)    { hint.textContent = 'Minimum 10 characters to post.'; hint.classList.remove('ok'); }
+      btnEl.disabled = true;
+      if (anonEl) anonEl.checked = false;
 
-      msgEl.textContent   = '🙏 Your request has been posted to the wall!';
-      msgEl.className     = 'prayer-drawer-form-note success';
-      msgEl.style.display = 'block';
-
-      // Refresh the list below
       renderMyPrayerList();
+
+      // Close the drawer first, then show the shared "Post Submitted" modal
+      closePrayerDrawer();
+      setTimeout(() => {
+        showPendingApprovalModal(
+          'Your prayer request has been posted to the wall.<br>Others in the community can now pray alongside you.',
+          { title: 'Request Posted!', icon: 'heart-handshake' }
+        );
+      }, 300);
     } else {
       msgEl.textContent   = res.message || 'Could not post. Try again.';
       msgEl.className     = 'prayer-drawer-form-note error';
@@ -4072,7 +4180,9 @@ async function submitDrawerPrayer() {
     msgEl.className     = 'prayer-drawer-form-note error';
     msgEl.style.display = 'block';
   } finally {
-    btnEl.disabled    = false;
+    if (btnEl.disabled && document.getElementById('drawerPreq')?.value.trim().length >= 10) {
+      btnEl.disabled = false;
+    }
     btnEl.textContent = 'Post to the wall';
   }
 }
@@ -4099,6 +4209,7 @@ async function updateFollowStats() {
   const submitBtn = document.getElementById('drawerPrayerSubmitBtn');
   const reqEl     = document.getElementById('drawerPreq');
   const counter   = document.getElementById('drawerPreqCounter');
+  const hint      = document.getElementById('drawerPreqHint');
 
   if (!openBtn) return; // only present when member is logged in
 
@@ -4107,23 +4218,60 @@ async function updateFollowStats() {
   if (backdrop)  backdrop.addEventListener('click', closePrayerDrawer);
   if (submitBtn) submitBtn.addEventListener('click', submitDrawerPrayer);
 
-  // Delete a saved prayer request from the list
-  const listEl = document.getElementById('myPrayerList');
-  if (listEl) {
-    listEl.addEventListener('click', e => {
-      const btn = e.target.closest('.my-prayer-delete-btn');
-      if (!btn) return;
-      const id = btn.dataset.deleteId;
-      if (id) removeMyPrayer(id);
-    });
-  }
-
-  // Character counter
+  // Character counter + hint + button enable/disable
   if (reqEl && counter) {
     reqEl.addEventListener('input', () => {
       const len = reqEl.value.length;
       counter.textContent = `${len}/1000`;
-      counter.style.color = len > 900 ? '#b91c1c' : 'var(--ink-soft)';
+      if (len >= 10) {
+        counter.classList.add('ok');
+        if (hint)    { hint.textContent = 'Looks good.'; hint.classList.add('ok'); }
+        if (submitBtn) submitBtn.disabled = false;
+      } else {
+        counter.classList.remove('ok');
+        if (hint)    { hint.textContent = 'Minimum 10 characters to post.'; hint.classList.remove('ok'); }
+        if (submitBtn) submitBtn.disabled = true;
+      }
+      if (len > 900) counter.style.color = '#b91c1c';
+      else           counter.style.color = '';
+    });
+  }
+
+  // Event delegation for confirm-delete in the list
+  const listEl = document.getElementById('myPrayerList');
+  if (listEl) {
+    listEl.addEventListener('click', e => {
+      // Trash icon — show confirm row
+      const deleteTrigger = e.target.closest('.my-prayer-delete-trigger');
+      if (deleteTrigger) {
+        const card = deleteTrigger.closest('.my-prayer-item');
+        if (card) card.querySelector('.my-prayer-confirm-row')?.classList.add('show');
+        return;
+      }
+
+      // Cancel — hide confirm row
+      const cancelBtn = e.target.closest('.my-prayer-confirm-cancel');
+      if (cancelBtn) {
+        cancelBtn.closest('.my-prayer-confirm-row')?.classList.remove('show');
+        return;
+      }
+
+      // Confirm delete
+      const deleteBtn = e.target.closest('.my-prayer-confirm-delete');
+      if (deleteBtn) {
+        const id   = deleteBtn.dataset.deleteId;
+        const card = deleteBtn.closest('.my-prayer-item');
+        if (card) {
+          card.style.transition = 'opacity .25s ease, transform .25s ease';
+          card.style.opacity    = '0';
+          card.style.transform  = 'translateX(-8px)';
+          setTimeout(() => {
+            if (id) removeMyPrayer(id);
+          }, 220);
+        } else if (id) {
+          removeMyPrayer(id);
+        }
+      }
     });
   }
 
@@ -4356,6 +4504,16 @@ function showPdMsg(text, isError) {
   if (closeBtn)  closeBtn.addEventListener('click', closeProfileDrawer);
   if (backdrop)  backdrop.addEventListener('click', closeProfileDrawer);
   if (form)      form.addEventListener('submit', submitProfileForm);
+
+  // Password collapsible toggle
+  const pwToggle = document.getElementById('pdPwToggle');
+  const pwFields = document.getElementById('pdPwFields');
+  if (pwToggle && pwFields) {
+    pwToggle.addEventListener('click', () => {
+      pwToggle.classList.toggle('open');
+      pwFields.classList.toggle('open');
+    });
+  }
 
   // Password strength indicator
   const newPassEl  = document.getElementById('pdNewPass');

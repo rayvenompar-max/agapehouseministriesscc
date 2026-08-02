@@ -57,13 +57,15 @@ foreach ($pages as $page) {
 <div id="signOutModal" class="signout-modal" hidden>
   <div class="signout-backdrop" id="signOutBackdrop"></div>
   <div class="signout-box" role="dialog" aria-modal="true" aria-labelledby="signOutTitle">
-    <div class="signout-content">
-      <h3 id="signOutTitle">Signing out?</h3>
-      <p>You'll need to sign back in to like, comment, or access your account.</p>
+    <div class="signout-icon">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
     </div>
+    <h3 id="signOutTitle">Signing out?</h3>
+    <p>You'll need to sign back in to like, comment, or access your account.</p>
+    <div class="signout-divider"></div>
     <div class="signout-actions">
-      <button class="btn btn-ghost" id="signOutCancel">Stay signed in</button>
-      <button class="btn btn-signout" id="signOutConfirm">Yes, sign out</button>
+      <button class="btn-so-stay" id="signOutCancel">Stay signed in</button>
+      <button class="btn-so-confirm" id="signOutConfirm">Yes, sign out</button>
     </div>
   </div>
 </div>

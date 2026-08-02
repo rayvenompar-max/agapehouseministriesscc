@@ -262,22 +262,34 @@
   <div class="prayer-drawer-backdrop"></div>
   <div class="prayer-drawer-panel">
 
+    <!-- Header -->
     <div class="prayer-drawer-header">
-      <h3 class="prayer-drawer-title"><i data-lucide="hand-heart"></i> My Prayer Requests</h3>
-      <button class="prayer-drawer-close" id="prayerDrawerClose" aria-label="Close">✕</button>
+      <div class="prayer-drawer-header-title">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        <div>
+          <h3 class="prayer-drawer-title">My Prayer Requests</h3>
+          <div class="prayer-drawer-subtitle" id="prayerDrawerSubtitle">0 total</div>
+        </div>
+      </div>
+      <button class="prayer-drawer-close" id="prayerDrawerClose" aria-label="Close">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
     </div>
 
     <!-- Submit form -->
     <div class="prayer-drawer-form">
       <div class="prayer-field">
         <label for="drawerPcat">Category</label>
-        <select id="drawerPcat">
-          <option>Healing</option>
-          <option>Family</option>
-          <option>Guidance</option>
-          <option>Provision</option>
-          <option>Thanksgiving</option>
-        </select>
+        <div class="prayer-field-select-wrap">
+          <select id="drawerPcat">
+            <option>Healing</option>
+            <option>Family</option>
+            <option>Guidance</option>
+            <option>Provision</option>
+            <option>Thanksgiving</option>
+          </select>
+          <svg class="select-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
       </div>
       <div class="prayer-field">
         <label for="drawerPreq">
@@ -287,16 +299,33 @@
         <textarea id="drawerPreq" rows="4" maxlength="1000"
           placeholder="Share your prayer need… (10 characters minimum)"></textarea>
       </div>
-      <button class="prayer-drawer-submit-btn" id="drawerPrayerSubmitBtn">Post to the wall</button>
-      <p id="drawerPrayerMsg" class="prayer-drawer-form-note" style="display:none;"></p>
-    </div>
+      <p class="prayer-char-hint" id="drawerPreqHint">Minimum 10 characters to post.</p>
 
-    <div class="prayer-drawer-divider">
-      <span>Your submitted requests</span>
+      <!-- Anonymous toggle -->
+      <div class="prayer-anon-row">
+        <div class="prayer-anon-label">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <div>
+            <strong>Post anonymously</strong>
+            <span>Your name stays hidden from other members</span>
+          </div>
+        </div>
+        <label class="prayer-toggle" aria-label="Post anonymously">
+          <input type="checkbox" id="drawerAnonToggle">
+          <span class="prayer-toggle-track"></span>
+        </label>
+      </div>
+
+      <button class="prayer-drawer-submit-btn" id="drawerPrayerSubmitBtn" disabled>Post to the wall</button>
+      <p id="drawerPrayerMsg" class="prayer-drawer-form-note" style="display:none;"></p>
     </div>
 
     <!-- List of this member's past requests -->
     <div class="prayer-drawer-list" id="myPrayerList">
+      <div class="prayer-list-head">
+        <span class="prayer-list-label">Your submitted requests</span>
+        <span class="prayer-list-count" id="myPrayerListCount">0</span>
+      </div>
       <p class="prayer-drawer-empty">You haven't submitted any requests yet.</p>
     </div>
 
@@ -308,21 +337,25 @@
   <div class="profile-drawer-backdrop"></div>
   <div class="profile-drawer-panel">
 
+    <!-- Header -->
     <div class="profile-drawer-header">
-      <h3 class="profile-drawer-title">My Profile</h3>
-      <button class="profile-drawer-close" id="profileDrawerClose" aria-label="Close">✕</button>
+      <div class="profile-drawer-header-title">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <h3 class="profile-drawer-title">My Profile</h3>
+      </div>
+      <button class="profile-drawer-close" id="profileDrawerClose" aria-label="Close">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
     </div>
 
     <div class="profile-drawer-body">
 
-      <!-- Avatar + name block -->
+      <!-- Profile summary -->
       <div class="pd-hero">
         <div class="pd-avatar-wrap">
           <div class="pd-avatar" id="pdAvatar"><?= $memberInitial ?? '?' ?></div>
           <label class="pd-avatar-upload-btn" for="pdAvatarInput" title="Change photo" aria-label="Upload profile picture">
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="11" height="11">
-              <path d="M11 1l4 4L5 15H1v-4L11 1z"/>
-            </svg>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/></svg>
           </label>
           <input type="file" id="pdAvatarInput" accept="image/jpeg,image/png,image/gif,image/webp" style="display:none">
         </div>
@@ -338,28 +371,36 @@
       <!-- Info rows -->
       <div class="pd-info-grid">
         <div class="pd-info-row">
-          <span class="pd-info-icon"><i data-lucide="mail"></i></span>
+          <span class="pd-info-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          </span>
           <div>
             <div class="pd-info-label">Email</div>
             <div class="pd-info-value" id="pdEmail">—</div>
           </div>
         </div>
         <div class="pd-info-row">
-          <span class="pd-info-icon"><i data-lucide="id-card"></i></span>
+          <span class="pd-info-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M15 8h2M15 12h2M7 16h10"/></svg>
+          </span>
           <div>
             <div class="pd-info-label">Username</div>
             <div class="pd-info-value" id="pdUsernameVal">—</div>
           </div>
         </div>
         <div class="pd-info-row">
-          <span class="pd-info-icon"><i data-lucide="calendar"></i></span>
+          <span class="pd-info-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+          </span>
           <div>
             <div class="pd-info-label">Member since</div>
             <div class="pd-info-value" id="pdMemberSince">—</div>
           </div>
         </div>
         <div class="pd-info-row">
-          <span class="pd-info-icon"><i data-lucide="clock"></i></span>
+          <span class="pd-info-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </span>
           <div>
             <div class="pd-info-label">Last login</div>
             <div class="pd-info-value" id="pdLastLogin">—</div>
@@ -367,10 +408,11 @@
         </div>
       </div>
 
-      <div class="pd-divider"></div>
-
-      <!-- ── Edit Profile (single form) ── -->
-      <div class="pd-section-title">Edit Profile</div>
+      <!-- Edit Profile form -->
+      <p class="pd-section-label">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/></svg>
+        Edit Profile
+      </p>
       <form id="pdEditForm" novalidate autocomplete="off">
 
         <div class="pd-field-group">
@@ -394,29 +436,32 @@
                  placeholder="you@example.com" autocomplete="off">
         </div>
 
-        <div class="pd-divider" style="margin:18px 0 14px;"></div>
-        <div class="pd-section-title" style="margin-bottom:12px;">Change Password <span style="font-weight:400;font-size:10px;color:var(--ink-soft);">(leave blank to keep current)</span></div>
-
-        <div class="pd-field-group">
-          <label class="pd-field-label" for="pdCurrentPass">Current Password</label>
-          <input type="password" id="pdCurrentPass" maxlength="255"
-                 placeholder="Required to save any changes" autocomplete="current-password">
-        </div>
-
-        <div class="pd-field-group">
-          <label class="pd-field-label" for="pdNewPass">New Password</label>
-          <input type="password" id="pdNewPass" maxlength="255"
-                 placeholder="Min 8 characters" autocomplete="new-password">
-          <div class="pd-pass-strength" id="pdPassStrength" hidden>
-            <div class="pd-pass-bar"><div class="pd-pass-fill" id="pdPassFill"></div></div>
-            <span class="pd-pass-label" id="pdPassLabel"></span>
+        <!-- Collapsible password section -->
+        <button type="button" class="pd-pw-toggle" id="pdPwToggle">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          Change Password
+          <span class="pd-pw-note">(leave blank to keep current)</span>
+        </button>
+        <div class="pd-pw-fields" id="pdPwFields">
+          <div class="pd-field-group">
+            <label class="pd-field-label" for="pdCurrentPass">Current Password</label>
+            <input type="password" id="pdCurrentPass" maxlength="255"
+                   placeholder="Required to save any changes" autocomplete="current-password">
           </div>
-        </div>
-
-        <div class="pd-field-group">
-          <label class="pd-field-label" for="pdConfirmPass">Confirm New Password</label>
-          <input type="password" id="pdConfirmPass" maxlength="255"
-                 placeholder="Repeat new password" autocomplete="new-password">
+          <div class="pd-field-group">
+            <label class="pd-field-label" for="pdNewPass">New Password</label>
+            <input type="password" id="pdNewPass" maxlength="255"
+                   placeholder="Min 8 characters" autocomplete="new-password">
+            <div class="pd-pass-strength" id="pdPassStrength" hidden>
+              <div class="pd-pass-bar"><div class="pd-pass-fill" id="pdPassFill"></div></div>
+              <span class="pd-pass-label" id="pdPassLabel"></span>
+            </div>
+          </div>
+          <div class="pd-field-group">
+            <label class="pd-field-label" for="pdConfirmPass">Confirm New Password</label>
+            <input type="password" id="pdConfirmPass" maxlength="255"
+                   placeholder="Repeat new password" autocomplete="new-password">
+          </div>
         </div>
 
         <p id="pdSaveMsg" class="pd-save-msg" style="display:none;"></p>
@@ -424,10 +469,10 @@
 
       </form>
 
-      <div class="pd-divider"></div>
+      <div class="pd-divider" style="margin-top:24px;"></div>
 
       <!-- Stats -->
-      <div class="pd-section-title">Activity</div>
+      <div class="pd-section-title" style="margin-bottom:12px;">Activity</div>
       <div class="pd-stats-row">
         <div class="pd-stat">
           <span id="pdStatFollowing">0</span>
@@ -450,13 +495,17 @@
     </div><!-- /.profile-drawer-body -->
   </div>
 </div>
+</div>
 
-<!-- ── Comment Drawer ──────────────────────────────────────────────────────── --><div id="commentDrawer" class="comment-drawer" hidden>
+<!-- ── Comment Drawer ──────────────────────────────────────────────────────── -->
+<div id="commentDrawer" class="comment-drawer" hidden>
   <div class="comment-drawer-backdrop"></div>
   <div class="comment-drawer-panel">
     <div class="comment-drawer-header">
       <h3 class="comment-drawer-title">Comments</h3>
-      <button class="comment-drawer-close" id="commentDrawerClose" aria-label="Close">✕</button>
+      <button class="comment-drawer-close" id="commentDrawerClose" aria-label="Close">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
     </div>
 
     <div class="comment-list" id="commentList">

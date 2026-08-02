@@ -87,38 +87,68 @@
       ?>
         <!-- Notification Bell -->
         <div class="notif-bell-wrap" id="notifBellWrap">
-          <button class="notif-bell-btn warm-bell-btn" id="notifBellBtn" aria-label="Notifications" aria-haspopup="true" aria-expanded="false">
+          <button class="notif-bell-btn" id="notifBellBtn" aria-label="Notifications" aria-haspopup="true" aria-expanded="false">
             <i data-lucide="bell"></i>
             <span class="notif-badge" id="notifBadge" hidden>0</span>
           </button>
           <div class="notif-dropdown" id="notifDropdown" role="dialog" aria-label="Notifications">
-            <div class="notif-dropdown-header">
-              <span class="notif-dropdown-title">Notifications</span>
+            <div class="notif-panel-head">
+              <h3 class="notif-panel-title">Notifications</h3>
               <button class="notif-mark-all-btn" id="notifMarkAllBtn">Mark all read</button>
             </div>
             <div class="notif-list" id="notifList">
               <div class="notif-empty">Loading…</div>
             </div>
-            <div class="notif-dropdown-footer">
+            <div class="notif-panel-foot">
               <button class="notif-clear-btn" id="notifClearBtn">Clear all</button>
             </div>
           </div>
         </div>
 
         <!-- User chip -->
-        <div class="nav-member-pill warm-user-chip" id="navMemberPill">
-          <div class="nav-member-avatar warm-user-avatar">
+        <button class="warm-user-chip" id="navMemberPill" aria-haspopup="true" aria-expanded="false">
+          <div class="warm-user-avatar">
             <?php if ($navPicture): ?>
               <img src="<?= $navPicture ?>" alt="<?= $initial ?>">
             <?php else: ?>
               <?= $initial ?>
             <?php endif; ?>
           </div>
-          <span class="nav-member-name"><?= $dispName ?></span>
-          <span class="nav-member-caret">▾</span>
-        </div>
-        <div class="nav-member-dropdown" id="navMemberDropdown">
-          <button type="button" id="signOutBtn">Sign out</button>
+          <span class="warm-user-name"><?= $dispName ?></span>
+          <svg class="warm-user-caret" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+
+        <div class="warm-dropdown" id="navMemberDropdown" role="dialog" aria-label="User menu">
+          <!-- Header: avatar + name + username -->
+          <div class="warm-dropdown-user">
+            <div class="warm-dropdown-avatar">
+              <?php if ($navPicture): ?>
+                <img src="<?= $navPicture ?>" alt="<?= $initial ?>">
+              <?php else: ?>
+                <?= $initial ?>
+              <?php endif; ?>
+            </div>
+            <div>
+              <strong class="warm-dropdown-name"><?= $dispName ?></strong>
+              <span class="warm-dropdown-handle">@<?= htmlspecialchars($m['username'] ?? 'member') ?></span>
+            </div>
+          </div>
+          <!-- Items -->
+          <div class="warm-dropdown-items">
+            <button type="button" class="warm-dropdown-item" id="dropdownMyProfile">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              My Profile
+            </button>
+            <button type="button" class="warm-dropdown-item" id="dropdownMyPrayers">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+              My Prayer Requests
+            </button>
+            <div class="warm-dropdown-divider"></div>
+            <button type="button" class="warm-dropdown-item warm-dropdown-item--signout" id="signOutBtn">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              Sign out
+            </button>
+          </div>
         </div>
         <form id="signOutForm" method="POST" action="<?= BASE_URL ?>/member/logout" style="display:none;"></form>
 
