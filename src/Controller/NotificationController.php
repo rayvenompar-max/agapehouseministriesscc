@@ -51,9 +51,12 @@ class NotificationController extends BaseController
 
     /**
      * POST /api/notifications/like
-     * Body: { target_type, target_id, target_title, recipient_id, liked }
-     * liked=true  → create notification (only if recipient follows the actor)
+     * Body: { target_type, target_id, target_title, liked, recipient_id? }
+     * liked=true  → create notification (always, regardless of follow status)
      * liked=false → remove notification (un-like)
+     *
+     * recipient_id is optional — if omitted (or 0), the server looks up the
+     * post author directly so the frontend never needs to pass it.
      */
     public function like(): void
     {
@@ -63,21 +66,28 @@ class NotificationController extends BaseController
         $targetType  = trim($this->str($body, 'target_type'));
         $targetId    = $this->int($body, 'target_id');
         $targetTitle = trim($this->str($body, 'target_title'));
-        $recipientId = $this->int($body, 'recipient_id');
         $liked       = (bool) ($body['liked'] ?? true);
 
-        if ($targetId <= 0 || $recipientId <= 0) {
-            $this->error('Invalid target_id or recipient_id.');
+        if ($targetId <= 0) {
+            $this->error('Invalid target_id.');
+        }
+
+        // Use recipient_id from body if provided and valid; otherwise resolve from DB
+        $recipientId = $this->int($body, 'recipient_id');
+        if ($recipientId <= 0) {
+            $recipientId = $this->resolvePostAuthor($targetType, $targetId);
+        }
+
+        // If we still have no owner (admin post, no member_id), silently succeed
+        if ($recipientId <= 0) {
+            $this->success(null);
         }
 
         if ($liked) {
-            // Only notify if the post owner (recipient) follows the actor
-            if ($this->recipientFollowsActor($recipientId, $actorId)) {
-                $this->service->notify(
-                    $recipientId, $actorId, 'like',
-                    $targetType, $targetId, $targetTitle
-                );
-            }
+            $this->service->notify(
+                $recipientId, $actorId, 'like',
+                $targetType, $targetId, $targetTitle
+            );
         } else {
             $this->service->removeLike($recipientId, $actorId, $targetType, $targetId);
         }
@@ -86,9 +96,30 @@ class NotificationController extends BaseController
     }
 
     /**
+     * Resolve the member_id of the author of a post (article / media / announcement).
+     * Returns 0 if the post was created by an admin (no member_id).
+     */
+    private function resolvePostAuthor(string $targetType, int $targetId): int
+    {
+        $db = \getDB();
+        $table = match ($targetType) {
+            'article'      => 'articles',
+            'media'        => 'media',
+            'announcement' => 'announcements',
+            default        => null,
+        };
+        if (!$table) return 0;
+
+        $stmt = $db->prepare("SELECT member_id FROM {$table} WHERE id = :id LIMIT 1");
+        $stmt->execute(['id' => $targetId]);
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+        return (int) ($row['member_id'] ?? 0);
+    }
+
+    /**
      * POST /api/notifications/share
      * Body: { target_type, target_id, target_title, recipient_id }
-     * Only notifies if the recipient follows the actor.
+     * Always notifies the post owner when their post is shared.
      */
     public function share(): void
     {
@@ -104,13 +135,11 @@ class NotificationController extends BaseController
             $this->error('Invalid target_id or recipient_id.');
         }
 
-        // Only notify if the post owner (recipient) follows the actor
-        if ($this->recipientFollowsActor($recipientId, $actorId)) {
-            $this->service->notify(
-                $recipientId, $actorId, 'share',
-                $targetType, $targetId, $targetTitle
-            );
-        }
+        // Always notify the post owner when someone shares their post
+        $this->service->notify(
+            $recipientId, $actorId, 'share',
+            $targetType, $targetId, $targetTitle
+        );
 
         $this->success(null);
     }
@@ -118,7 +147,7 @@ class NotificationController extends BaseController
     /**
      * POST /api/notifications/comment
      * Body: { target_type, target_id, target_title, recipient_id }
-     * Only notifies if the recipient follows the actor.
+     * Always notifies the post owner when someone comments on their post.
      */
     public function comment(): void
     {
@@ -134,13 +163,11 @@ class NotificationController extends BaseController
             $this->error('Invalid target_id or recipient_id.');
         }
 
-        // Only notify if the post owner (recipient) follows the actor
-        if ($this->recipientFollowsActor($recipientId, $actorId)) {
-            $this->service->notify(
-                $recipientId, $actorId, 'comment',
-                $targetType, $targetId, $targetTitle
-            );
-        }
+        // Always notify the post owner when someone comments on their post
+        $this->service->notify(
+            $recipientId, $actorId, 'comment',
+            $targetType, $targetId, $targetTitle
+        );
 
         $this->success(null);
     }
@@ -169,15 +196,13 @@ class NotificationController extends BaseController
         }
 
         if ($liked) {
-            // Only notify if the comment author (recipient) follows the actor
-            if ($this->recipientFollowsActor($recipientId, $actorId)) {
-                // target_id = post ID so clicking the notif opens the post modal
-                $this->service->notify(
-                    $recipientId, $actorId, 'comment_like',
-                    $targetType, $targetId,
-                    $commentBody ?: $targetTitle
-                );
-            }
+            // Always notify the comment author when someone likes their comment
+            // target_id = post ID so clicking the notif opens the post modal
+            $this->service->notify(
+                $recipientId, $actorId, 'comment_like',
+                $targetType, $targetId,
+                $commentBody ?: $targetTitle
+            );
         } else {
             $this->service->removeCommentLike($recipientId, $actorId, $commentId);
         }
@@ -189,7 +214,7 @@ class NotificationController extends BaseController
      * POST /api/notifications/comment-reply
      * Notify a comment author that someone replied to their comment.
      * Body: { comment_id, comment_body, recipient_id, target_type, target_id, target_title }
-     * Only notifies if the comment author (recipient) follows the actor.
+     * Always notifies the comment author regardless of follow status.
      */
     public function commentReply(): void
     {
@@ -207,14 +232,12 @@ class NotificationController extends BaseController
             $this->error('Invalid parameters.');
         }
 
-        // Only notify if the comment author (recipient) follows the actor
-        if ($this->recipientFollowsActor($recipientId, $actorId)) {
-            $this->service->notify(
-                $recipientId, $actorId, 'comment_reply',
-                $targetType, $targetId,
-                $commentBody ?: $targetTitle
-            );
-        }
+        // Always notify the comment author when someone replies to their comment
+        $this->service->notify(
+            $recipientId, $actorId, 'comment_reply',
+            $targetType, $targetId,
+            $commentBody ?: $targetTitle
+        );
 
         $this->success(null);
     }

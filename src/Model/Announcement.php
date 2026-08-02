@@ -14,6 +14,7 @@ class Announcement
         public readonly string $published_at,
         public readonly string $created_at,
         public readonly string $posted_by = 'Agape House',
+        public readonly ?int   $memberId = null,
         public readonly int    $commentCount = 0,
     ) {}
 
@@ -28,6 +29,7 @@ class Announcement
             'published_at'  => $this->published_at,
             'created_at'    => $this->created_at,
             'posted_by'     => $this->posted_by,
+            'member_id'     => $this->memberId,
             'comment_count' => $this->commentCount,
         ];
     }
@@ -43,6 +45,7 @@ class Announcement
             published_at:        $row['published_at'],
             created_at:          $row['created_at'],
             posted_by:           $row['posted_by']      ?? 'Agape House',
+            memberId:            isset($row['member_id']) ? (int) $row['member_id'] : null,
             commentCount:  (int) ($row['comment_count'] ?? 0),
         );
     }

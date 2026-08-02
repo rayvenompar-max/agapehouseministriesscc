@@ -56,8 +56,8 @@ class AnnouncementRepository
     public function create(array $data): Announcement
     {
         $stmt = $this->db->prepare(
-            'INSERT INTO announcements (title, body, category, is_pinned, published_at, posted_by)
-             VALUES (:title, :body, :category, :is_pinned, :published_at, :posted_by)'
+            'INSERT INTO announcements (title, body, category, is_pinned, published_at, posted_by, member_id)
+             VALUES (:title, :body, :category, :is_pinned, :published_at, :posted_by, :member_id)'
         );
         $stmt->execute([
             ':title'        => $data['title'],
@@ -66,6 +66,7 @@ class AnnouncementRepository
             ':is_pinned'    => (int) ($data['is_pinned'] ?? 0),
             ':published_at' => $data['published_at'] ?? date('Y-m-d H:i:s'),
             ':posted_by'    => $data['posted_by']    ?? 'Agape House',
+            ':member_id'    => isset($data['member_id']) ? (int) $data['member_id'] : null,
         ]);
 
         return $this->findById((int) $this->db->lastInsertId());

@@ -56,6 +56,11 @@ class AnnouncementController extends BaseController
                               ?? 'Agape House';
         }
 
+        // Track which member posted this (null for admin posts)
+        if (!isset($data['member_id']) && !empty($_SESSION['member']['id'])) {
+            $data['member_id'] = (int) $_SESSION['member']['id'];
+        }
+
         try {
             $a = $this->service->create($data);
             $this->json(['status' => 'success', 'data' => $a], 201);

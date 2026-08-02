@@ -87,8 +87,8 @@ class CommentRepository
         ?int   $parentId = null
     ): Comment {
         $stmt = $this->db->prepare(
-            'INSERT INTO comments (member_id, target_type, target_id, parent_id, body, created_at)
-             VALUES (:member_id, :target_type, :target_id, :parent_id, :body, NOW())'
+            'INSERT INTO comments (member_id, target_type, target_id, parent_id, body, like_count, created_at)
+             VALUES (:member_id, :target_type, :target_id, :parent_id, :body, 0, NOW())'
         );
         $stmt->execute([
             'member_id'   => $memberId,

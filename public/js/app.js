@@ -1132,7 +1132,6 @@ function openVideoModal(media) {
           id="yt-iframe"
           src="https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0&modestbranding=1&enablejsapi=1"
           allow="autoplay; encrypted-media; fullscreen"
-          allowfullscreen
           frameborder="0"
           title="${escHtml(media.title)}"
           style="width:100%;height:100%;display:block;"
@@ -3166,18 +3165,15 @@ function buildFeedCard(item) {
     }
   }
 
-  // Scope likes to the current member — guests and each member have independent state
-  const memberId  = window.CURRENT_MEMBER ? window.CURRENT_MEMBER.id : 'guest';
-  const likeKey   = `feed_likes_${item.type}_${item.id}`;          // shared count
-  const likedKey  = `feed_liked_${memberId}_${item.type}_${item.id}`; // per-member flag
-  const likeCount = parseInt(localStorage.getItem(likeKey)  || '0', 10);
-  const liked     = localStorage.getItem(likedKey) === '1';
+  // ── Like state: start with 0/false then hydrate from server ──
+  // The DB is the source of truth; localStorage is gone.
+  const targetApiType = { watch: 'media', read: 'article', notice: 'announcement' }[item.type] || item.type;
 
   const actionsHtml = `
     <div class="feed-card-actions">
-      <button class="feed-action-btn feed-like-btn ${liked ? 'liked' : ''}" title="Like">
-        <span class="feed-action-icon"><i data-lucide="${liked ? 'heart' : 'heart'}" class="${liked ? 'icon-heart-filled' : 'icon-heart-empty'}"></i></span>
-        <span class="feed-like-count">${likeCount > 0 ? likeCount : ''}</span>
+      <button class="feed-action-btn feed-like-btn" title="Like" data-liked="0" data-count="0">
+        <span class="feed-action-icon"><i data-lucide="heart" class="icon-heart-empty"></i></span>
+        <span class="feed-like-count"></span>
         <span>Like</span>
       </button>
       <button class="feed-action-btn feed-comment-btn" title="Comment" data-count="${item.commentCount || 0}">
@@ -3225,26 +3221,50 @@ function buildFeedCard(item) {
       ${actionsHtml}`;
   }
 
-  // Like button — toggle per member, shared count
+  // Helper: apply liked visual state to the button
+  function applyLikeState(btn, liked, count) {
+    btn.dataset.liked = liked ? '1' : '0';
+    btn.dataset.count = String(count);
+    btn.classList.toggle('liked', liked);
+    const iconEl    = btn.querySelector('.feed-action-icon svg');
+    const countSpan = btn.querySelector('.feed-like-count');
+    if (iconEl)    iconEl.style.fill   = liked ? 'currentColor' : 'none';
+    if (countSpan) countSpan.textContent = count > 0 ? String(count) : '';
+  }
+
   const likeBtn = el.querySelector('.feed-like-btn');
+
+  // Hydrate like state from server (non-blocking)
+  apiFetch(`/likes/${targetApiType}/${item.id}`)
+    .then(res => {
+      if (res.status === 'success') {
+        applyLikeState(likeBtn, res.data.liked, res.data.like_count);
+      }
+    })
+    .catch(() => {});
+
+  // Like button — toggle via server
   likeBtn.addEventListener('click', e => {
     e.stopPropagation();
-    const isLiked  = localStorage.getItem(likedKey) === '1';
-    const newLiked = !isLiked;
-    const newCount = parseInt(localStorage.getItem(likeKey) || '0', 10) + (newLiked ? 1 : -1);
-    localStorage.setItem(likedKey, newLiked ? '1' : '0');
-    localStorage.setItem(likeKey,  String(Math.max(0, newCount)));
-    likeBtn.classList.toggle('liked', newLiked);
-    likeBtn.querySelector('.feed-like-count').textContent  = newCount > 0 ? newCount : '';
-    // swap heart fill state via class — CSS handles the colour
-    const iconEl = likeBtn.querySelector('.feed-action-icon svg');
-    if (iconEl) iconEl.style.fill = newLiked ? 'currentColor' : 'none';
+    if (!window.CURRENT_MEMBER) {
+      // Prompt login
+      window.location.href = (window.APP_BASE_URL || '') + '/member/login';
+      return;
+    }
+
+    const wasLiked  = likeBtn.dataset.liked === '1';
+    const prevCount = parseInt(likeBtn.dataset.count, 10) || 0;
+    const newLiked  = !wasLiked;
+    const optimisticCount = Math.max(0, prevCount + (newLiked ? 1 : -1));
+
+    // Optimistic update
+    applyLikeState(likeBtn, newLiked, optimisticCount);
 
     // ── Animations (only when liking, not unliking) ──
     if (newLiked) {
       // 1. Heart pop
       likeBtn.classList.remove('like-pop');
-      void likeBtn.offsetWidth; // force reflow to restart animation
+      void likeBtn.offsetWidth;
       likeBtn.classList.add('like-pop');
       likeBtn.addEventListener('animationend', () => likeBtn.classList.remove('like-pop'), { once: true });
 
@@ -3259,13 +3279,12 @@ function buildFeedCard(item) {
       likeBtn.appendChild(ripple);
       ripple.addEventListener('animationend', () => ripple.remove(), { once: true });
 
-      // 3. Floating hearts burst (3 hearts, slightly different paths)
+      // 3. Floating hearts burst
       const actionsBar = likeBtn.closest('.feed-card-actions');
       const barRect    = actionsBar ? actionsBar.getBoundingClientRect() : rect;
       const heartX     = e.clientX - barRect.left;
       const heartY     = e.clientY - barRect.top;
-      const drifts = [-14, 0, 14];
-      drifts.forEach((drift, i) => {
+      [-14, 0, 14].forEach((drift, i) => {
         setTimeout(() => {
           const heart = document.createElement('span');
           heart.className = 'float-heart';
@@ -3280,23 +3299,22 @@ function buildFeedCard(item) {
       });
     }
 
-    // Update the "Liked" stat in the left sidebar profile card
-    updateLikedStat();
-
-    // ── Notify the post author (fire-and-forget, only when logged in) ──
-    if (window.CURRENT_MEMBER && item.authorMemberId && item.authorMemberId !== window.CURRENT_MEMBER.id) {
-      const notifType = { watch: 'media', read: 'article', notice: 'announcement' }[item.type] || item.type;
-      apiFetch('/notifications/like', {
-        method: 'POST',
-        body: JSON.stringify({
-          target_type:  notifType,
-          target_id:    item.id,
-          target_title: item.title,
-          recipient_id: item.authorMemberId,
-          liked:        newLiked,
-        }),
-      }).catch(() => {}); // silent — don't break the UI if the API fails
-    }
+    // Persist to server (notification handled server-side)
+    apiFetch(`/likes/${targetApiType}/${item.id}`, { method: 'POST' })
+      .then(res => {
+        if (res.status === 'success') {
+          // Reconcile with server truth
+          applyLikeState(likeBtn, res.data.liked, res.data.like_count);
+          if (res.data.liked) window._refreshNotifBadge?.();
+        } else {
+          // Revert optimistic update on error
+          applyLikeState(likeBtn, wasLiked, prevCount);
+        }
+      })
+      .catch(() => {
+        // Revert on network error
+        applyLikeState(likeBtn, wasLiked, prevCount);
+      });
   });
 
   // Comment button — open comment drawer
@@ -3336,7 +3354,7 @@ function buildFeedCard(item) {
           target_title: item.title,
           recipient_id: item.authorMemberId,
         }),
-      }).catch(() => {});
+      }).then(() => window._refreshNotifBadge?.()).catch(() => {});
     }
   });
 
@@ -3461,6 +3479,16 @@ function buildCommentItem(c, listEl, rootId) {
   // Like state (localStorage per member)
   const uid      = window.CURRENT_MEMBER ? window.CURRENT_MEMBER.id : 'guest';
   const likedKey = `cmt_liked_${uid}_${c.id}`;
+  // If the server says like_count is 0, clear any stale localStorage entry
+  // (e.g. from a previously deleted comment that happened to get the same DB ID).
+  if ((c.like_count || 0) === 0) {
+    localStorage.removeItem(likedKey);
+  }
+  // You can't have already liked your own brand-new comment.
+  const isOwnFreshComment = window.CURRENT_MEMBER && c.member_id === window.CURRENT_MEMBER.id && (c.like_count || 0) === 0;
+  if (isOwnFreshComment) {
+    localStorage.removeItem(likedKey);
+  }
   let   liked    = localStorage.getItem(likedKey) === '1';
   let   likes    = c.like_count || 0;
 
@@ -3522,7 +3550,7 @@ function buildCommentItem(c, listEl, rootId) {
           target_title: _commentTarget.title,
           liked,
         }),
-      }).catch(() => {});
+      }).then(() => { if (liked) window._refreshNotifBadge?.(); }).catch(() => {});
     }
   });
 
@@ -3547,18 +3575,24 @@ function buildCommentItem(c, listEl, rootId) {
 
       form.innerHTML = `
         ${replyAvatar}
-        <textarea class="comment-input" placeholder="Reply to ${escHtml(name)}…" rows="1"></textarea>
-        <button class="comment-submit-btn" title="Post reply" disabled>➤</button>
+        <div class="comment-input-wrap">
+          <input type="text" class="comment-input" placeholder="Reply to ${escHtml(name)}…" autocomplete="off">
+          <button class="comment-submit-btn" aria-label="Post reply">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+          </button>
+        </div>
       `;
 
-      const textarea  = form.querySelector('textarea');
+      const textarea  = form.querySelector('input');
       const submitBtn = form.querySelector('button');
 
-      textarea.addEventListener('input', () => { submitBtn.disabled = textarea.value.trim().length === 0; });
-      textarea.addEventListener('keydown', e => {
-        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if (!submitBtn.disabled) doReply(); }
+      textarea.addEventListener('input', () => {
+        submitBtn.classList.toggle('active', textarea.value.trim().length > 0);
       });
-      submitBtn.addEventListener('click', doReply);
+      textarea.addEventListener('keydown', e => {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if (submitBtn.classList.contains('active')) doReply(); }
+      });
+      submitBtn.addEventListener('click', () => { if (submitBtn.classList.contains('active')) doReply(); });
 
       // Append inside wrap so it is a full-width block below the row
       wrap.appendChild(form);
@@ -3567,9 +3601,9 @@ function buildCommentItem(c, listEl, rootId) {
       async function doReply() {
         const text = textarea.value.trim();
         if (!text || !_commentTarget) return;
-        submitBtn.disabled = true;
-        const orig = submitBtn.textContent;
-        submitBtn.textContent = '…';
+        submitBtn.classList.remove('active');
+        submitBtn.style.opacity = '.4';
+        submitBtn.style.pointerEvents = 'none';
         try {
           const res = await apiFetch('/comments', {
             method: 'POST',
@@ -3605,13 +3639,17 @@ function buildCommentItem(c, listEl, rootId) {
                   target_id:    _commentTarget.id,
                   target_title: _commentTarget.title,
                 }),
-              }).catch(() => {});
+              }).then(() => window._refreshNotifBadge?.()).catch(() => {});
             }
           } else {
             alert(res.message || 'Could not post reply.');
           }
         } catch { alert('Network error. Try again.'); }
-        finally { submitBtn.textContent = orig; submitBtn.disabled = textarea.value.trim().length === 0; }
+        finally {
+          submitBtn.style.opacity = '';
+          submitBtn.style.pointerEvents = '';
+          if (textarea.value.trim().length > 0) submitBtn.classList.add('active');
+        }
       }
     });
   }
@@ -3750,7 +3788,7 @@ async function submitComment() {
             target_title: _commentTarget.title,
             recipient_id: _commentTarget.authorMemberId,
           }),
-        }).catch(() => {});
+        }).then(() => window._refreshNotifBadge?.()).catch(() => {});
       }
     } else {
       alert(res.message || 'Could not post comment.');
@@ -5119,6 +5157,10 @@ function showPdMsg(text, isError) {
   setTimeout(pollUnread, 500);
   _pollTimer = setInterval(pollUnread, 30_000);
 
+  // Expose pollUnread globally so notification-sending code can refresh the
+  // badge immediately after firing a notification (instead of waiting 30s).
+  window._refreshNotifBadge = pollUnread;
+
   // ── Open the post in the unified Post Detail Modal ───────────────────────
   async function openNotifTarget(targetType, targetId) {
     try {
@@ -5146,7 +5188,7 @@ function showPdMsg(text, isError) {
                <iframe
                  id="pdm-yt-iframe-${ytId}"
                  src="https://www.youtube.com/embed/${ytId}?rel=0&modestbranding=1&enablejsapi=1&origin=${encodeURIComponent(location.origin)}"
-                 allow="encrypted-media; fullscreen" allowfullscreen
+                 allow="encrypted-media; fullscreen"
                  title="${_esc(data.title)}"></iframe>
                <div class="pdm-yt-fallback" id="pdm-yt-fallback-${ytId}" hidden>
                  <div class="pdm-yt-fallback-inner">
@@ -5341,18 +5383,24 @@ function showPdMsg(text, isError) {
     _pdmFormWrap.innerHTML = `
       <div class="comment-form">
         ${avatarHtml}
-        <textarea class="comment-input" id="pdmCommentInput" placeholder="Write a comment…" rows="1"></textarea>
-        <button class="comment-submit-btn" id="pdmCommentSubmit" title="Post" disabled>➤</button>
+        <div class="comment-input-wrap">
+          <input type="text" class="comment-input" id="pdmCommentInput" placeholder="Write a comment…" autocomplete="off">
+          <button class="comment-submit-btn" id="pdmCommentSubmit" aria-label="Send">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+          </button>
+        </div>
       </div>`;
 
     const input  = _pdmFormWrap.querySelector('#pdmCommentInput');
     const submit = _pdmFormWrap.querySelector('#pdmCommentSubmit');
 
-    input.addEventListener('input', () => { submit.disabled = input.value.trim().length === 0; });
-    input.addEventListener('keydown', e => {
-      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if (!submit.disabled) _pdmSubmitComment(); }
+    input.addEventListener('input', () => {
+      submit.classList.toggle('active', input.value.trim().length > 0);
     });
-    submit.addEventListener('click', _pdmSubmitComment);
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if (submit.classList.contains('active')) _pdmSubmitComment(); }
+    });
+    submit.addEventListener('click', () => { if (submit.classList.contains('active')) _pdmSubmitComment(); });
   }
 
   async function _pdmSubmitComment() {
@@ -5362,9 +5410,9 @@ function showPdMsg(text, isError) {
     const body   = input.value.trim();
     if (!body) return;
 
-    submit.disabled    = true;
-    const orig         = submit.textContent;
-    submit.textContent = '…';
+    submit.classList.remove('active');
+    submit.style.opacity = '.4';
+    submit.style.pointerEvents = 'none';
 
     try {
       const res = await apiFetch('/comments', {
@@ -5372,17 +5420,21 @@ function showPdMsg(text, isError) {
         body: JSON.stringify({ target_type: _pdmTarget.type, target_id: _pdmTarget.id, body }),
       });
       if (res.status === 'success') {
-        input.value     = '';
-        submit.disabled = true;
+        input.value = '';
         const empty = _pdmListEl.querySelector('.comment-empty');
         if (empty) empty.remove();
         _pdmListEl.appendChild(buildCommentItem(res.data, _pdmListEl));
         _pdmListEl.scrollTop = _pdmListEl.scrollHeight;
+        updateCommentCount(_pdmTarget.type, _pdmTarget.id, 1);
       } else {
         alert(res.message || 'Could not post comment.');
       }
     } catch { alert('Network error. Try again.'); }
-    finally { submit.textContent = orig; submit.disabled = input.value.trim().length === 0; }
+    finally {
+      submit.style.opacity = '';
+      submit.style.pointerEvents = '';
+      if (input.value.trim().length > 0) submit.classList.add('active');
+    }
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────

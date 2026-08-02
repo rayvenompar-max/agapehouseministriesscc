@@ -1253,7 +1253,7 @@ h1.hero-title em { font-style: italic; font-weight: 500; color: var(--sun-light)
 /* Scrollable list */
 .comment-list {
   flex: 1; overflow-y: auto; padding: 0 24px;
-  display: flex; flex-direction: column;
+  display: block;
 }
 .comment-list::-webkit-scrollbar { width: 4px; }
 .comment-list::-webkit-scrollbar-track { background: transparent; }
@@ -1266,7 +1266,7 @@ h1.hero-title em { font-style: italic; font-weight: 500; color: var(--sun-light)
 
 /* Empty state */
 .comment-empty {
-  flex: 1; display: flex; align-items: center; justify-content: center;
+  display: flex; align-items: center; justify-content: center;
   flex-direction: column; gap: 10px;
   color: var(--ev-ink-soft); font-size: 14px; text-align: center; padding: 40px 20px;
 }
@@ -1274,7 +1274,7 @@ h1.hero-title em { font-style: italic; font-weight: 500; color: var(--sun-light)
 
 /* Comment item — flat layout */
 .comment-item {
-  display: flex; gap: 11px;
+  display: flex; flex-wrap: wrap; align-items: flex-start; gap: 11px;
   padding: 16px 0; border-bottom: 1px solid var(--ev-line);
 }
 .comment-item:last-child { border-bottom: none; }
@@ -1321,19 +1321,50 @@ h1.hero-title em { font-style: italic; font-weight: 500; color: var(--sun-light)
 
 /* Inline reply form */
 .comment-reply-form {
-  display: flex; align-items: flex-end; gap: 8px;
-  margin-top: 8px; padding-left: 0;
+  display: flex; align-items: center; gap: 8px;
+  width: 100%;
+  margin-top: 8px;
+  padding-left: 43px; /* indent under parent bubble: 32px avatar + 11px gap */
 }
-.comment-reply-form .comment-avatar { width: 28px; height: 28px; font-size: 11px; }
-.comment-reply-form .comment-input  { flex: 1; min-height: 34px; padding: 8px 14px; font-size: 13px; border-radius: 16px; }
-.comment-reply-form .comment-submit-btn { width: 32px; height: 32px; font-size: 13px; }
+.comment-reply-form .comment-avatar { width: 28px; height: 28px; font-size: 11px; flex-shrink: 0; }
+.comment-reply-form .comment-input-wrap { flex: 1; position: relative; }
+.comment-reply-form .comment-input { padding: 8px 42px 8px 14px; font-size: 13px; border-radius: 16px; min-height: 34px; }
 
-/* Nested replies */
+/* Nested replies — indented with L-line connector */
 .comment-replies {
-  display: flex; flex-direction: column; gap: 0;
-  margin-top: 4px; padding-left: 43px;
+  display: block;
+  width: 100%;               /* force onto its own row inside .comment-item flex */
+  margin-top: 4px;
+  padding-left: 43px;        /* 32px avatar + 11px gap */
+  position: relative;
 }
-.comment-replies .comment-item { padding: 10px 0; }
+/* Vertical + horizontal L-line */
+.comment-replies::before {
+  content: '';
+  position: absolute;
+  left: 15px;          /* centre of parent avatar (32px / 2 = 16, minus 1px) */
+  top: 0;
+  bottom: 12px;
+  width: 1.5px;
+  background: var(--ev-line);
+  border-radius: 2px;
+}
+.comment-replies .comment-item {
+  padding: 8px 0;
+  border-bottom: none;
+  position: relative;
+}
+/* Horizontal arm of the L */
+.comment-replies .comment-item::before {
+  content: '';
+  position: absolute;
+  left: -28px;         /* from the indent edge back to the vertical line */
+  top: 22px;           /* vertically centred on the reply avatar */
+  width: 24px;
+  height: 1.5px;
+  background: var(--ev-line);
+  border-radius: 2px;
+}
 .comment-replies .comment-avatar { width: 28px; height: 28px; font-size: 11px; }
 .comment-replies .comment-author { font-size: 12.5px; }
 .comment-replies .comment-body   { font-size: 12.5px; }
@@ -4465,13 +4496,18 @@ nav.primary.open .nav-dropdown button svg {
 .notif-bell-btn i[data-lucide] { display: flex; align-items: center; justify-content: center; line-height: 1; }
 .notif-bell-btn i[data-lucide] svg { width: 17px; height: 17px; stroke: currentColor; stroke-width: 2; display: block; }
 
-/* Unread dot badge */
+/* Unread count badge */
 .notif-badge {
-  position: absolute; top: 6px; right: 7px;
-  width: 8px; height: 8px; border-radius: 50%;
+  position: absolute; top: 4px; right: 4px;
+  min-width: 17px; height: 17px;
+  padding: 0 4px;
+  border-radius: 999px;
   background: #C1542E; border: 1.5px solid #20142A;
   display: flex; align-items: center; justify-content: center;
-  font-size: 0; /* hide number, dot only */
+  font-size: 10px; font-weight: 700; line-height: 1;
+  color: #fff;
+  letter-spacing: 0;
+  pointer-events: none;
 }
 .notif-badge[hidden] { display: none !important; }
 
@@ -4640,7 +4676,7 @@ nav.primary.open .nav-dropdown button svg {
   position: relative;
   width: 100%; max-width: 640px;
   max-height: 90vh;
-  background: var(--white);
+  background: var(--ev-cream);
   border-radius: 14px;
   box-shadow: 0 16px 48px rgba(10,27,51,.22);
   display: flex; flex-direction: column;
@@ -4649,12 +4685,12 @@ nav.primary.open .nav-dropdown button svg {
 
 .pdm-header {
   padding: 20px 24px 16px;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--ev-line);
   flex-shrink: 0;
 }
 .pdm-header-meta {
   font-size: 10px; font-weight: 700; letter-spacing: .08em;
-  color: var(--horizon); font-family: var(--manrope);
+  color: #1E1528; font-family: var(--manrope);
   text-transform: uppercase; margin-bottom: 6px;
 }
 .pdm-header-title {
@@ -4724,7 +4760,7 @@ nav.primary.open .nav-dropdown button svg {
   flex-shrink: 0;
 }
 .pdm-divider::before,
-.pdm-divider::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+.pdm-divider::after { content: ''; flex: 1; height: 1px; background: var(--ev-line); }
 .pdm-divider-label { font-size: 10px; font-weight: 700; letter-spacing: .08em; color: var(--ink-soft); font-family: var(--manrope); text-transform: uppercase; white-space: nowrap; }
 
 .pdm-comment-list {
@@ -4734,15 +4770,21 @@ nav.primary.open .nav-dropdown button svg {
   overflow-y: auto;
   padding: 10px 24px;
   scrollbar-width: thin;
-  scrollbar-color: var(--line) transparent;
+  scrollbar-color: var(--ev-line) transparent;
 }
 .pdm-comment-list::-webkit-scrollbar { width: 4px; }
-.pdm-comment-list::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
+.pdm-comment-list::-webkit-scrollbar-thumb { background: var(--ev-line); border-radius: 4px; }
 
 .pdm-comment-form-wrap {
   padding: 10px 24px 16px;
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--ev-line);
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.pdm-comment-form-wrap .comment-form {
+  display: contents; /* children participate directly in the flex row */
 }
 
 /* ============================================================================

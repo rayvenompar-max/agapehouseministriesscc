@@ -629,6 +629,72 @@ if ($method === 'GET' && matchRoute('/media/featured', $path)) {
     ]);
     exit;
 
+// ---- Post Likes ----
+} elseif ($method === 'POST' && matchRoute('/likes/{type}/{id}', $path, $params)) {
+    // Toggle like — requires member login
+    if (empty($_SESSION['member']['id'])) {
+        http_response_code(401);
+        echo json_encode(['status' => 'error', 'message' => 'Not logged in.']);
+        exit;
+    }
+    $validTypes = ['article', 'media', 'announcement'];
+    $targetType = $params['type'];
+    $targetId   = (int) $params['id'];
+    if (!in_array($targetType, $validTypes, true) || $targetId <= 0) {
+        http_response_code(400);
+        echo json_encode(['status' => 'error', 'message' => 'Invalid target.']);
+        exit;
+    }
+    $memberId    = (int) $_SESSION['member']['id'];
+    $likeRepo    = new \Repository\PostLikeRepository($db);
+    $nowLiked    = $likeRepo->toggle($memberId, $targetType, $targetId);
+    $likeCount   = $likeRepo->countFor($targetType, $targetId);
+
+    // Notification: fire when liking, remove when unliking
+    $notifRepo  = new \Repository\NotificationRepository($db);
+    // Resolve post author
+    $tableMap   = ['article' => 'articles', 'media' => 'media', 'announcement' => 'announcements'];
+    $table      = $tableMap[$targetType];
+    $authorStmt = $db->prepare("SELECT member_id, title FROM {$table} WHERE id = :id LIMIT 1");
+    $authorStmt->execute(['id' => $targetId]);
+    $postRow    = $authorStmt->fetch(\PDO::FETCH_ASSOC);
+    $authorId   = (int) ($postRow['member_id'] ?? 0);
+    $postTitle  = $postRow['title'] ?? '';
+
+    if ($authorId > 0) {
+        if ($nowLiked) {
+            $notifRepo->create($authorId, $memberId, 'like', $targetType, $targetId, $postTitle);
+        } else {
+            $notifRepo->deleteLike($authorId, $memberId, $targetType, $targetId);
+        }
+    }
+
+    echo json_encode(['status' => 'success', 'data' => [
+        'liked'      => $nowLiked,
+        'like_count' => $likeCount,
+    ]]);
+    exit;
+
+} elseif ($method === 'GET' && matchRoute('/likes/{type}/{id}', $path, $params)) {
+    // Get like status + count for a target (works for guests too)
+    $validTypes = ['article', 'media', 'announcement'];
+    $targetType = $params['type'];
+    $targetId   = (int) $params['id'];
+    if (!in_array($targetType, $validTypes, true) || $targetId <= 0) {
+        http_response_code(400);
+        echo json_encode(['status' => 'error', 'message' => 'Invalid target.']);
+        exit;
+    }
+    $likeRepo  = new \Repository\PostLikeRepository($db);
+    $memberId  = !empty($_SESSION['member']['id']) ? (int) $_SESSION['member']['id'] : 0;
+    $liked     = $memberId > 0 && $likeRepo->hasLiked($memberId, $targetType, $targetId);
+    $likeCount = $likeRepo->countFor($targetType, $targetId);
+    echo json_encode(['status' => 'success', 'data' => [
+        'liked'      => $liked,
+        'like_count' => $likeCount,
+    ]]);
+    exit;
+
 // ---- Comments ----
 } elseif ($method === 'GET' && matchRoute('/comments/{type}/{id}', $path, $params)) {
     $commentCtrl->getForTarget($params['type'], (int) $params['id']);
