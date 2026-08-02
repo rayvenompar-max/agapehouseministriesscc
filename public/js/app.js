@@ -2536,7 +2536,7 @@ async function submitAddEvent(e) {
   cmsg.addEventListener('input', () => {
     const len = cmsg.value.length;
     countEl.textContent = `${len} / 3000`;
-    countEl.style.color = len > 2800 ? '#b91c1c' : 'var(--ink-soft)';
+    countEl.style.color = len > 2800 ? '#fca5a5' : 'rgba(251,246,236,.4)';
   });
 
   // Clear inline error on input

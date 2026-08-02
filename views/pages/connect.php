@@ -1,51 +1,41 @@
 <section class="page" id="page-connect">
 
-  <!-- ── Page hero ─────────────────────────────────────────────────────────── -->
-  <div class="page-hero connect-hero">
-    <div class="page-hero-inner">
-      <div class="eyebrow connect-hero-eyebrow">Connect</div>
-      <h2 class="connect-hero-title">Talk to a <em>real person</em></h2>
-      <p class="lede connect-hero-lede">Questions about faith, prayer needs, or just want to say hello — we read every message.</p>
+  <!-- ── Hero ──────────────────────────────────────────────────────────────── -->
+  <div class="connect-hero">
+    <div class="connect-spark-wrap" aria-hidden="true">
+      <div class="connect-spark-ring"></div>
+      <div class="connect-spark-ring connect-spark-ring--delay"></div>
+      <div class="connect-spark"></div>
     </div>
-
-    <!-- Sun disc + rays -->
-    <div class="page-hero-horizon-stage" aria-hidden="true">
-      <div class="sun-wrap">
-        <div class="sun-ray sun-ray--r1"></div>
-        <div class="sun-ray sun-ray--r2"></div>
-        <div class="sun-ray sun-ray--r3"></div>
-        <div class="sun-ray sun-ray--r4"></div>
-        <div class="sun-ray sun-ray--r5"></div>
-        <div class="sun-ray sun-ray--r6"></div>
-        <div class="sun-ray sun-ray--r7"></div>
-        <div class="sun-ray sun-ray--r8"></div>
-        <div class="sun-ray sun-ray--r9"></div>
-        <div class="sun-disc"></div>
-      </div>
+    <div class="connect-hero-content">
+      <p class="connect-hero-eyebrow">Connect</p>
+      <h1 class="connect-hero-title">Talk to a <em>real person.</em></h1>
+      <p class="connect-hero-lede">Questions about faith, prayer needs, or just want to say hello — we read every message.</p>
     </div>
   </div>
 
-  <div class="section-wrap" style="padding-top:44px; padding-bottom:80px;">
-    <div class="connect-layout">
+  <!-- ── Body ──────────────────────────────────────────────────────────────── -->
+  <div class="connect-wrap">
 
-      <!-- Contact form -->
-      <div class="form-card" style="position:static;">
-        <h3 style="font-family:var(--display); margin-bottom:20px; color:var(--ink);">Send a message</h3>
-        <form id="contactForm" novalidate>
-          <div class="field-row">
-            <div class="field">
-              <label for="cname">Name <span style="color:var(--horizon);">*</span></label>
-              <input id="cname" type="text" placeholder="Your name" maxlength="120" autocomplete="name">
-              <span class="field-error" id="cnameError"></span>
-            </div>
-            <div class="field">
-              <label for="cemail">Email <span style="color:var(--horizon);">*</span></label>
-              <input id="cemail" type="email" placeholder="you@example.com" maxlength="160" autocomplete="email">
-              <span class="field-error" id="cemailError"></span>
-            </div>
+    <!-- Contact form -->
+    <div class="connect-form-card">
+      <h2>Send a message</h2>
+      <form id="contactForm" novalidate>
+        <div class="field-row">
+          <div class="field">
+            <label for="cname">Name <span class="req">*</span></label>
+            <input id="cname" type="text" placeholder="Your name" maxlength="120" autocomplete="name">
+            <span class="field-error" id="cnameError"></span>
           </div>
           <div class="field">
-            <label for="creason">Reason for reaching out</label>
+            <label for="cemail">Email <span class="req">*</span></label>
+            <input id="cemail" type="email" placeholder="you@example.com" maxlength="160" autocomplete="email">
+            <span class="field-error" id="cemailError"></span>
+          </div>
+        </div>
+        <div class="field">
+          <label for="creason">Reason for reaching out</label>
+          <div class="connect-select-wrap">
             <select id="creason">
               <option value="Just saying hi">Just saying hi</option>
               <option value="Prayer request">Prayer request</option>
@@ -53,50 +43,58 @@
               <option value="Volunteering">Volunteering</option>
               <option value="Technical issue">Technical issue</option>
             </select>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
           </div>
-          <div class="field">
-            <label for="cmsg">
-              Message <span style="color:var(--horizon);">*</span>
-              <span class="form-hint" id="cmsgCount" style="font-weight:400; color:var(--ink-soft);">0 / 3000</span>
-            </label>
-            <textarea id="cmsg" placeholder="Write your message here…" rows="5" maxlength="3000"></textarea>
-            <span class="field-error" id="cmsgError"></span>
-          </div>
+        </div>
+        <div class="field">
+          <label for="cmsg">
+            Message <span class="req">*</span>
+            <span class="connect-count" id="cmsgCount">0 / 3000</span>
+          </label>
+          <textarea id="cmsg" placeholder="Write your message here…" rows="5" maxlength="3000"></textarea>
+          <span class="field-error" id="cmsgError"></span>
+        </div>
 
-          <div id="contactMsg" class="form-msg" hidden></div>
+        <div id="contactMsg" class="form-msg" hidden></div>
 
-          <button type="submit" class="submit-btn" id="contactSubmitBtn">Send message</button>
-        </form>
+        <button type="submit" class="connect-btn-send" id="contactSubmitBtn">Send message</button>
+      </form>
+    </div>
+
+    <!-- Right column -->
+    <div class="connect-side">
+
+      <div class="connect-side-block">
+        <h3>Find us elsewhere</h3>
+        <p>Also follow us — we post daily on every major platform.</p>
+        <div class="connect-platform-pills">
+          <a class="connect-platform-pill" href="https://youtube.com" target="_blank" rel="noopener">YouTube</a>
+          <a class="connect-platform-pill" href="https://tiktok.com" target="_blank" rel="noopener">TikTok</a>
+          <a class="connect-platform-pill" href="https://www.facebook.com/agapnistries" target="_blank" rel="noopener">Facebook</a>
+        </div>
       </div>
 
-      <!-- Social & chat -->
-      <div>
-        <h3 style="font-family:var(--display); margin-bottom:12px; color:var(--ink);">Find us elsewhere</h3>
-        <p style="font-size:15px;">Also follow us — we post daily on every major platform.</p>
-        <div class="social-row">
-          
-          <a class="social-chip" href="https://youtube.com" target="_blank" rel="noopener">YouTube</a>
-          <a class="social-chip" href="https://tiktok.com" target="_blank" rel="noopener">TikTok</a>
-          <a class="social-chip" href="https://www.facebook.com/agapnistries" target="_blank" rel="noopener">Facebook</a>
-         
-        </div>
+      <div class="connect-side-block">
+        <h3>Need to talk now?</h3>
+        <p>Our care team is available for urgent prayer conversations.</p>
+        <button class="connect-btn-livechat" id="liveChatBtn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Start a live chat
+        </button>
+      </div>
 
-        <h3 style="font-family:var(--display); margin-top:40px; margin-bottom:12px; color:var(--ink);">Need to talk now?</h3>
-        <p style="font-size:15px; margin-bottom:16px;">Our care team is available for urgent prayer conversations.</p>
-        <button class="btn btn-dark" id="liveChatBtn">Start a live chat</button>
-
-        <!-- Donation nudge -->
-        <div style="margin-top:40px; padding:24px; background:var(--night); border-radius:4px; border:1px solid rgba(127,196,232,.15);">
-          <div class="eyebrow" style="margin-bottom:10px;">Support the mission</div>
-          <p style="color:#C6D9EA; font-size:14px; line-height:1.6; margin-bottom:16px;">
-            Every gift helps us keep every message free and reach more people around the world.
-          </p>
-          <button class="btn btn-primary" id="openDonateModalBtn">Give today</button>
-        </div>
+      <div class="connect-support-card">
+        <p class="connect-support-eyebrow">Support the Mission</p>
+        <p>Every gift helps us keep every message free and reach more people around the world.</p>
+        <button class="connect-btn-give" id="openDonateModalBtn">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          Give now
+        </button>
       </div>
 
     </div>
   </div>
+
 </section>
 
 <!-- ── Donation / Give Modal ─────────────────────────────────────────────── -->
