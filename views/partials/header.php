@@ -93,7 +93,11 @@
           </button>
           <div class="msg-dropdown" id="msgDropdown" role="dialog" aria-label="Messages">
             <div class="msg-panel-head">
-              <h3 class="msg-panel-title">Your Messages</h3>
+              <h3 class="msg-panel-title" id="msgPanelTitle">Your Messages</h3>
+              <div class="msg-search-wrap">
+                <input type="text" class="msg-search-input" id="msgSearchInput" placeholder="Search members to message..." aria-label="Search members">
+                <i data-lucide="search" class="msg-search-icon"></i>
+              </div>
             </div>
             <div class="msg-list" id="msgList">
               <div class="msg-empty">Loading…</div>

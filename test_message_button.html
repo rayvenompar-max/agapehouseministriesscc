@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Message Button Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 40px;
+      background: #f5f5f5;
+    }
+    .test-container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .test-button {
+      width: 100%;
+      padding: 12px 26px;
+      border-radius: 999px;
+      border: 1.5px solid #E9E1D2;
+      background: #fff;
+      color: #241C1F;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin: 10px 0;
+    }
+    .test-button:hover {
+      background: #FBF6EC;
+      border-color: #C1542E;
+      color: #C1542E;
+    }
+    .test-button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .log {
+      background: #000;
+      color: #0f0;
+      padding: 15px;
+      border-radius: 5px;
+      font-family: monospace;
+      font-size: 12px;
+      max-height: 300px;
+      overflow-y: auto;
+      margin-top: 20px;
+    }
+    .log-entry {
+      margin: 5px 0;
+    }
+    .error { color: #f00; }
+    .success { color: #0f0; }
+    .info { color: #0ff; }
+    h2 { color: #333; }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="test-container">
+  <h2>🧪 Message Button Diagnostic Test</h2>
+  <p>This tests if the message button JavaScript works correctly.</p>
+  
+  <button class="test-button" id="testBtn" data-member-id="999" data-member-name="Test User">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+    </svg>
+    Test Message Button
+  </button>
+  
+  <div class="log" id="log">
+    <div class="log-entry info">Console initialized. Click the button above to test...</div>
+  </div>
+  
+  <hr style="margin: 20px 0;">
+  
+  <h3>Test Checklist:</h3>
+  <ul>
+    <li>✅ Button should be visible and clickable</li>
+    <li>✅ Click should log "Button clicked" below</li>
+    <li>✅ Button should show loading state</li>
+    <li>✅ API call should be logged</li>
+  </ul>
+</div>
+
+<script>
+  const BASE_URL = '/DigitalEvangelization/api';
+  const logEl = document.getElementById('log');
+  
+  function log(message, type = 'info') {
+    const entry = document.createElement('div');
+    entry.className = `log-entry ${type}`;
+    entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+    logEl.appendChild(entry);
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+  
+  log('Script loaded successfully', 'success');
+  
+  const testBtn = document.getElementById('testBtn');
+  
+  if (testBtn) {
+    log('Button found in DOM', 'success');
+    log('Button ID: ' + testBtn.id, 'info');
+    log('Member ID: ' + testBtn.dataset.memberId, 'info');
+    log('Member Name: ' + testBtn.dataset.memberName, 'info');
+    
+    testBtn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      log('🔘 Button clicked!', 'success');
+      
+      const targetMemberId = testBtn.dataset.memberId;
+      const targetMemberName = testBtn.dataset.memberName;
+      
+      log(`Target member: ${targetMemberName} (ID: ${targetMemberId})`, 'info');
+      
+      if (!targetMemberId) {
+        log('ERROR: Member ID not found', 'error');
+        alert('Member ID not found');
+        return;
+      }
+      
+      testBtn.disabled = true;
+      const originalHTML = testBtn.innerHTML;
+      testBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation: spin 1s linear infinite;"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> Opening...';
+      
+      log('Button disabled and showing loading state', 'info');
+      
+      try {
+        const url = BASE_URL + '/messages/start/' + targetMemberId;
+        log(`Fetching: ${url}`, 'info');
+        
+        const res = await fetch(url, {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        
+        log(`Response status: ${res.status}`, res.ok ? 'success' : 'error');
+        
+        if (!res.ok) {
+          const errorText = await res.text();
+          log(`Server error: ${errorText}`, 'error');
+          throw new Error(`Server returned ${res.status}: ${errorText}`);
+        }
+        
+        const data = await res.json();
+        log(`Response data: ${JSON.stringify(data)}`, 'success');
+        
+        if (data.status === 'success') {
+          log('✓ Conversation started successfully!', 'success');
+          log(`Conversation ID: ${data.data.conversation_id}`, 'info');
+          log('Would redirect to: /#home', 'info');
+          
+          // Don't actually redirect in test mode
+          alert('Success! Check the log for details.');
+          testBtn.disabled = false;
+          testBtn.innerHTML = originalHTML;
+        } else {
+          log(`Error: ${data.message}`, 'error');
+          alert(data.message || 'Could not start conversation.');
+          testBtn.disabled = false;
+          testBtn.innerHTML = originalHTML;
+        }
+      } catch (error) {
+        log(`EXCEPTION: ${error.message}`, 'error');
+        console.error('Full error:', error);
+        alert('Network error: ' + error.message);
+        testBtn.disabled = false;
+        testBtn.innerHTML = originalHTML;
+      }
+    });
+    
+    log('Event listener attached successfully', 'success');
+    log('Ready! Click the button to test.', 'success');
+  } else {
+    log('ERROR: Button not found!', 'error');
+  }
+</script>
+
+</body>
+</html>

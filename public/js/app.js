@@ -4749,8 +4749,6 @@ function showPdMsg(text, isError) {
 
   async function openMemberProfile(username) {
     modal.hidden = false;
-    // Expose globally so notification clicks can call this
-    window.openMemberProfile = openMemberProfile;
     lockScroll();
 
     // Reset content
@@ -4886,6 +4884,9 @@ function showPdMsg(text, isError) {
     div.textContent = str;
     return div.innerHTML;
   }
+  
+  // Expose globally so notification clicks can call this
+  window.openMemberProfile = openMemberProfile;
 })();
 
 
@@ -5517,12 +5518,16 @@ function showPdMsg(text, isError) {
   const msgDropdown= document.getElementById('msgDropdown');
   const msgBadge   = document.getElementById('msgBadge');
   const msgList    = document.getElementById('msgList');
+  const msgSearchInput = document.getElementById('msgSearchInput');
+  const msgPanelTitle = document.getElementById('msgPanelTitle');
 
   // Only active when member is logged in
   if (!msgBtn || !window.CURRENT_MEMBER) return;
 
   let _isOpen    = false;
   let _pollTimer = null;
+  let _allThreads = []; // Store all threads for search filtering
+  let _searchMode = false; // Track if we're in search mode
 
   // ── Open / Close ──────────────────────────────────────────────────────────
   function openDropdown() {
@@ -5559,12 +5564,33 @@ function showPdMsg(text, isError) {
   async function loadMessages() {
     msgList.innerHTML = '<div class="msg-empty">Loading…</div>';
     try {
-      const res = await apiFetch('/contact/threads');
-      if (res.status !== 'success') throw new Error();
-      const threads = res.data || [];
-      renderList(threads);
-      updateBadge(threads);
-    } catch {
+      // Fetch both admin threads and direct message conversations
+      const [contactRes, dmRes] = await Promise.all([
+        apiFetch('/contact/threads'),
+        apiFetch('/messages/conversations')
+      ]);
+      
+      const contactThreads = contactRes.status === 'success' ? (contactRes.data || []) : [];
+      const dmConversations = dmRes.status === 'success' ? (dmRes.data || []) : [];
+      
+      // Combine and sort by most recent activity
+      const allThreads = [
+        ...contactThreads.map(t => ({ ...t, type: 'contact' })),
+        ...dmConversations.map(c => ({ ...c, type: 'dm' }))
+      ];
+      
+      // Sort by last activity (most recent first)
+      allThreads.sort((a, b) => {
+        const aTime = new Date(a.last_message_at || a.last_activity || a.created_at).getTime();
+        const bTime = new Date(b.last_message_at || b.last_activity || b.created_at).getTime();
+        return bTime - aTime;
+      });
+      
+      _allThreads = allThreads; // Store for search
+      renderList(allThreads);
+      updateBadge(contactThreads, dmConversations);
+    } catch (err) {
+      console.error('Failed to load messages:', err);
       msgList.innerHTML = '<div class="msg-empty">Could not load messages.</div>';
     }
   }
@@ -5583,44 +5609,228 @@ function showPdMsg(text, isError) {
     });
   }
 
-  function buildItem(thread) {
+  // ── Search functionality ──────────────────────────────────────────────────
+  let _searchTimeout = null;
+  if (msgSearchInput) {
+    msgSearchInput.addEventListener('input', e => {
+      const query = e.target.value.trim();
+      
+      // Clear previous timeout
+      if (_searchTimeout) {
+        clearTimeout(_searchTimeout);
+      }
+      
+      if (!query) {
+        // Show all threads when search is empty
+        _searchMode = false;
+        if (msgPanelTitle) {
+          msgPanelTitle.textContent = 'Your Messages';
+        }
+        renderList(_allThreads);
+        lucide.createIcons();
+        return;
+      }
+
+      // Enter search mode
+      _searchMode = true;
+      if (msgPanelTitle) {
+        msgPanelTitle.textContent = 'Searching...';
+      }
+
+      // Debounce search API call
+      _searchTimeout = setTimeout(async () => {
+        try {
+          const res = await apiFetch(`/member/search?q=${encodeURIComponent(query)}`);
+          if (res.status !== 'success') {
+            console.error('Search error:', res.message || 'Unknown error');
+            throw new Error(res.message || 'Search failed');
+          }
+          
+          const members = res.data || [];
+          
+          // Update title with results count
+          if (msgPanelTitle) {
+            if (members.length === 0) {
+              msgPanelTitle.textContent = 'No members found';
+            } else {
+              msgPanelTitle.textContent = `Found ${members.length} member${members.length !== 1 ? 's' : ''}`;
+            }
+          }
+
+          // Render member search results
+          if (members.length === 0) {
+            msgList.innerHTML = '<div class="msg-empty"><i data-lucide="search-x" class="msg-empty-icon"></i><span>No members match your search</span></div>';
+            lucide.createIcons({ nodes: [msgList] });
+          } else {
+            renderMemberSearchResults(members);
+            lucide.createIcons();
+          }
+        } catch (err) {
+          console.error('Member search failed:', err);
+          msgList.innerHTML = '<div class="msg-empty">Could not search members.</div>';
+        }
+      }, 300); // Wait 300ms after user stops typing
+    });
+
+    // Clear search when dropdown closes
+    msgDropdown.addEventListener('transitionend', () => {
+      if (!_isOpen && msgSearchInput) {
+        msgSearchInput.value = '';
+        _searchMode = false;
+        if (msgPanelTitle) {
+          msgPanelTitle.textContent = 'Your Messages';
+        }
+      }
+    });
+  }
+
+  // ── Render member search results ──────────────────────────────────────────
+  function renderMemberSearchResults(members) {
+    msgList.innerHTML = '';
+    members.forEach((member, i) => {
+      const el = buildMemberItem(member);
+      el.style.animationDelay = `${i * 40}ms`;
+      msgList.appendChild(el);
+    });
+  }
+
+  function buildMemberItem(member) {
     const wrap = document.createElement('div');
-    wrap.className = 'msg-item' + (thread.unread_admin_replies > 0 ? ' unread' : '');
+    wrap.className = 'msg-item';
 
-    // Use Agape House logo for all messages (admin conversations)
-    const logoSrc = (window.APP_BASE_URL || '') + '/public/images/agape1.jpg';
+    // Generate avatar or initial
+    let avatarContent;
+    if (member.profile_picture) {
+      avatarContent = `<img src="${member.profile_picture}" alt="${_esc(member.display_name)}" />`;
+    } else {
+      const initial = (member.display_name || member.username || '?').charAt(0).toUpperCase();
+      avatarContent = `<div class="msg-initial">${initial}</div>`;
+    }
 
-    const timeStr = typeof formatTimeAgo === 'function' ? formatTimeAgo(thread.last_activity || thread.created_at) : '';
-    const preview = thread.message.length > 80 ? thread.message.substring(0, 80) + '…' : thread.message;
+    const memberSince = member.created_at ? formatTimeAgo(member.created_at) : '';
 
     wrap.innerHTML = `
       <div class="msg-item-icon">
-        <img src="${logoSrc}" alt="Agape House" />
+        ${avatarContent}
       </div>
       <div class="msg-item-content">
-        <div class="msg-item-reason">${_esc(thread.reason)}</div>
-        <div class="msg-item-preview">${_esc(preview)}</div>
-        <div class="msg-item-time">${timeStr}</div>
+        <div class="msg-item-reason">${_esc(member.display_name)}</div>
+        <div class="msg-item-preview">@${_esc(member.username)}</div>
+        <div class="msg-item-time">Member since ${memberSince}</div>
       </div>
-      ${thread.unread_admin_replies > 0 ? '<span class="msg-unread-dot"></span>' : ''}
     `;
 
-    wrap.addEventListener('click', () => {
+    wrap.addEventListener('click', async () => {
       closeDropdown();
-      // Open the chat modal with this thread
-      if (typeof window.openMemberChatModal === 'function') {
-        window.openMemberChatModal(thread.id);
-        // Refresh badge after opening (user will see replies)
-        setTimeout(loadMessages, 500);
+      // Start a conversation with this member
+      try {
+        const res = await apiFetch(`/messages/start/${member.id}`, { method: 'POST' });
+        if (res.status === 'success' && res.data?.conversation_id) {
+          // Open the direct message modal if available
+          if (typeof window.openDirectMessageModal === 'function') {
+            // Pass both conversation_id and other_member data
+            window.openDirectMessageModal(res.data.conversation_id, res.data.other_member);
+          } else {
+            // Fallback: navigate to messages page if available
+            window.location.href = `${window.APP_BASE_URL || ''}/messages`;
+          }
+        } else {
+          console.error('Failed to start conversation:', res);
+          alert(res.message || 'Could not start conversation. Please try again.');
+        }
+      } catch (err) {
+        console.error('Failed to start conversation:', err);
+        alert('Could not start conversation. Please try again.');
       }
     });
 
     return wrap;
   }
 
-  function updateBadge(threads) {
-    const unreadCount = threads.reduce((sum, t) => sum + (t.unread_admin_replies || 0), 0);
-    setBadge(unreadCount);
+  function buildItem(thread) {
+    const wrap = document.createElement('div');
+    
+    // Check if it's a direct message or contact thread
+    const isDM = thread.type === 'dm';
+    const isUnread = isDM ? (thread.unread_count > 0) : (thread.unread_admin_replies > 0);
+    
+    wrap.className = 'msg-item' + (isUnread ? ' unread' : '');
+
+    let iconHtml, title, preview, timeStr;
+
+    if (isDM) {
+      // Direct message from another member
+      const otherMember = {
+        id: thread.other_member_id,
+        display_name: thread.other_member_name,
+        username: thread.other_member_username,
+        profile_picture: thread.other_member_picture
+      };
+      
+      if (otherMember.profile_picture) {
+        iconHtml = `<img src="${otherMember.profile_picture}" alt="${_esc(otherMember.display_name)}" />`;
+      } else {
+        const initial = (otherMember.display_name || otherMember.username || '?').charAt(0).toUpperCase();
+        iconHtml = `<div class="msg-initial">${initial}</div>`;
+      }
+      
+      title = otherMember.display_name || otherMember.username;
+      preview = thread.last_message_body ? 
+        (thread.last_message_body.length > 80 ? thread.last_message_body.substring(0, 80) + '…' : thread.last_message_body) :
+        'No messages yet';
+      timeStr = typeof formatTimeAgo === 'function' ? formatTimeAgo(thread.last_message_at || thread.created_at) : '';
+      
+      // Store other_member for click handler
+      thread._otherMember = otherMember;
+    } else {
+      // Contact/admin thread
+      const logoSrc = (window.APP_BASE_URL || '') + '/public/images/agape1.jpg';
+      iconHtml = `<img src="${logoSrc}" alt="Agape House" />`;
+      title = thread.reason;
+      preview = thread.message.length > 80 ? thread.message.substring(0, 80) + '…' : thread.message;
+      timeStr = typeof formatTimeAgo === 'function' ? formatTimeAgo(thread.last_activity || thread.created_at) : '';
+    }
+
+    wrap.innerHTML = `
+      <div class="msg-item-icon">
+        ${iconHtml}
+      </div>
+      <div class="msg-item-content">
+        <div class="msg-item-reason">${_esc(title)}</div>
+        <div class="msg-item-preview">${_esc(preview)}</div>
+        <div class="msg-item-time">${timeStr}</div>
+      </div>
+      ${isUnread ? '<span class="msg-unread-dot"></span>' : ''}
+    `;
+
+    wrap.addEventListener('click', () => {
+      closeDropdown();
+      
+      if (isDM) {
+        // Open direct message modal
+        if (typeof window.openDirectMessageModal === 'function') {
+          window.openDirectMessageModal(thread.id, thread._otherMember);
+          // Refresh messages after opening
+          setTimeout(loadMessages, 500);
+        }
+      } else {
+        // Open the contact chat modal with this thread
+        if (typeof window.openMemberChatModal === 'function') {
+          window.openMemberChatModal(thread.id);
+          // Refresh badge after opening (user will see replies)
+          setTimeout(loadMessages, 500);
+        }
+      }
+    });
+
+    return wrap;
+  }
+
+  function updateBadge(contactThreads, dmConversations) {
+    const contactUnread = contactThreads.reduce((sum, t) => sum + (t.unread_admin_replies || 0), 0);
+    const dmUnread = dmConversations.reduce((sum, c) => sum + (c.unread_count || 0), 0);
+    const totalUnread = contactUnread + dmUnread;
+    setBadge(totalUnread);
   }
 
   // ── Badge ─────────────────────────────────────────────────────────────────
@@ -5651,17 +5861,24 @@ function showPdMsg(text, isError) {
   async function pollThreads() {
     if (!window.CURRENT_MEMBER) return;
     try {
-      const res = await apiFetch('/contact/threads');
-      if (res.status === 'success') {
-        const threads = res.data || [];
-        updateBadge(threads);
-      }
+      // Fetch both admin threads and direct message conversations
+      const [contactRes, dmRes] = await Promise.all([
+        apiFetch('/contact/threads'),
+        apiFetch('/messages/conversations')
+      ]);
+      
+      const contactThreads = contactRes.status === 'success' ? (contactRes.data || []) : [];
+      const dmConversations = dmRes.status === 'success' ? (dmRes.data || []) : [];
+      
+      updateBadge(contactThreads, dmConversations);
     } catch { /* silent */ }
   }
 
-  // Initial load
-  setTimeout(pollThreads, 800);
-  _pollTimer = setInterval(pollThreads, 30_000);
+  // Load badge count immediately on page load
+  pollThreads();
+  
+  // Then poll every 30 seconds
+  _pollTimer = setInterval(pollThreads, 30000);
 
   // Expose refresh function globally so chat modal can call it after sending a message
   window._refreshMessagesBadge = pollThreads;
@@ -5901,4 +6118,358 @@ function showPdMsg(text, isError) {
   if (pageHome.classList.contains('active') || pageHome.classList.contains('hero-animate')) {
     setTimeout(startCycle, 900);
   }
+})();
+
+
+// ─── Member Direct Messages (Member-to-Member) ────────────────────────────────
+/**
+ * Opens a direct message conversation with another member.
+ * This is called when clicking the "Message" button on a member's profile.
+ * Unlike openMemberChatModal (which is for member-to-admin), this opens
+ * a member-to-member conversation.
+ */
+window.openMemberDirectChat = async function(targetMemberId, targetMemberName) {
+  // First, start or get the conversation with this member
+  try {
+    const startRes = await apiFetch(`/messages/start/${targetMemberId}`, {
+      method: 'POST',
+    });
+
+    if (startRes.status !== 'success') {
+      alert(startRes.message || 'Could not start conversation.');
+      return;
+    }
+
+    const conversationId = startRes.data.conversation_id;
+    const otherMember = startRes.data.other_member;
+
+    // Now open a modal showing this conversation
+    openDirectMessageModal(conversationId, otherMember);
+  } catch (error) {
+    console.error('Failed to start direct message:', error);
+    alert('Network error. Please try again.');
+  }
+};
+
+/**
+ * Opens the direct message modal UI
+ */
+function openDirectMessageModal(conversationId, otherMember) {
+  console.log('[openDirectMessageModal] Called with:', { conversationId, otherMember });
+  
+  // Check if we already have a direct message modal in the DOM
+  let modal = document.getElementById('directMessageModal');
+  console.log('[openDirectMessageModal] Existing modal:', modal ? 'Found' : 'Not found');
+  
+  if (!modal) {
+    // Create the modal on demand
+    console.log('[openDirectMessageModal] Creating modal...');
+    createDirectMessageModal();
+    modal = document.getElementById('directMessageModal');
+    console.log('[openDirectMessageModal] Modal created:', modal ? 'Success' : 'Failed');
+  }
+
+  // Populate modal with conversation data
+  const titleEl = document.getElementById('dmTitle');
+  const metaEl = document.getElementById('dmMeta');
+  const threadEl = document.getElementById('dmThread');
+  const inputEl = document.getElementById('dmInput');
+  const sendBtn = document.getElementById('dmSend');
+  const closeBtn = document.getElementById('dmClose');
+  const backdrop = document.getElementById('dmBackdrop');
+  const msgEl = document.getElementById('dmMsg');
+  
+  if (titleEl) titleEl.textContent = otherMember.display_name || otherMember.username;
+  if (metaEl) metaEl.textContent = `@${otherMember.username}`;
+  
+  // Store conversation ID for later use
+  modal.dataset.conversationId = conversationId;
+  modal.dataset.otherMemberId = otherMember.id;
+
+  // Load conversation messages
+  loadDirectMessages(conversationId, threadEl, otherMember);
+
+  // Show modal
+  modal.hidden = false;
+  lockScroll();
+
+  // Event handlers
+  const sendMessage = async () => {
+    const body = inputEl.value.trim();
+    if (!body) return;
+
+    sendBtn.disabled = true;
+    msgEl.textContent = '';
+
+    try {
+      const res = await apiFetch(`/messages/conversation/${conversationId}`, {
+        method: 'POST',
+        body: JSON.stringify({ body }),
+      });
+
+      if (res.status === 'success') {
+        // Add message to thread
+        threadEl.insertAdjacentHTML('beforeend', buildDirectMessageBubble(res.data, true));
+        threadEl.scrollTop = threadEl.scrollHeight;
+        inputEl.value = '';
+        msgEl.textContent = '✓ Sent';
+        setTimeout(() => { msgEl.textContent = ''; }, 2000);
+      } else {
+        msgEl.textContent = res.message || 'Could not send.';
+      }
+    } catch {
+      msgEl.textContent = 'Network error. Try again.';
+    } finally {
+      sendBtn.disabled = false;
+    }
+  };
+
+  const closeModal = () => {
+    animatedModalClose(modal, () => {
+      unlockScroll();
+      // Mark as read when closing
+      apiFetch(`/messages/conversation/${conversationId}/read`, { method: 'POST' }).catch(() => {});
+    });
+  };
+
+  // Wire up handlers (remove old ones first to avoid duplicates)
+  sendBtn.replaceWith(sendBtn.cloneNode(true));
+  closeBtn.replaceWith(closeBtn.cloneNode(true));
+  backdrop.replaceWith(backdrop.cloneNode(true));
+  inputEl.replaceWith(inputEl.cloneNode(true));
+
+  // Get fresh references after cloning
+  const freshSendBtn = document.getElementById('dmSend');
+  const freshCloseBtn = document.getElementById('dmClose');
+  const freshBackdrop = document.getElementById('dmBackdrop');
+  const freshInputEl = document.getElementById('dmInput');
+  
+  // Updated sendMessage to use fresh input reference
+  const sendMessageFresh = async () => {
+    const body = freshInputEl.value.trim();
+    if (!body) return;
+
+    freshSendBtn.disabled = true;
+    msgEl.textContent = '';
+
+    try {
+      const res = await apiFetch(`/messages/conversation/${conversationId}`, {
+        method: 'POST',
+        body: JSON.stringify({ body }),
+      });
+
+      if (res.status === 'success') {
+        // Add message to thread
+        threadEl.insertAdjacentHTML('beforeend', buildDirectMessageBubble(res.data, true));
+        threadEl.scrollTop = threadEl.scrollHeight;
+        freshInputEl.value = '';
+        msgEl.textContent = '✓ Sent';
+        setTimeout(() => { msgEl.textContent = ''; }, 2000);
+      } else {
+        msgEl.textContent = res.message || 'Could not send.';
+      }
+    } catch {
+      msgEl.textContent = 'Network error. Try again.';
+    } finally {
+      freshSendBtn.disabled = false;
+    }
+  };
+  
+  freshSendBtn.addEventListener('click', sendMessageFresh);
+  freshCloseBtn.addEventListener('click', closeModal);
+  freshBackdrop.addEventListener('click', closeModal);
+  freshInputEl.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      e.preventDefault();
+      sendMessageFresh();
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !modal.hidden) closeModal();
+  }, { once: true });
+}
+
+/**
+ * Load messages for a direct conversation
+ */
+async function loadDirectMessages(conversationId, threadEl, otherMember) {
+  threadEl.innerHTML = '<div style="color:var(--ink-soft);font-size:13px;padding:8px 0;">Loading…</div>';
+
+  try {
+    const res = await apiFetch(`/messages/conversation/${conversationId}`);
+    
+    if (res.status !== 'success') {
+      threadEl.innerHTML = '<div style="color:var(--ink-soft);font-size:13px;">Could not load messages.</div>';
+      return;
+    }
+
+    const messages = res.data.messages || [];
+    
+    if (messages.length === 0) {
+      threadEl.innerHTML = '<div style="color:var(--ink-soft);font-size:13px;">No messages yet. Start the conversation!</div>';
+    } else {
+      threadEl.innerHTML = messages.map(msg => buildDirectMessageBubble(msg, false)).join('');
+      threadEl.scrollTop = threadEl.scrollHeight;
+    }
+    
+    // Mark as read immediately when conversation is opened
+    apiFetch(`/messages/conversation/${conversationId}/read`, { method: 'POST' })
+      .then(() => {
+        // Refresh the messages badge to reflect the updated unread count
+        if (typeof window._refreshMessagesBadge === 'function') {
+          window._refreshMessagesBadge();
+        }
+      })
+      .catch(() => {});
+  } catch {
+    threadEl.innerHTML = '<div style="color:var(--ink-soft);font-size:13px;">Network error.</div>';
+  }
+}
+
+/**
+ * Build HTML for a direct message bubble
+ */
+function buildDirectMessageBubble(msg, isNew = false) {
+  // Check if this message is from the current logged-in member
+  const currentMember = window.CURRENT_MEMBER || {};
+  const isMine = msg.sender_id === (currentMember.id || 0);
+  const senderName = msg.sender_name || msg.sender_username || 'Member';
+  const initial = senderName.charAt(0).toUpperCase();
+  const pic = msg.sender_picture;
+  
+  const bubbleClass = isMine ? 'dm-bubble-mine' : 'dm-bubble-other';
+  const time = new Date(msg.created_at).toLocaleTimeString('en-US', { 
+    hour: 'numeric', 
+    minute: '2-digit' 
+  });
+
+  return `
+    <div class="dm-message ${bubbleClass}">
+      ${!isMine ? `
+        <div class="dm-avatar">
+          ${pic ? `<img src="${escHtml(pic)}" alt="${escHtml(initial)}">` : initial}
+        </div>
+      ` : ''}
+      <div class="dm-content">
+        <div class="dm-bubble">
+          ${!isMine ? `<div class="dm-sender-name">${escHtml(senderName)}</div>` : ''}
+          <div class="dm-body">${escHtml(msg.body)}</div>
+        </div>
+        <div class="dm-time">${time}</div>
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * Create the direct message modal DOM structure
+ */
+function createDirectMessageModal() {
+  const modal = document.createElement('div');
+  modal.id = 'directMessageModal';
+  modal.className = 'member-chat-overlay';
+  modal.hidden = true;
+  modal.setAttribute('role', 'dialog');
+  modal.setAttribute('aria-modal', 'true');
+  
+  modal.innerHTML = `
+    <div class="member-chat-backdrop" id="dmBackdrop"></div>
+    <div class="member-chat-box">
+      <div class="member-chat-header">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div>
+            <h2 class="member-chat-title" id="dmTitle">Direct Message</h2>
+            <p class="member-chat-meta" id="dmMeta"></p>
+          </div>
+        </div>
+        <button class="member-chat-close" id="dmClose" aria-label="Close">✕</button>
+      </div>
+      <div class="member-chat-thread" id="dmThread"></div>
+      <div class="member-chat-footer">
+        <div class="member-chat-input-wrap">
+          <textarea class="member-chat-input" id="dmInput" 
+            rows="2" placeholder="Write a message..." maxlength="3000"></textarea>
+          <button class="member-chat-send" id="dmSend" aria-label="Send message">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+          </button>
+        </div>
+        <span class="member-chat-msg" id="dmMsg"></span>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+}
+
+
+// ─── Auto-open Direct Message on Page Load ───────────────────────────────────
+// Check if we should open a direct message modal after redirect from profile page
+(function checkPendingDirectMessage() {
+  console.log('[DM Auto-open] Initializing...');
+  
+  // Check URL hash for direct message (e.g., #dm=123)
+  const hash = window.location.hash;
+  const dmMatch = hash.match(/#dm=(\d+)/);
+  
+  if (dmMatch) {
+    const conversationId = parseInt(dmMatch[1]);
+    console.log('[DM Auto-open] Found conversation ID in URL hash:', conversationId);
+    
+    // Remove the hash
+    history.replaceState(null, '', window.location.pathname + '#home');
+    
+    // Wait for DOM and app init
+    window.addEventListener('DOMContentLoaded', () => {
+      setTimeout(async () => {
+        console.log('[DM Auto-open] Loading conversation from API...');
+        try {
+          const res = await apiFetch(`/messages/conversation/${conversationId}`);
+          if (res.status === 'success' && res.data.other_member) {
+            console.log('[DM Auto-open] Opening modal with conversation data');
+            openDirectMessageModal(conversationId, res.data.other_member);
+          } else {
+            console.error('[DM Auto-open] Failed to load conversation:', res);
+          }
+        } catch (error) {
+          console.error('[DM Auto-open] Error loading conversation:', error);
+        }
+      }, 800);
+    });
+    return;
+  }
+  
+  // Fallback: Check sessionStorage
+  window.addEventListener('DOMContentLoaded', () => {
+    console.log('[DM Auto-open] DOM loaded, waiting 800ms for app init...');
+    setTimeout(() => {
+      console.log('[DM Auto-open] Checking sessionStorage...');
+      const pendingMessage = sessionStorage.getItem('openDirectMessage');
+      console.log('[DM Auto-open] pendingMessage:', pendingMessage);
+      
+      if (pendingMessage) {
+        try {
+          const data = JSON.parse(pendingMessage);
+          console.log('[DM Auto-open] Parsed data:', data);
+          sessionStorage.removeItem('openDirectMessage');
+          console.log('[DM Auto-open] Removed from sessionStorage');
+          
+          // Open the direct message modal with the conversation data
+          if (data.conversationId && data.otherMember) {
+            console.log('[DM Auto-open] Opening modal...');
+            openDirectMessageModal(data.conversationId, data.otherMember);
+          } else {
+            console.warn('[DM Auto-open] Invalid data structure:', data);
+          }
+        } catch (e) {
+          console.error('[DM Auto-open] Failed to open pending direct message:', e);
+        }
+      } else {
+        console.log('[DM Auto-open] No pending message found');
+      }
+    }, 800); // Wait for app initialization
+  });
 })();

@@ -191,6 +191,34 @@ class MemberRepository
         return array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
     }
 
+    /**
+     * Search for members by username or display name.
+     * Returns only active members, excluding the current user.
+     * Limit results to prevent performance issues.
+     */
+    public function searchMembers(string $query, int $excludeId = 0, int $limit = 10): array
+    {
+        $searchTerm = '%' . $query . '%';
+        
+        $sql = 'SELECT id, username, display_name, profile_picture, created_at
+                FROM members
+                WHERE status = :status
+                  AND id != :exclude_id
+                  AND (username LIKE :search1 OR display_name LIKE :search2)
+                ORDER BY display_name ASC
+                LIMIT ' . (int)$limit;
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([
+            'status' => 'active',
+            'exclude_id' => $excludeId,
+            'search1' => $searchTerm,
+            'search2' => $searchTerm
+        ]);
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     private function hydrate(array $row): Member
     {
         return new Member(

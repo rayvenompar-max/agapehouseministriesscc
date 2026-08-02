@@ -75,6 +75,7 @@ use Controller\ContactController;
 use Controller\AnnouncementController;
 use Controller\CommentController;
 use Controller\NotificationController;
+use Controller\DirectMessageController;
 use Repository\MediaRepository;
 use Repository\ArticleRepository;
 use Repository\PrayerRepository;
@@ -84,6 +85,7 @@ use Repository\AnnouncementRepository;
 use Repository\CommentRepository;
 use Repository\NotificationRepository;
 use Repository\MemberRepository;
+use Repository\DirectMessageRepository;
 use Service\MediaService;
 use Service\ArticleService;
 use Service\PrayerService;
@@ -101,6 +103,7 @@ $contactCtrl      = new ContactController(new ContactService(new ContactReposito
 $announcementCtrl = new AnnouncementController(new AnnouncementService(new AnnouncementRepository($db), new NotificationRepository($db), new MemberRepository($db)));
 $commentCtrl      = new CommentController(new CommentService(new CommentRepository($db)));
 $notifCtrl        = new NotificationController(new NotificationService(new NotificationRepository($db)));
+$dmCtrl           = new DirectMessageController(new DirectMessageRepository($db), new MemberRepository($db));
 
 // ---------- Route matching ----------
 $method = $_SERVER['REQUEST_METHOD'];
@@ -291,6 +294,22 @@ if ($method === 'GET' && matchRoute('/media/featured', $path)) {
 } elseif ($method === 'POST' && matchRoute('/contact', $path)) {
     $contactCtrl->send();
 
+// ---- Direct Messages (Member to Member) ----
+} elseif ($method === 'POST' && matchRoute('/messages/start/{memberId}', $path, $params)) {
+    $dmCtrl->startConversation((int) $params['memberId']);
+
+} elseif ($method === 'GET' && matchRoute('/messages/conversations', $path)) {
+    $dmCtrl->getConversations();
+
+} elseif ($method === 'POST' && matchRoute('/messages/conversation/{id}/read', $path, $params)) {
+    $dmCtrl->markAsRead((int) $params['id']);
+
+} elseif ($method === 'GET' && matchRoute('/messages/conversation/{id}', $path, $params)) {
+    $dmCtrl->getConversation((int) $params['id']);
+
+} elseif ($method === 'POST' && matchRoute('/messages/conversation/{id}', $path, $params)) {
+    $dmCtrl->sendMessage((int) $params['id']);
+
 // ---- Announcements ----
 } elseif ($method === 'GET' && matchRoute('/announcements/pinned', $path)) {
     $announcementCtrl->getPinned();
@@ -311,6 +330,30 @@ if ($method === 'GET' && matchRoute('/media/featured', $path)) {
     $announcementCtrl->delete((int) $params['id']);
 
 // ---- Member profile ----
+} elseif ($method === 'GET' && matchRoute('/member/search', $path)) {
+    // Search for members by username or display name
+    $query = trim((string)($_GET['q'] ?? ''));
+    if ($query === '') {
+        echo json_encode(['status' => 'success', 'data' => []]);
+        exit;
+    }
+    
+    try {
+        $memberRepo = new \Repository\MemberRepository($db);
+        $currentMemberId = (int)($_SESSION['member']['id'] ?? 0);
+        $results = $memberRepo->searchMembers($query, $currentMemberId, 10);
+        
+        echo json_encode(['status' => 'success', 'data' => $results]);
+    } catch (\Throwable $e) {
+        error_log('Member search error: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+        http_response_code(500);
+        echo json_encode([
+            'status' => 'error', 
+            'message' => 'Search failed: ' . $e->getMessage()
+        ]);
+    }
+    exit;
+
 } elseif ($method === 'POST' && matchRoute('/member/avatar', $path)) {
     // Upload profile picture for the logged-in member
     if (empty($_SESSION['member']['id'])) {
