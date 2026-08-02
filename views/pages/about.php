@@ -1,7 +1,7 @@
 <section class="page" id="page-about">
 
   <!-- ── Page hero ─────────────────────────────────────────────────────────── -->
-  <div class="page-hero about-hero">
+  <div class="page-hero about-hero page-hero--about">
     <div class="page-hero-inner">
       <div class="eyebrow about-hero-eyebrow">About</div>
       <h2 class="about-hero-title">Agape House Ministries <em>San Carlos</em></h2>
@@ -11,20 +11,11 @@
       </p>
     </div>
 
-    <!-- Sun disc + rays -->
-    <div class="page-hero-horizon-stage" aria-hidden="true">
-      <div class="sun-wrap">
-        <div class="sun-ray sun-ray--r1"></div>
-        <div class="sun-ray sun-ray--r2"></div>
-        <div class="sun-ray sun-ray--r3"></div>
-        <div class="sun-ray sun-ray--r4"></div>
-        <div class="sun-ray sun-ray--r5"></div>
-        <div class="sun-ray sun-ray--r6"></div>
-        <div class="sun-ray sun-ray--r7"></div>
-        <div class="sun-ray sun-ray--r8"></div>
-        <div class="sun-ray sun-ray--r9"></div>
-        <div class="sun-disc"></div>
-      </div>
+    <!-- Spark orb decoration (mirrors Events page) -->
+    <div class="about-spark-wrap" aria-hidden="true">
+      <div class="about-spark-ring"></div>
+      <div class="about-spark-ring about-spark-ring--delay"></div>
+      <div class="about-spark"></div>
     </div>
   </div>
 

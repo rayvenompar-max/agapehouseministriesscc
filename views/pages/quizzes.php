@@ -3,30 +3,21 @@
   <!-- ── Page hero ─────────────────────────────────────────────────────────── -->
   <div class="page-hero page-hero--quizzes">
     <div class="page-hero-inner">
-      <div class="eyebrow quizzes-hero-eyebrow">Faith &amp; Knowledge</div>
-      <h2 class="quizzes-hero-title">Bible <em>Quizzes</em></h2>
+      <p class="eyebrow quizzes-hero-eyebrow">Faith &amp; Knowledge</p>
+      <h2 class="quizzes-hero-title">Bible <em>Quizzes.</em></h2>
       <p class="lede quizzes-hero-lede">Test your knowledge of Scripture — from the Gospels to the Epistles.</p>
     </div>
 
-    <!-- Sun disc + rays -->
-    <div class="page-hero-horizon-stage" aria-hidden="true">
-      <div class="sun-wrap">
-        <div class="sun-ray sun-ray--r1"></div>
-        <div class="sun-ray sun-ray--r2"></div>
-        <div class="sun-ray sun-ray--r3"></div>
-        <div class="sun-ray sun-ray--r4"></div>
-        <div class="sun-ray sun-ray--r5"></div>
-        <div class="sun-ray sun-ray--r6"></div>
-        <div class="sun-ray sun-ray--r7"></div>
-        <div class="sun-ray sun-ray--r8"></div>
-        <div class="sun-ray sun-ray--r9"></div>
-        <div class="sun-disc"></div>
-      </div>
+    <!-- Spark orb + animated rings -->
+    <div class="quiz-spark-wrap" aria-hidden="true">
+      <div class="quiz-spark-ring"></div>
+      <div class="quiz-spark-ring quiz-spark-ring--delay"></div>
+      <div class="quiz-spark"></div>
     </div>
   </div>
 
   <!-- ── Quiz grid view ───────────────────────────────────────────────────── -->
-  <div class="section-wrap" style="padding-top:40px; padding-bottom:80px;" id="quizGridView">
+  <div class="section-wrap quiz-section-wrap" id="quizGridView">
 
     <!-- Filter pills -->
     <div class="quiz-filter-row" id="quizFilterRow">
@@ -41,7 +32,7 @@
   </div>
 
   <!-- ── Active quiz view ─────────────────────────────────────────────────── -->
-  <div class="section-wrap quiz-active-wrap" id="quizActiveView" hidden style="padding-top:40px; padding-bottom:80px;">
+  <div class="section-wrap quiz-active-wrap" id="quizActiveView" hidden>
 
     <!-- Quiz header bar -->
     <div class="quiz-header-bar">
@@ -76,8 +67,8 @@
         <p class="quiz-result-score" id="quizResultScore"></p>
         <p class="quiz-result-verse" id="quizResultVerse"></p>
         <div class="quiz-result-actions">
-          <button class="btn btn-primary" id="quizRetryBtn">Try Again</button>
-          <button class="btn btn-ghost-dark" id="quizAllBtn">All Quizzes</button>
+          <button id="quizRetryBtn">Try Again</button>
+          <button id="quizAllBtn">All Quizzes</button>
         </div>
       </div>
     </div>

@@ -9,7 +9,7 @@
  *   - Images                            → Cache-first with long TTL
  */
 
-const CACHE_VERSION = 'daybreak-v5';
+const CACHE_VERSION = 'daybreak-v6';
 const STATIC_CACHE  = CACHE_VERSION + '-static';
 const IMAGE_CACHE   = CACHE_VERSION + '-images';
 
@@ -106,6 +106,8 @@ self.addEventListener('fetch', event => {
 
 /**
  * Cache-first: return cached response if available, otherwise fetch & cache.
+ * Only returns a synthetic 503 on a true network failure (no connectivity).
+ * Real server responses (including error codes) are always passed through as-is.
  */
 async function cacheFirstWithNetwork(request, cacheName) {
   const cache  = await caches.open(cacheName);
@@ -114,13 +116,15 @@ async function cacheFirstWithNetwork(request, cacheName) {
 
   try {
     const response = await fetch(request);
+    // Only cache clean 200 responses; always return whatever the server sent
     if (response && response.status === 200 && response.type !== 'opaque') {
       cache.put(request, response.clone());
     }
     return response;
   } catch {
+    // Network is genuinely unavailable — return a soft offline placeholder
     return new Response('Offline — please check your connection.', {
-      status: 503,
+      status: 200,
       headers: { 'Content-Type': 'text/plain' },
     });
   }

@@ -3,43 +3,38 @@
   <!-- ── Page hero ─────────────────────────────────────────────────────────── -->
   <div class="page-hero page-hero--prayer">
     <div class="page-hero-inner">
-      <div class="eyebrow prayer-hero-eyebrow">Prayer Wall</div>
-      <h2 class="prayer-hero-title">Carry it, or <em>lay it down</em></h2>
+      <p class="eyebrow prayer-hero-eyebrow">Prayer Wall</p>
+      <h2 class="prayer-hero-title">Carry it, or <em>lay it down.</em></h2>
       <p class="lede prayer-hero-lede">Post a need. Pray over someone else's. No request is too small.</p>
     </div>
 
-    <!-- Sun disc + rays -->
-    <div class="page-hero-horizon-stage" aria-hidden="true">
-      <div class="sun-wrap">
-        <div class="sun-ray sun-ray--r1"></div>
-        <div class="sun-ray sun-ray--r2"></div>
-        <div class="sun-ray sun-ray--r3"></div>
-        <div class="sun-ray sun-ray--r4"></div>
-        <div class="sun-ray sun-ray--r5"></div>
-        <div class="sun-ray sun-ray--r6"></div>
-        <div class="sun-ray sun-ray--r7"></div>
-        <div class="sun-ray sun-ray--r8"></div>
-        <div class="sun-ray sun-ray--r9"></div>
-        <div class="sun-disc"></div>
-      </div>
+    <!-- Spark orb animation -->
+    <div class="prayer-spark-wrap" aria-hidden="true">
+      <div class="prayer-spark-ring"></div>
+      <div class="prayer-spark-ring prayer-spark-ring--delay"></div>
+      <div class="prayer-spark"></div>
     </div>
   </div>
 
+  <!-- ── Wall layout ────────────────────────────────────────────────────────── -->
   <div class="section-wrap" style="padding-top:44px; padding-bottom:80px;">
     <div class="prayer-layout">
 
       <!-- Submit form -->
-      <div class="form-card">
+      <div class="form-card prayer-form-card">
         <h3 style="font-family:var(--display); margin-bottom:20px; color:var(--white);">Submit a request</h3>
         <div class="field">
           <label for="pcat">Category</label>
-          <select id="pcat">
-            <option>Healing</option>
-            <option>Family</option>
-            <option>Guidance</option>
-            <option>Provision</option>
-            <option>Thanksgiving</option>
-          </select>
+          <div class="select-wrap">
+            <select id="pcat">
+              <option>Healing</option>
+              <option>Family</option>
+              <option>Guidance</option>
+              <option>Provision</option>
+              <option>Thanksgiving</option>
+            </select>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
         </div>
         <div class="field">
           <label for="preq">
@@ -49,13 +44,13 @@
           <textarea id="preq" rows="5" maxlength="1000"
             placeholder="Share as much or as little as you'd like… (10 characters minimum)"></textarea>
         </div>
-        <button class="submit-btn" id="prayerSubmitBtn">Post to the wall</button>
+        <button class="submit-btn prayer-submit-btn" id="prayerSubmitBtn">Post to the wall</button>
         <p id="prayerFormMsg" class="form-note" style="display:none;"></p>
       </div>
 
       <!-- Wall right-side column -->
       <div>
-        <div class="filter-row" id="prayerFilterRow" style="margin-bottom:20px;">
+        <div class="filter-row prayer-filter-row" id="prayerFilterRow" style="margin-bottom:20px;">
           <button class="filter-pill active" data-cat="">All</button>
           <button class="filter-pill" data-cat="Healing">Healing</button>
           <button class="filter-pill" data-cat="Family">Family</button>

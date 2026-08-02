@@ -1713,13 +1713,16 @@ function renderQuizGrid(filterCategory = '', animate = false) {
   }
 
   grid.innerHTML = filtered.map(quiz => `
-    <div class="quiz-card" data-quiz-id="${escHtml(quiz.id)}">
+    <div class="quiz-card${quiz.id === 'daily-challenge' ? ' quiz-card--daily' : ''}" data-quiz-id="${escHtml(quiz.id)}">
       <div class="quiz-card-top">
         <span class="quiz-card-count">${quiz.questions.length} questions</span>
       </div>
       <h3 class="quiz-card-title">${escHtml(quiz.title)}</h3>
       <p class="quiz-card-desc">${escHtml(quiz.description)}</p>
-      <button class="quiz-start-btn" data-quiz-id="${escHtml(quiz.id)}">Start quiz ↗</button>
+      <button class="quiz-start-btn" data-quiz-id="${escHtml(quiz.id)}">
+        Start quiz
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+      </button>
     </div>
   `).join('');
 
@@ -1807,19 +1810,22 @@ function showQuizResult() {
   const ratio  = _quizScore / total;
 
   // Pick icon & heading
-  let icon, heading;
-  if (ratio === 1)       { icon = '🏆'; heading = 'Perfect score!'; }
-  else if (ratio >= 0.7) { icon = '🌟'; heading = 'Well done!'; }
-  else if (ratio >= 0.4) { icon = '📖'; heading = 'Keep studying!'; }
-  else                   { icon = '🙏'; heading = 'Keep going!'; }
+  let iconName, heading;
+  if (ratio === 1)       { iconName = 'trophy';    heading = 'Perfect score!'; }
+  else if (ratio >= 0.7) { iconName = 'star';      heading = 'Well done!'; }
+  else if (ratio >= 0.4) { iconName = 'book-open'; heading = 'Keep studying!'; }
+  else                   { iconName = 'heart-handshake'; heading = 'Keep going!'; }
 
   // Pick verse
   const verse = RESULT_VERSES.find(v => ratio >= v.score) || RESULT_VERSES[RESULT_VERSES.length - 1];
 
-  document.getElementById('quizResultIcon').textContent    = icon;
+  document.getElementById('quizResultIcon').innerHTML  = `<i data-lucide="${iconName}"></i>`;
   document.getElementById('quizResultHeading').textContent = heading;
   document.getElementById('quizResultScore').textContent   = `You scored ${_quizScore} out of ${total}`;
   document.getElementById('quizResultVerse').textContent   = verse.text;
+
+  // Re-init Lucide so the new icon renders
+  if (typeof lucide !== 'undefined') lucide.createIcons();
 
   // Update progress bar to 100%
   document.getElementById('quizProgressFill').style.width  = '100%';
@@ -2073,7 +2079,7 @@ function renderWeeklySchedule(items) {
   el.innerHTML = items.map(e => `
     <div class="schedule-row">
       <span class="day">${escHtml(e.day_label)}</span>
-      <div>
+      <div class="row-main">
         <h3>${escHtml(e.title)}</h3>
         <span class="meta">
           ${escHtml(e.location)}${e.has_livestream ? ' · <span class="live-tag">Livestream available</span>' : ''}
@@ -2122,10 +2128,10 @@ function renderUpcomingEvents(items) {
           <h3>${escHtml(e.title)}</h3>
           <p>${escHtml(e.description)}</p>
           <div class="event-card-footer">
-            <span class="event-meta-row">
-              <i data-lucide="clock" class="event-meta-icon"></i> ${time}${e.location ? ` · <i data-lucide="map-pin" class="event-meta-icon"></i> ${escHtml(e.location)}` : ''}
-              ${e.has_livestream ? ' · <span class="live-tag">Livestream</span>' : ''}
-            </span>
+            <div class="event-meta-row">
+              <i data-lucide="clock" class="event-meta-icon"></i> ${time}${e.location ? ` &nbsp;·&nbsp; <i data-lucide="map-pin" class="event-meta-icon"></i> ${escHtml(e.location)}` : ''}
+              ${e.has_livestream ? ' &nbsp;·&nbsp; <span class="live-tag">Livestream</span>' : ''}
+            </div>
             <button class="btn btn-dark join-btn"
               data-id="${e.id}"
               data-title="${escHtml(e.title)}"

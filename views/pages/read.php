@@ -75,7 +75,10 @@
         </div>
         <div class="form-msg" id="addArticleMsg" hidden></div>
         <div style="display:flex;gap:12px;margin-top:24px;">
-          <button type="submit" class="btn btn-primary" id="addArticleSubmitBtn">Publish Article</button>
+          <button type="submit" class="btn-modal-publish" id="addArticleSubmitBtn">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+            Publish Article
+          </button>
           <button type="button" class="btn btn-ghost-dark" id="addArticleCancelBtn">Cancel</button>
         </div>
       </form>

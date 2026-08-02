@@ -4,39 +4,32 @@
   <div class="page-hero page-hero--events">
     <div class="page-hero-inner">
       <div class="eyebrow events-hero-eyebrow">Events</div>
-      <h2 class="events-hero-title">Livestreams &amp; <em>gatherings</em></h2>
+      <h2 class="events-hero-title">Livestreams &amp; <em>Gatherings.</em></h2>
       <p class="lede events-hero-lede">Join from wherever you are, or find a seat in a room nearby.</p>
     </div>
 
-    <!-- Sun disc + rays (same as watch hero) -->
-    <div class="page-hero-horizon-stage" aria-hidden="true">
-      <div class="sun-wrap">
-        <div class="sun-ray sun-ray--r1"></div>
-        <div class="sun-ray sun-ray--r2"></div>
-        <div class="sun-ray sun-ray--r3"></div>
-        <div class="sun-ray sun-ray--r4"></div>
-        <div class="sun-ray sun-ray--r5"></div>
-        <div class="sun-ray sun-ray--r6"></div>
-        <div class="sun-ray sun-ray--r7"></div>
-        <div class="sun-ray sun-ray--r8"></div>
-        <div class="sun-ray sun-ray--r9"></div>
-        <div class="sun-disc"></div>
-      </div>
+    <!-- Spark orb decoration -->
+    <div class="events-spark-wrap" aria-hidden="true">
+      <div class="events-spark-ring"></div>
+      <div class="events-spark-ring events-spark-ring--delay"></div>
+      <div class="events-spark"></div>
     </div>
   </div>
 
-  <div class="section-wrap" style="padding-top:40px; padding-bottom:80px;">
+  <div class="section-wrap events-content-wrap">
 
-    <h3 style="font-family:var(--display); font-size:18px; color:var(--ink); margin-bottom:6px;">
-      <span class="live-dot"></span>Live this week
-    </h3>
+    <div class="events-section-head">
+      <span class="events-section-mark"></span>
+      <h3 class="events-section-title">Live this week</h3>
+    </div>
     <div id="weeklySchedule">
       <p style="color:var(--ink-soft);">Loading schedule…</p>
     </div>
 
-    <h3 style="font-family:var(--display); font-size:18px; color:var(--ink); margin-top:48px; margin-bottom:20px;">
-      Upcoming gatherings
-    </h3>
+    <div class="events-section-head events-section-head--upcoming">
+      <span class="events-section-mark events-section-mark--upcoming"></span>
+      <h3 class="events-section-title">Upcoming gatherings</h3>
+    </div>
     <div class="event-cards" id="upcomingEvents">
       <p style="color:var(--ink-soft);">Loading events…</p>
     </div>
