@@ -3029,7 +3029,14 @@ h1.hero-title em { font-style: italic; font-weight: 500; color: var(--sun-light)
   width: 24px; height: 24px; border-radius: 50%; position: relative; z-index: 2;
   background: radial-gradient(circle at 38% 32%, #fff 0%, #D9A544 45%, #C1542E 85%);
   box-shadow: 0 0 28px 7px rgba(217,165,68,.5), 0 0 60px 18px rgba(217,165,68,.2);
-  animation: connectBreatheSpark 4.5s ease-in-out infinite;
+  opacity: 0;
+}
+.connect-animate .connect-spark {
+  animation: connectSparkIn .8s var(--ease-out) .5s forwards, connectBreatheSpark 4.5s ease-in-out 1.3s infinite;
+}
+@keyframes connectSparkIn {
+  from { opacity: 0; transform: scale(.6); }
+  to   { opacity: 1; transform: scale(1); }
 }
 @keyframes connectBreatheSpark {
   0%, 100% { transform: scale(1); }
@@ -3044,7 +3051,7 @@ h1.hero-title em { font-style: italic; font-weight: 500; color: var(--sun-light)
   font-family: var(--mono); font-size: 10.5px; letter-spacing: .2em;
   text-transform: uppercase; color: #D9A544;
   margin: 0 0 14px; display: flex; align-items: center; gap: 8px;
-  opacity: 0; animation: fadeUp .7s var(--ease-out) .1s forwards;
+  opacity: 0;
 }
 .connect-hero-eyebrow::before {
   content: ''; width: 16px; height: 1px; background: #D9A544; display: inline-block;
@@ -3052,14 +3059,19 @@ h1.hero-title em { font-style: italic; font-weight: 500; color: var(--sun-light)
 .connect-hero-title {
   font-family: var(--display); font-weight: 600; font-size: clamp(1.7rem, 3.5vw, 2.1rem);
   line-height: 1.22; color: #FBF6EC; margin: 0 0 14px;
-  opacity: 0; animation: fadeUp .8s var(--ease-out) .25s forwards;
+  opacity: 0;
 }
 .connect-hero-title em { font-style: italic; font-weight: 600; color: #D9A544; }
 .connect-hero-lede {
   font-size: 14.5px; line-height: 1.6; color: rgba(251,246,236,.72);
   margin: 0; max-width: 480px;
-  opacity: 0; animation: fadeUp .8s var(--ease-out) .42s forwards;
+  opacity: 0;
 }
+
+/* Animate in when .connect-animate is on #page-connect */
+.connect-animate .connect-hero-eyebrow { animation: fadeUp .7s var(--ease-out) .1s  forwards; }
+.connect-animate .connect-hero-title   { animation: fadeUp .8s var(--ease-out) .25s forwards; }
+.connect-animate .connect-hero-lede    { animation: fadeUp .8s var(--ease-out) .42s forwards; }
 
 /* Page background — matches About */
 #page-connect { background: #FBF6EC; }
