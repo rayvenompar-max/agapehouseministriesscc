@@ -535,8 +535,8 @@ window.CURRENT_MEMBER = <?= json_encode(
       navigator.serviceWorker.register('/DigitalEvangelization/sw.js', {
         scope: '/DigitalEvangelization/'
       })
-      .then(reg => console.log('[SW] Registered, scope:', reg.scope))
-      .catch(err => console.warn('[SW] Registration failed:', err));
+      .then(reg => {})
+      .catch(err => {});
     });
   }
 </script>
@@ -587,9 +587,6 @@ window.CURRENT_MEMBER = <?= json_encode(
       if (!deferredPrompt) return;
       deferredPrompt.prompt();
       deferredPrompt.userChoice.then(function (choice) {
-        if (choice.outcome === 'accepted') {
-          console.log('[PWA] User accepted install');
-        }
         deferredPrompt = null;
         banner.style.display = 'none';
       });

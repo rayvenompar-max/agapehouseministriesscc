@@ -222,35 +222,19 @@ $visitorPic    = !empty($visitor['profile_picture']) ? htmlspecialchars($visitor
         class="btn-message" 
         id="messageBtn" 
         data-member-id="<?= htmlspecialchars($profileData['id']) ?>" 
-        data-member-name="<?= $displayName ?>"
-        onclick="console.log('Button clicked via onclick!'); return false;">
+        data-member-name="<?= $displayName ?>">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
         </svg>
         Message
       </button>
     </div>
-    <?php else: ?>
-      <!-- DEBUG: Button not shown because: -->
-      <?php if ($isOwnProfile): ?>
-        <!-- This is your own profile -->
-      <?php elseif (!$memberAuth->isLoggedIn()): ?>
-        <!-- You are not logged in -->
-      <?php endif; ?>
     <?php endif; ?>
   </div>
 </div>
 
 <script>
   const BASE_URL = '<?= BASE_URL ?>/api';
-  
-  // Debug information
-  console.log('=== Member Profile Script Loaded ===');
-  console.log('BASE_URL:', BASE_URL);
-  console.log('Current member logged in:', <?= $memberAuth->isLoggedIn() ? 'true' : 'false' ?>);
-  console.log('Is own profile:', <?= $isOwnProfile ? 'true' : 'false' ?>);
-  console.log('Profile data ID:', '<?= $profileData['id'] ?? 'undefined' ?>');
-  console.log('SessionStorage test:', sessionStorage.getItem('test') === null ? 'Available' : 'Available');
   
   const followBtn = document.getElementById('followBtn');
   if (followBtn) {
@@ -263,15 +247,12 @@ $visitorPic    = !empty($visitor['profile_picture']) ? htmlspecialchars($visitor
   // Message button - open direct message modal
   const messageBtn = document.getElementById('messageBtn');
   if (messageBtn) {
-    console.log('Message button found, attaching listener');
     messageBtn.addEventListener('click', async (e) => {
       e.preventDefault();
       e.stopPropagation();
       
       const targetMemberId = messageBtn.dataset.memberId;
       const targetMemberName = messageBtn.dataset.memberName;
-      
-      console.log('Message button clicked for member:', targetMemberId, targetMemberName);
       
       if (!targetMemberId) {
         alert('Member ID not found. Please refresh and try again.');
@@ -283,34 +264,22 @@ $visitorPic    = !empty($visitor['profile_picture']) ? htmlspecialchars($visitor
       messageBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation: spin 1s linear infinite;"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> Opening...';
       
       try {
-        // Start conversation
         const url = BASE_URL + '/messages/start/' + targetMemberId;
-        console.log('Fetching:', url);
-        
         const res = await fetch(url, {
           method: 'POST',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' }
         });
         
-        console.log('Response status:', res.status);
-        
         if (!res.ok) {
           const errorText = await res.text();
-          console.error('Server error response:', errorText);
-          throw new Error(`Server returned ${res.status}: ${errorText}`);
+          throw new Error(`Server returned ${res.status}`);
         }
         
         const data = await res.json();
-        console.log('Response data:', data);
         
         if (data.status === 'success') {
-          console.log('✓ Conversation created successfully');
-          
-          // Open message modal RIGHT HERE on this page
           openDirectMessageModalOnProfile(data.data.conversation_id, data.data.other_member);
-          
-          // Reset button
           messageBtn.disabled = false;
           messageBtn.innerHTML = originalHTML;
         } else {
@@ -319,14 +288,11 @@ $visitorPic    = !empty($visitor['profile_picture']) ? htmlspecialchars($visitor
           messageBtn.innerHTML = originalHTML;
         }
       } catch (error) {
-        console.error('Error starting conversation:', error);
-        alert('Network error: ' + error.message + '. Check console for details.');
+        alert('Could not start conversation. Please try again.');
         messageBtn.disabled = false;
         messageBtn.innerHTML = originalHTML;
       }
     });
-  } else {
-    console.log('Message button NOT found in DOM');
   }
   
   // ========================================================================
@@ -334,7 +300,6 @@ $visitorPic    = !empty($visitor['profile_picture']) ? htmlspecialchars($visitor
   // ========================================================================
   
   async function openDirectMessageModalOnProfile(conversationId, otherMember) {
-    console.log('Opening DM modal on profile page:', conversationId, otherMember);
     
     // Create modal if it doesn't exist
     let modal = document.getElementById('profileDmModal');
