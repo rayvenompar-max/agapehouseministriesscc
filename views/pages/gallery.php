@@ -102,7 +102,7 @@
 </div>
 
 <!-- ── Edit Photo Modal ───────────────────────────────────────────────────── -->
-<div class="article-modal" id="editGalleryModal" role="dialog" aria-modal="true" aria-label="Edit photo" hidden>
+<div class="article-modal" id="editGalleryModal" role="dialog" aria-mod al="true" aria-label="Edit photo" hidden>
   <div class="article-modal-backdrop" id="editGalleryModalBackdrop"></div>
   <div class="article-modal-box article-modal-box--form">
     <div class="article-modal-header">

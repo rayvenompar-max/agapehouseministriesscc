@@ -4881,17 +4881,19 @@ nav.primary.open .nav-dropdown button svg {
 .msg-panel-head {
   display: flex; 
   flex-direction: column;
+  gap: 12px;
   padding: 16px 18px;
   border-bottom: 1px solid #E9E1D2;
 }
 .msg-panel-title {
   font-family: var(--display); font-weight: 600; font-size: 16px;
-  margin: 0 0 12px 0; color: #20142A;
+  margin: 0; color: #20142A;
 }
 
 .msg-search-wrap {
   position: relative;
   width: 100%;
+  display: block;
 }
 .msg-search-input {
   width: 100%;
@@ -4899,9 +4901,10 @@ nav.primary.open .nav-dropdown button svg {
   border: 1px solid #E9E1D2;
   border-radius: 8px;
   background: #FFFFFF;
-  font-size: 14px;
+  font-size: 13px;
   color: #20142A;
   transition: all 0.2s ease;
+  box-sizing: border-box;
 }
 .msg-search-input::placeholder {
   color: #9B8F82;

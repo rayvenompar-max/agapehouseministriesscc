@@ -776,7 +776,7 @@ if ($method === 'GET' && matchRoute('/media/featured', $path)) {
         echo json_encode(['status' => 'error', 'message' => 'Not logged in.']);
         exit;
     }
-    $validTypes = ['article', 'media', 'announcement'];
+    $validTypes = ['article', 'media', 'announcement', 'gallery'];
     $targetType = $params['type'];
     $targetId   = (int) $params['id'];
     if (!in_array($targetType, $validTypes, true) || $targetId <= 0) {
@@ -792,7 +792,7 @@ if ($method === 'GET' && matchRoute('/media/featured', $path)) {
     // Notification: fire when liking, remove when unliking
     $notifRepo  = new \Repository\NotificationRepository($db);
     // Resolve post author
-    $tableMap   = ['article' => 'articles', 'media' => 'media', 'announcement' => 'announcements'];
+    $tableMap   = ['article' => 'articles', 'media' => 'media', 'announcement' => 'announcements', 'gallery' => 'gallery'];
     $table      = $tableMap[$targetType];
     $authorStmt = $db->prepare("SELECT member_id, title FROM {$table} WHERE id = :id LIMIT 1");
     $authorStmt->execute(['id' => $targetId]);
@@ -816,7 +816,7 @@ if ($method === 'GET' && matchRoute('/media/featured', $path)) {
 
 } elseif ($method === 'GET' && matchRoute('/likes/{type}/{id}', $path, $params)) {
     // Get like status + count for a target (works for guests too)
-    $validTypes = ['article', 'media', 'announcement'];
+    $validTypes = ['article', 'media', 'announcement', 'gallery'];
     $targetType = $params['type'];
     $targetId   = (int) $params['id'];
     if (!in_array($targetType, $validTypes, true) || $targetId <= 0) {
