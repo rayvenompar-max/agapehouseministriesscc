@@ -76,6 +76,7 @@ use Controller\AnnouncementController;
 use Controller\CommentController;
 use Controller\NotificationController;
 use Controller\DirectMessageController;
+use Controller\GalleryController;
 use Repository\MediaRepository;
 use Repository\ArticleRepository;
 use Repository\PrayerRepository;
@@ -86,6 +87,7 @@ use Repository\CommentRepository;
 use Repository\NotificationRepository;
 use Repository\MemberRepository;
 use Repository\DirectMessageRepository;
+use Repository\GalleryRepository;
 use Service\MediaService;
 use Service\ArticleService;
 use Service\PrayerService;
@@ -104,6 +106,7 @@ $announcementCtrl = new AnnouncementController(new AnnouncementService(new Annou
 $commentCtrl      = new CommentController(new CommentService(new CommentRepository($db)));
 $notifCtrl        = new NotificationController(new NotificationService(new NotificationRepository($db)));
 $dmCtrl           = new DirectMessageController(new DirectMessageRepository($db), new MemberRepository($db));
+$galleryCtrl      = new GalleryController(new GalleryRepository($db), new NotificationRepository($db));
 
 // ---------- Route matching ----------
 $method = $_SERVER['REQUEST_METHOD'];
@@ -224,6 +227,79 @@ if ($method === 'GET' && matchRoute('/media/featured', $path)) {
 
 } elseif ($method === 'POST' && matchRoute('/articles', $path)) {
     $articleCtrl->create();
+
+// ---- Gallery ----
+} elseif ($method === 'GET' && matchRoute('/gallery/pending', $path)) {
+    $galleryCtrl->getPending();
+
+} elseif ($method === 'POST' && matchRoute('/gallery/{id}/approve', $path, $params)) {
+    $galleryCtrl->approve((int) $params['id']);
+
+} elseif ($method === 'POST' && matchRoute('/gallery/{id}/reject', $path, $params)) {
+    $galleryCtrl->reject((int) $params['id']);
+
+} elseif ($method === 'DELETE' && matchRoute('/gallery/{id}', $path, $params)) {
+    $galleryCtrl->delete((int) $params['id']);
+
+} elseif ($method === 'PUT' && matchRoute('/gallery/{id}', $path, $params)) {
+    $galleryCtrl->update((int) $params['id']);
+
+} elseif ($method === 'GET' && matchRoute('/gallery/{id}', $path, $params)) {
+    $galleryCtrl->getOne((int) $params['id']);
+
+} elseif ($method === 'GET' && matchRoute('/gallery', $path)) {
+    $galleryCtrl->getApproved();
+
+} elseif ($method === 'POST' && matchRoute('/gallery', $path)) {
+    $galleryCtrl->create();
+
+} elseif ($method === 'POST' && matchRoute('/gallery/upload', $path)) {
+    // Handle image file upload
+    $uploadDir = BASE_PATH . '/public/uploads/gallery/';
+    if (!is_dir($uploadDir)) {
+        mkdir($uploadDir, 0775, true);
+    }
+
+    if (empty($_FILES['image']) || $_FILES['image']['error'] !== UPLOAD_ERR_OK) {
+        $errCode = $_FILES['image']['error'] ?? -1;
+        http_response_code(400);
+        echo json_encode(['status' => 'error', 'message' => "Upload failed (code {$errCode})."]);
+        exit;
+    }
+
+    $file     = $_FILES['image'];
+    $allowed  = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    $finfo    = finfo_open(FILEINFO_MIME_TYPE);
+    $mime     = finfo_file($finfo, $file['tmp_name']);
+    finfo_close($finfo);
+
+    if (!in_array($mime, $allowed, true)) {
+        http_response_code(400);
+        echo json_encode(['status' => 'error', 'message' => "Invalid file type. Only JPEG, PNG, GIF, and WebP are allowed."]);
+        exit;
+    }
+
+    $maxBytes = 10 * 1024 * 1024; // 10 MB
+    if ($file['size'] > $maxBytes) {
+        http_response_code(400);
+        echo json_encode(['status' => 'error', 'message' => 'Image exceeds the 10 MB limit.']);
+        exit;
+    }
+
+    $extMap   = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/gif' => 'gif', 'image/webp' => 'webp'];
+    $ext      = $extMap[$mime];
+    $safeName = bin2hex(random_bytes(16)) . '.' . $ext;
+    $dest     = $uploadDir . $safeName;
+
+    if (!move_uploaded_file($file['tmp_name'], $dest)) {
+        http_response_code(500);
+        echo json_encode(['status' => 'error', 'message' => 'Could not save uploaded file.']);
+        exit;
+    }
+
+    $imageUrl = BASE_URL . '/public/uploads/gallery/' . $safeName;
+    echo json_encode(['status' => 'success', 'data' => ['image_url' => $imageUrl]]);
+    exit;
 
 // ---- Prayers ----
 } elseif ($method === 'POST' && matchRoute('/prayers/{id}/approve', $path, $params)) {

@@ -42,7 +42,7 @@
 
 <main>
 <?php
-$pages = ['home','watch','read','bible','quizzes','prayer','events','announcement','about','connect'];
+$pages = ['home','watch','read','bible','quizzes','prayer','events','announcement','gallery','about','connect'];
 foreach ($pages as $page) {
     require_once BASE_PATH . '/views/pages/' . $page . '.php';
 }

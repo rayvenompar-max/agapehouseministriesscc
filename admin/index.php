@@ -487,6 +487,10 @@ $isLoggedIn   = true;
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4v6l2 4H6l2-4V4h8z"/><path d="M12 14v6"/></svg>
       Announcements
     </button>
+    <button class="tab-btn" data-tab="gallery">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+      Gallery
+    </button>
     <button class="tab-btn" data-tab="events">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
       Events
@@ -539,6 +543,15 @@ $isLoggedIn   = true;
       <button class="btn-new-ann" id="openNewAnnBtn">+ New Announcement</button>
     </div>
     <div id="annAdminList"><div class="loading-state">Loading…</div></div>
+  </div>
+
+  <!-- ── Gallery Panel ── -->
+  <div class="tab-panel" id="tab-gallery">
+    <div class="section-title">Pending Gallery Photos</div>
+    <p style="margin-bottom:20px; font-size:14px; color:var(--ink-soft);">
+      Review member-submitted photos. Once approved, they will appear in the community gallery feed.
+    </p>
+    <div id="galleryPendingList"><div class="loading-state">Loading…</div></div>
   </div>
 
   <!-- ── Events Panel ── -->
@@ -1070,6 +1083,91 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     });
   }
 });
+
+// ── Gallery Pending Panel ─────────────────────────────────────────────────────
+async function loadGalleryPending() {
+  const container = document.getElementById('galleryPendingList');
+  try {
+    const res  = await fetch(API + '/gallery/pending');
+    const json = await res.json();
+
+    if (json.status !== 'success' || !json.data.length) {
+      container.innerHTML = '<div class="empty-state">No pending photos — all clear!</div>';
+      return;
+    }
+
+    container.innerHTML = json.data.map(g => {
+      return `
+        <div class="prayer-card" data-id="${g.id}" style="display:flex;gap:18px;align-items:flex-start;">
+          <div style="flex-shrink:0;width:180px;height:180px;border-radius:8px;overflow:hidden;background:var(--line);">
+            <img src="${escHtml(g.image_url)}" alt="${escHtml(g.title)}" 
+                 style="width:100%;height:100%;object-fit:cover;">
+          </div>
+          <div style="flex:1;min-width:0;">
+            <div class="p-meta">
+              <div>
+                <span class="p-name">${escHtml(g.display_name || g.username)}</span>
+              </div>
+              <div>${new Date(g.created_at).toLocaleString()}</div>
+            </div>
+            <div style="font-weight:600; font-size:15px; margin-bottom:6px; color:var(--night);">${escHtml(g.title)}</div>
+            ${g.description ? `<div class="p-body">${escHtml(g.description)}</div>` : ''}
+            <div class="prayer-actions" style="margin-top:14px;">
+              <button class="btn-approve" onclick="handleGallery(${g.id}, 'approve')">✓ Approve &amp; Publish</button>
+              <button class="btn-reject"  onclick="handleGallery(${g.id}, 'reject')">✗ Reject</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  } catch (e) {
+    container.innerHTML = '<div class="empty-state">Could not load pending photos.</div>';
+  }
+}
+
+async function handleGallery(id, action) {
+  if (action === 'reject') {
+    const ok = await showConfirm({ 
+      title: 'Reject this photo?', 
+      message: 'The photo will be removed from the pending list and won\'t appear in the gallery.', 
+      okLabel: 'Reject' 
+    });
+    if (!ok) return;
+  }
+  const card = document.querySelector(`#galleryPendingList .prayer-card[data-id="${id}"]`);
+  try {
+    const res  = await fetch(API + `/gallery/${id}/${action}`, { method: 'POST' });
+    const json = await res.json();
+    if (json.status === 'success') {
+      card.style.transition = 'opacity 0.3s';
+      card.style.opacity    = '0';
+      setTimeout(() => {
+        card.remove();
+        if (!document.querySelector('#galleryPendingList .prayer-card')) {
+          document.getElementById('galleryPendingList').innerHTML =
+            '<div class="empty-state">No pending photos — all clear!</div>';
+        }
+      }, 300);
+    } else {
+      alert('Error: ' + json.message);
+    }
+  } catch (e) {
+    alert('Network error.');
+  }
+}
+
+// Lazy-load gallery pending tab when first clicked
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  if (btn.dataset.tab === 'gallery') {
+    btn.addEventListener('click', () => {
+      if (!document.getElementById('galleryPendingList')._loaded) {
+        document.getElementById('galleryPendingList')._loaded = true;
+        loadGalleryPending();
+      }
+    });
+  }
+});
+
 let allMedia = [];
 
 async function loadMedia() {

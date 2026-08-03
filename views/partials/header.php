@@ -57,9 +57,11 @@
           <span class="nav-tip">Community</span>
         </button>
         <div class="nav-dropdown" role="menu">
+          <button data-page="gallery"      role="menuitem"><i data-lucide="image"></i> Gallery</button>
           <button data-page="prayer"       role="menuitem"><i data-lucide="heart-handshake"></i> Prayer Wall</button>
           <button data-page="events"       role="menuitem"><i data-lucide="calendar"></i> Events</button>
           <button data-page="announcement" role="menuitem"><i data-lucide="megaphone"></i> Announcements</button>
+          
         </div>
       </div>
 

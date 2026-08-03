@@ -328,12 +328,13 @@ const loaders = {
   prayer:       () => loadPrayerWall(),
   events:       () => loadEvents(),
   announcement: () => loadAnnouncements(),
+  gallery:      () => loadGalleryPage(),
 };
 const loaded = new Set();
 
 // Valid page ids — used to validate hash values
 const validPages = new Set([
-  'home', 'watch', 'read', 'bible', 'quizzes', 'prayer', 'events', 'announcement', 'about', 'connect'
+  'home', 'watch', 'read', 'bible', 'quizzes', 'prayer', 'events', 'announcement', 'gallery', 'about', 'connect'
 ]);
 
 function goTo(pageId, pushHash = true) {
@@ -382,6 +383,8 @@ function goTo(pageId, pushHash = true) {
     current.classList.remove('prayer-animate');
     // Remove announcement-animate so it replays next time announcement is visited
     current.classList.remove('announcement-animate');
+    // Remove gallery-animate so it replays next time gallery is visited
+    current.classList.remove('gallery-animate');
     // Remove about-animate so it replays next time about is visited
     current.classList.remove('about-animate');
     // Remove connect-animate so it replays next time connect is visited
@@ -400,7 +403,7 @@ function goTo(pageId, pushHash = true) {
     const animClass = {
       home: 'hero-animate', watch: 'watch-animate', events: 'events-animate',
       read: 'read-animate', bible: 'bible-animate', prayer: 'prayer-animate',
-      announcement: 'announcement-animate', about: 'about-animate', connect: 'connect-animate',
+      announcement: 'announcement-animate', gallery: 'gallery-animate', about: 'about-animate', connect: 'connect-animate',
       quizzes: 'quizzes-animate',
     }[pageId];
     if (animClass) next.classList.add(animClass);
@@ -438,7 +441,7 @@ navButtons.forEach(btn => {
       const animClass = {
         home: 'hero-animate', watch: 'watch-animate', events: 'events-animate',
         read: 'read-animate', bible: 'bible-animate', prayer: 'prayer-animate',
-        announcement: 'announcement-animate', about: 'about-animate', connect: 'connect-animate',
+        announcement: 'announcement-animate', gallery: 'gallery-animate', about: 'about-animate', connect: 'connect-animate',
         quizzes: 'quizzes-animate',
       }[pageId];
       if (animClass) activePage.classList.add(animClass);
@@ -629,6 +632,29 @@ async function loadMediaGrid(type) {
           <div class="thumb-play"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21 6 3"/></svg></div>
         </div>
         <span class="duration">${escHtml(m.duration_label)}</span>
+        ${canEdit ? `
+        <div class="media-card-menu">
+          <button class="media-menu-btn" data-id="${m.id}" aria-label="Options" title="Options">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/>
+            </svg>
+          </button>
+          <div class="media-dropdown-menu" data-id="${m.id}">
+            <button class="media-dropdown-item media-edit-btn" data-id="${m.id}">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
+              Edit
+            </button>
+            <button class="media-dropdown-item media-delete-btn" data-id="${m.id}">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+              </svg>
+              Delete
+            </button>
+          </div>
+        </div>` : ''}
       </div>
       <div class="mc-poster-row">
         ${avatarHtml}
@@ -640,11 +666,6 @@ async function loadMediaGrid(type) {
       <div class="body">
         <h3>${escHtml(m.title)}</h3>
         <p>${escHtml(m.description)}</p>
-        ${canEdit ? `
-        <div class="media-action-btns">
-          <button class="media-edit-btn" data-id="${m.id}" title="Edit video">✎ Edit</button>
-          <button class="media-delete-btn" data-id="${m.id}" title="Delete video">🗑 Delete</button>
-        </div>` : ''}
       </div>
     </div>
   `
@@ -652,11 +673,42 @@ async function loadMediaGrid(type) {
 
   // Bind thumb click → play
   grid.querySelectorAll('.media-card .thumb').forEach(thumb => {
-    thumb.addEventListener('click', () => {
+    thumb.addEventListener('click', (e) => {
+      // Prevent playing video when clicking menu button or dropdown
+      if (e.target.closest('.media-card-menu')) return;
+      
       const id = parseInt(thumb.closest('.media-card').dataset.id, 10);
       const m  = res.data.find(x => x.id === id);
       if (m) openVideoModal(m);
     });
+  });
+
+  // Bind three-dot menu button toggle
+  grid.querySelectorAll('.media-menu-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const dropdown = btn.nextElementSibling;
+      const isOpen = dropdown.classList.contains('show');
+      
+      // Close all other dropdowns
+      document.querySelectorAll('.media-dropdown-menu.show').forEach(d => {
+        d.classList.remove('show');
+      });
+      
+      // Toggle current dropdown
+      if (!isOpen) {
+        dropdown.classList.add('show');
+      }
+    });
+  });
+
+  // Close dropdown when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.media-card-menu')) {
+      document.querySelectorAll('.media-dropdown-menu.show').forEach(d => {
+        d.classList.remove('show');
+      });
+    }
   });
 
   // Add "Show more" button for truncated descriptions
@@ -683,6 +735,10 @@ async function loadMediaGrid(type) {
   grid.querySelectorAll('.media-edit-btn').forEach(btn => {
     btn.addEventListener('click', e => {
       e.stopPropagation();
+      // Close the dropdown
+      const dropdown = btn.closest('.media-dropdown-menu');
+      if (dropdown) dropdown.classList.remove('show');
+      
       const id = parseInt(btn.dataset.id, 10);
       const m  = res.data.find(x => x.id === id);
       if (m) openEditVideoModal(m);
@@ -693,6 +749,10 @@ async function loadMediaGrid(type) {
   grid.querySelectorAll('.media-delete-btn').forEach(btn => {
     btn.addEventListener('click', e => {
       e.stopPropagation();
+      // Close the dropdown
+      const dropdown = btn.closest('.media-dropdown-menu');
+      if (dropdown) dropdown.classList.remove('show');
+      
       const id    = parseInt(btn.dataset.id, 10);
       const m     = res.data.find(x => x.id === id);
       const cardEl = btn.closest('.media-card');
@@ -3057,16 +3117,18 @@ async function loadHomeFeed() {
   if (!feedEl) return;
 
   try {
-    // Fetch media, articles, and announcements in parallel
-    const [mediaRes, articlesRes, annRes] = await Promise.all([
+    // Fetch media, articles, announcements, and gallery in parallel
+    const [mediaRes, articlesRes, annRes, galleryRes] = await Promise.all([
       apiFetch('/media'),
       apiFetch('/articles'),
       apiFetch('/announcements'),
+      apiFetch('/gallery'),
     ]);
 
     const media   = (mediaRes.status   === 'success' ? mediaRes.data   : []) || [];
     const articles= (articlesRes.status === 'success' ? articlesRes.data : []) || [];
     const anns    = (annRes.status     === 'success' ? annRes.data     : []) || [];
+    const gallery = (galleryRes.status === 'success' ? galleryRes.data  : []) || [];
 
     // Normalise each item into a common feed shape with a sortable date
     const items = [
@@ -3109,6 +3171,20 @@ async function loadHomeFeed() {
         commentCount:   a.comment_count || 0,
         raw:            a,
       })),
+      ...gallery.map(g => ({
+        type:           'gallery',
+        id:             g.id,
+        title:          g.title,
+        excerpt:        g.description || '',
+        date:           g.created_at || '',
+        thumb:          g.image_urls && g.image_urls.length > 0 ? g.image_urls[0] : null,
+        imageUrls:      g.image_urls || [],
+        author:         g.posted_by || 'admin',
+        authorUsername: g.poster_username || null,
+        authorMemberId: g.member_id || null,
+        commentCount:   g.comment_count || 0,
+        raw:            g,
+      })),
     ];
 
     // Sort newest first
@@ -3142,7 +3218,12 @@ function buildFeedCard(item) {
   el.className = `feed-card feed-card--${item.type}`;
   el.dataset.itemId = item.id;
 
-  const typeLabel  = { watch: '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle"><polygon points="6 3 20 12 6 21 6 3"/></svg> Video', read: '📖 Article', notice: '📢 Announcement' }[item.type];
+  const typeLabel  = { 
+    watch: '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle"><polygon points="6 3 20 12 6 21 6 3"/></svg> Video', 
+    read: '📖 Article', 
+    notice: '📢 Announcement',
+    gallery: '📷 Gallery'
+  }[item.type];
 
   const dateStr = item.date ? formatTimeAgo(item.date) : '';
   const excerpt = item.excerpt
@@ -3190,11 +3271,18 @@ function buildFeedCard(item) {
     } else {
       thumbHtml = `<div class="feed-card-thumb-placeholder"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21 6 3"/></svg></div>`;
     }
+  } else if (item.type === 'gallery') {
+    // Gallery item: show first image or placeholder
+    if (item.thumb) {
+      thumbHtml = `<div class="feed-card-thumb"><img src="${escHtml(item.thumb)}" alt="" loading="lazy"></div>`;
+    } else {
+      thumbHtml = `<div class="feed-card-thumb-placeholder"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>`;
+    }
   }
 
   // ── Like state: start with 0/false then hydrate from server ──
   // The DB is the source of truth; localStorage is gone.
-  const targetApiType = { watch: 'media', read: 'article', notice: 'announcement' }[item.type] || item.type;
+  const targetApiType = { watch: 'media', read: 'article', notice: 'announcement', gallery: 'gallery' }[item.type] || item.type;
 
   const actionsHtml = `
     <div class="feed-card-actions">
@@ -3240,6 +3328,12 @@ function buildFeedCard(item) {
         ${bodyHtml}
         ${actionsHtml}
       </div>`;
+  } else if (item.type === 'gallery') {
+    el.innerHTML = `
+      ${posterHtml}
+      ${thumbHtml}
+      ${bodyHtml}
+      ${actionsHtml}`;
   } else {
     el.innerHTML = `
       ${posterHtml}
@@ -3390,12 +3484,17 @@ function buildFeedCard(item) {
     if (item.type === 'watch')  { openVideoModal(item.raw); return; }
     if (item.type === 'read')   { openArticleModal(item.raw); return; }
     if (item.type === 'notice') { openAnnouncementModal(item.raw); return; }
+    if (item.type === 'gallery') { openGalleryModal(item.id); return; }
   });
 
-  // Click on the thumbnail also opens the video
+  // Click on the thumbnail also opens the video or gallery
   if (item.type === 'watch') {
     const thumb = el.querySelector('.feed-card-thumb, .feed-card-thumb-placeholder');
     if (thumb) thumb.addEventListener('click', () => openVideoModal(item.raw));
+  }
+  if (item.type === 'gallery') {
+    const thumb = el.querySelector('.feed-card-thumb, .feed-card-thumb-placeholder');
+    if (thumb) thumb.addEventListener('click', () => openGalleryModal(item.id));
   }
 
   return el;
@@ -4703,6 +4802,594 @@ function showPdMsg(text, isError) {
 
 
 // ═══════════════════════════════════════════════════════════════════════════════
+//  GALLERY PAGE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+async function loadGalleryPage() {
+  const grid = document.getElementById('galleryGrid');
+  if (!grid) return;
+  
+  // Get current member ID if logged in
+  const currentMemberId = window.CURRENT_MEMBER?.id || null;
+  
+  try {
+    const res = await apiFetch('/gallery');
+    const json = res;
+    
+    if (json.status !== 'success' || !json.data.length) {
+      grid.innerHTML = '<div class="empty-state">No photos yet. Be the first to share!</div>';
+      return;
+    }
+    
+    grid.innerHTML = json.data.map(item => {
+      const images = item.images || [];
+      const imageCount = images.length;
+      const isOwner = currentMemberId && parseInt(item.member_id) === parseInt(currentMemberId);
+      
+      // Menu button (only for post owner)
+      const menuBtn = isOwner ? `
+        <button class="gallery-item-menu-btn" data-id="${item.id}" aria-label="Options" onclick="event.stopPropagation(); toggleGalleryMenu(${item.id})">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/>
+          </svg>
+        </button>
+        <div class="gallery-item-menu" id="galleryMenu${item.id}" hidden>
+          <button onclick="event.stopPropagation(); editGalleryPost(${item.id})">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+            Edit
+          </button>
+          <button onclick="event.stopPropagation(); deleteGalleryPost(${item.id}, '${escHtml(item.title).replace(/'/g, "\\'")}')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+            </svg>
+            Delete
+          </button>
+        </div>
+      ` : '';
+      
+      // Create collage based on image count
+      if (imageCount === 0) return ''; // Skip if no images
+      
+      if (imageCount === 1) {
+        // Single image - full size
+        return `
+          <div class="gallery-item gallery-item--single" data-id="${item.id}">
+            ${menuBtn}
+            <img src="${escHtml(images[0].image_url)}" alt="${escHtml(item.title)}" loading="lazy">
+            <div class="gallery-item-overlay">
+              <h4>${escHtml(item.title)}</h4>
+              <p>by ${escHtml(item.display_name || item.username)}</p>
+            </div>
+          </div>
+        `;
+      } else if (imageCount === 2) {
+        // Two images - side by side
+        return `
+          <div class="gallery-item gallery-item--double" data-id="${item.id}">
+            ${menuBtn}
+            <div class="gallery-collage gallery-collage--2">
+              <img src="${escHtml(images[0].image_url)}" alt="${escHtml(item.title)}" loading="lazy">
+              <img src="${escHtml(images[1].image_url)}" alt="${escHtml(item.title)}" loading="lazy">
+            </div>
+            <div class="gallery-item-overlay">
+              <h4>${escHtml(item.title)}</h4>
+              <p>by ${escHtml(item.display_name || item.username)}</p>
+              <span class="gallery-count">+${imageCount} photos</span>
+            </div>
+          </div>
+        `;
+      } else if (imageCount === 3) {
+        // Three images - one large, two small
+        return `
+          <div class="gallery-item gallery-item--triple" data-id="${item.id}">
+            ${menuBtn}
+            <div class="gallery-collage gallery-collage--3">
+              <img src="${escHtml(images[0].image_url)}" alt="${escHtml(item.title)}" loading="lazy" class="main">
+              <img src="${escHtml(images[1].image_url)}" alt="${escHtml(item.title)}" loading="lazy">
+              <img src="${escHtml(images[2].image_url)}" alt="${escHtml(item.title)}" loading="lazy">
+            </div>
+            <div class="gallery-item-overlay">
+              <h4>${escHtml(item.title)}</h4>
+              <p>by ${escHtml(item.display_name || item.username)}</p>
+              <span class="gallery-count">+${imageCount} photos</span>
+            </div>
+          </div>
+        `;
+      } else {
+        // Four or more images - show first 4 in grid with count
+        return `
+          <div class="gallery-item gallery-item--multi" data-id="${item.id}">
+            ${menuBtn}
+            <div class="gallery-collage gallery-collage--4">
+              <img src="${escHtml(images[0].image_url)}" alt="${escHtml(item.title)}" loading="lazy">
+              <img src="${escHtml(images[1].image_url)}" alt="${escHtml(item.title)}" loading="lazy">
+              <img src="${escHtml(images[2].image_url)}" alt="${escHtml(item.title)}" loading="lazy">
+              <div class="gallery-more">
+                <img src="${escHtml(images[3].image_url)}" alt="${escHtml(item.title)}" loading="lazy">
+                ${imageCount > 4 ? `<div class="gallery-more-count">+${imageCount - 4}</div>` : ''}
+              </div>
+            </div>
+            <div class="gallery-item-overlay">
+              <h4>${escHtml(item.title)}</h4>
+              <p>by ${escHtml(item.display_name || item.username)}</p>
+              <span class="gallery-count">+${imageCount} photos</span>
+            </div>
+          </div>
+        `;
+      }
+    }).join('');
+    
+    // Reinitialize Lucide icons
+    if (typeof lucide !== 'undefined') {
+      lucide.createIcons();
+    }
+    
+    // Add click handlers
+    document.querySelectorAll('.gallery-item').forEach(item => {
+      item.addEventListener('click', () => {
+        openGalleryModal(parseInt(item.dataset.id));
+      });
+    });
+  } catch (e) {
+    grid.innerHTML = '<div class="error-state">Could not load gallery.</div>';
+    console.error('Gallery load error:', e);
+  }
+}
+
+async function openGalleryModal(id) {
+  const modal = document.getElementById('viewGalleryModal');
+  if (!modal) return;
+  
+  try {
+    const res = await apiFetch(`/gallery/${id}`);
+    const json = res;
+    
+    if (json.status !== 'success' || !json.data) {
+      alert('Could not load photo.');
+      return;
+    }
+    
+    const item = json.data;
+    const images = item.images || [];
+    
+    document.getElementById('viewGalleryMeta').textContent = 
+      `Posted by ${item.display_name || item.username} • ${new Date(item.created_at).toLocaleDateString()}`;
+    document.getElementById('viewGalleryTitle').textContent = item.title;
+    
+    // Show all images in modal
+    if (images.length > 0) {
+      document.getElementById('viewGalleryImageWrap').innerHTML = images.map((img, index) => 
+        `<img src="${escHtml(img.image_url)}" alt="${escHtml(item.title)}" style="max-width:100%;border-radius:8px;${index > 0 ? 'margin-top:12px;' : ''}">`
+      ).join('');
+    } else {
+      document.getElementById('viewGalleryImageWrap').innerHTML = 
+        `<img src="${escHtml(item.image_url)}" alt="${escHtml(item.title)}">`;
+    }
+    
+    document.getElementById('viewGalleryDescription').textContent = item.description || '';
+    
+    modal.hidden = false;
+    lockScroll();
+  } catch (e) {
+    console.error('Gallery modal error:', e);
+    alert('Could not load photo details.');
+  }
+}
+
+// Upload modal
+(function initGalleryUpload() {
+  const uploadModal = document.getElementById('uploadGalleryModal');
+  const uploadForm = document.getElementById('uploadGalleryForm');
+  const galImagesInput = document.getElementById('galImages');
+  const galImagesPreview = document.getElementById('galImagesPreview');
+  const galPreviewGrid = document.getElementById('galPreviewGrid');
+  const photoCount = document.getElementById('photoCount');
+  
+  if (!uploadModal) return;
+  
+  let selectedFiles = [];
+  
+  // Open upload modal
+  document.getElementById('openUploadGalleryBtn')?.addEventListener('click', () => {
+    uploadModal.hidden = false;
+    lockScroll();
+  });
+  
+  // Close upload modal
+  document.getElementById('uploadGalleryModalClose')?.addEventListener('click', () => {
+    animatedModalClose(uploadModal, () => {
+      uploadForm.reset();
+      selectedFiles = [];
+      galImagesPreview.style.display = 'none';
+      unlockScroll();
+    });
+  });
+  
+  document.getElementById('uploadGalleryCancelBtn')?.addEventListener('click', () => {
+    animatedModalClose(uploadModal, () => {
+      uploadForm.reset();
+      selectedFiles = [];
+      galImagesPreview.style.display = 'none';
+      unlockScroll();
+    });
+  });
+  
+  document.getElementById('uploadGalleryModalBackdrop')?.addEventListener('click', () => {
+    animatedModalClose(uploadModal, () => {
+      uploadForm.reset();
+      selectedFiles = [];
+      galImagesPreview.style.display = 'none';
+      unlockScroll();
+    });
+  });
+  
+  // Close view modal
+  document.getElementById('viewGalleryModalClose')?.addEventListener('click', () => {
+    animatedModalClose(document.getElementById('viewGalleryModal'), unlockScroll);
+  });
+  
+  document.getElementById('viewGalleryModalBackdrop')?.addEventListener('click', () => {
+    animatedModalClose(document.getElementById('viewGalleryModal'), unlockScroll);
+  });
+  
+  // Images preview - support multiple files
+  galImagesInput?.addEventListener('change', (e) => {
+    const files = Array.from(e.target.files);
+    
+    if (files.length === 0) {
+      galImagesPreview.style.display = 'none';
+      selectedFiles = [];
+      return;
+    }
+    
+    // Limit to 10 images
+    if (files.length > 10) {
+      alert('Maximum 10 images allowed at once.');
+      galImagesInput.value = '';
+      return;
+    }
+    
+    selectedFiles = files;
+    photoCount.textContent = files.length;
+    galPreviewGrid.innerHTML = '';
+    galImagesPreview.style.display = 'block';
+    
+    files.forEach((file, index) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const previewItem = document.createElement('div');
+        previewItem.style.cssText = 'position:relative;border-radius:8px;overflow:hidden;border:2px solid var(--line);aspect-ratio:1;';
+        previewItem.innerHTML = `
+          <img src="${e.target.result}" alt="Preview ${index + 1}" style="width:100%;height:100%;object-fit:cover;">
+          <button type="button" class="remove-photo-btn" data-index="${index}" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.7);color:#fff;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:14px;line-height:1;padding:0;">✕</button>
+        `;
+        galPreviewGrid.appendChild(previewItem);
+      };
+      reader.readAsDataURL(file);
+    });
+    
+    // Handle remove photo
+    setTimeout(() => {
+      document.querySelectorAll('.remove-photo-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const index = parseInt(e.target.dataset.index);
+          selectedFiles.splice(index, 1);
+          
+          // Update file input
+          const dt = new DataTransfer();
+          selectedFiles.forEach(file => dt.items.add(file));
+          galImagesInput.files = dt.files;
+          
+          // Trigger change to refresh preview
+          galImagesInput.dispatchEvent(new Event('change'));
+        });
+      });
+    }, 100);
+  });
+  
+  // Submit gallery photos as single post
+  uploadForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const title = document.getElementById('galTitle').value.trim();
+    const description = document.getElementById('galDescription').value.trim();
+    const submitBtn = document.getElementById('uploadGallerySubmitBtn');
+    const uploadBtnText = document.getElementById('uploadBtnText');
+    const msg = document.getElementById('uploadGalleryMsg');
+    
+    if (selectedFiles.length === 0) {
+      msg.textContent = 'Please select at least one image.';
+      msg.className = 'form-msg';
+      msg.style.color = 'var(--reject)';
+      msg.hidden = false;
+      return;
+    }
+    
+    if (!title) {
+      msg.textContent = 'Please provide a title for your post.';
+      msg.className = 'form-msg';
+      msg.style.color = 'var(--reject)';
+      msg.hidden = false;
+      return;
+    }
+    
+    submitBtn.disabled = true;
+    msg.hidden = true;
+    
+    try {
+      const imageUrls = [];
+      
+      // Upload all images first
+      for (let i = 0; i < selectedFiles.length; i++) {
+        const file = selectedFiles[i];
+        uploadBtnText.textContent = `Uploading ${i + 1} of ${selectedFiles.length}...`;
+        
+        const formData = new FormData();
+        formData.append('image', file);
+        
+        const uploadRes = await fetch(BASE_URL + '/gallery/upload', {
+          method: 'POST',
+          body: formData
+        });
+        const uploadJson = await uploadRes.json();
+        
+        if (uploadJson.status !== 'success') {
+          throw new Error(uploadJson.message || 'Upload failed');
+        }
+        
+        imageUrls.push(uploadJson.data.image_url);
+      }
+      
+      // Create single gallery entry with all images
+      uploadBtnText.textContent = 'Creating post...';
+      const createRes = await apiFetch('/gallery', {
+        method: 'POST',
+        body: JSON.stringify({ 
+          title: title, 
+          description: description, 
+          image_urls: imageUrls 
+        })
+      });
+      
+      if (createRes.status === 'success') {
+        const photoText = selectedFiles.length === 1 ? 'photo has' : 'photos have';
+        showPendingApprovalModal(
+          `Your ${selectedFiles.length} ${photoText} been submitted and are awaiting approval!`,
+          { title: 'Post Submitted!', icon: 'image' }
+        );
+        
+        animatedModalClose(uploadModal, () => {
+          uploadForm.reset();
+          selectedFiles = [];
+          galImagesPreview.style.display = 'none';
+          unlockScroll();
+        });
+      } else {
+        msg.textContent = createRes.message || 'Submission failed';
+        msg.className = 'form-msg';
+        msg.style.color = 'var(--reject)';
+        msg.hidden = false;
+      }
+    } catch (e) {
+      msg.textContent = e.message || 'An error occurred';
+      msg.className = 'form-msg';
+      msg.style.color = 'var(--reject)';
+      msg.hidden = false;
+    } finally {
+      submitBtn.disabled = false;
+      uploadBtnText.textContent = 'Submit for Approval';
+    }
+  });
+})();
+
+// ── Gallery Menu Functions ─────────────────────────────────────────────────────
+function toggleGalleryMenu(id) {
+  const menu = document.getElementById(`galleryMenu${id}`);
+  if (!menu) return;
+  
+  // Close all other menus
+  document.querySelectorAll('.gallery-item-menu').forEach(m => {
+    if (m.id !== `galleryMenu${id}`) m.hidden = true;
+  });
+  
+  menu.hidden = !menu.hidden;
+}
+
+// Close menus when clicking outside
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.gallery-item-menu-btn') && !e.target.closest('.gallery-item-menu')) {
+    document.querySelectorAll('.gallery-item-menu').forEach(m => m.hidden = true);
+  }
+});
+
+async function editGalleryPost(id) {
+  // Close menu
+  document.getElementById(`galleryMenu${id}`).hidden = true;
+  
+  try {
+    const res = await apiFetch(`/gallery/${id}`);
+    if (res.status !== 'success' || !res.data) {
+      alert('Could not load photo details.');
+      return;
+    }
+    
+    const item = res.data;
+    
+    // Open edit modal with current data
+    const editModal = document.getElementById('editGalleryModal');
+    document.getElementById('editGalleryId').value = id;
+    document.getElementById('editGalTitle').value = item.title;
+    document.getElementById('editGalDescription').value = item.description || '';
+    document.getElementById('editGalleryMsg').hidden = true;
+    
+    editModal.hidden = false;
+    lockScroll();
+  } catch (e) {
+    alert('Error loading post.');
+    console.error(e);
+  }
+}
+
+// Edit modal handlers
+(function initEditGalleryModal() {
+  const modal = document.getElementById('editGalleryModal');
+  if (!modal) return;
+  
+  const form = document.getElementById('editGalleryForm');
+  const submitBtn = document.getElementById('editGallerySubmitBtn');
+  const msg = document.getElementById('editGalleryMsg');
+  
+  // Close handlers
+  document.getElementById('editGalleryModalClose')?.addEventListener('click', () => {
+    animatedModalClose(modal, () => {
+      form.reset();
+      unlockScroll();
+    });
+  });
+  
+  document.getElementById('editGalleryCancelBtn')?.addEventListener('click', () => {
+    animatedModalClose(modal, () => {
+      form.reset();
+      unlockScroll();
+    });
+  });
+  
+  document.getElementById('editGalleryModalBackdrop')?.addEventListener('click', () => {
+    animatedModalClose(modal, () => {
+      form.reset();
+      unlockScroll();
+    });
+  });
+  
+  // Submit handler
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const id = document.getElementById('editGalleryId').value;
+    const title = document.getElementById('editGalTitle').value.trim();
+    const description = document.getElementById('editGalDescription').value.trim();
+    
+    if (!title) {
+      msg.textContent = 'Title is required.';
+      msg.style.color = 'var(--reject)';
+      msg.hidden = false;
+      return;
+    }
+    
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Saving...';
+    msg.hidden = true;
+    
+    try {
+      const updateRes = await apiFetch(`/gallery/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ title, description })
+      });
+      
+      if (updateRes.status === 'success') {
+        animatedModalClose(modal, () => {
+          form.reset();
+          unlockScroll();
+          loadGalleryPage(); // Reload gallery
+        });
+      } else {
+        msg.textContent = updateRes.message || 'Update failed';
+        msg.style.color = 'var(--reject)';
+        msg.hidden = false;
+      }
+    } catch (e) {
+      msg.textContent = 'Error updating post.';
+      msg.style.color = 'var(--reject)';
+      msg.hidden = false;
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Save Changes';
+    }
+  });
+})();
+
+async function deleteGalleryPost(id, title) {
+  // Close menu
+  const menu = document.getElementById(`galleryMenu${id}`);
+  if (menu) menu.hidden = true;
+  
+  // Open delete confirmation modal
+  const deleteModal = document.getElementById('deleteGalleryModal');
+  const confirmBtn = document.getElementById('deleteGalleryConfirmBtn');
+  document.getElementById('deleteGalleryMessage').innerHTML = 
+    `Are you sure you want to delete "<strong>${escHtml(title)}</strong>"? This action cannot be undone.`;
+  
+  deleteModal.hidden = false;
+  lockScroll();
+  
+  // Set up one-time click handler for confirm
+  const handleConfirm = async () => {
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = 'Deleting...';
+    
+    try {
+      const res = await apiFetch(`/gallery/${id}`, { method: 'DELETE' });
+      
+      if (res.status === 'success') {
+        animatedModalClose(deleteModal, unlockScroll);
+        
+        // Remove item from DOM with animation
+        const item = document.querySelector(`.gallery-item[data-id="${id}"]`);
+        if (item) {
+          item.style.transition = 'opacity 0.3s, transform 0.3s';
+          item.style.opacity = '0';
+          item.style.transform = 'scale(0.9)';
+          setTimeout(() => {
+            item.remove();
+            // Check if gallery is now empty
+            if (!document.querySelectorAll('.gallery-item').length) {
+              document.getElementById('galleryGrid').innerHTML = '<div class="empty-state">No photos yet. Be the first to share!</div>';
+            }
+          }, 300);
+        }
+      } else {
+        alert('Error: ' + (res.message || 'Delete failed'));
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = 'Delete';
+      }
+    } catch (e) {
+      alert('Error deleting post.');
+      console.error(e);
+      confirmBtn.disabled = false;
+      confirmBtn.textContent = 'Delete';
+    }
+    
+    // Remove this handler after use
+    confirmBtn.removeEventListener('click', handleConfirm);
+  };
+  
+  confirmBtn.addEventListener('click', handleConfirm);
+}
+
+// Delete modal close handlers
+(function initDeleteGalleryModal() {
+  const modal = document.getElementById('deleteGalleryModal');
+  if (!modal) return;
+  
+  document.getElementById('deleteGalleryModalClose')?.addEventListener('click', () => {
+    animatedModalClose(modal, unlockScroll);
+  });
+  
+  document.getElementById('deleteGalleryCancelBtn')?.addEventListener('click', () => {
+    animatedModalClose(modal, unlockScroll);
+  });
+  
+  document.getElementById('deleteGalleryModalBackdrop')?.addEventListener('click', () => {
+    animatedModalClose(modal, unlockScroll);
+  });
+})();
+
+
+// ═══════════════════════════════════════════════════════════════════════════════
 //  MEMBER PROFILE MODAL
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -5058,9 +5745,11 @@ function showPdMsg(text, isError) {
       new_event:        { svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>', color: '#039BE5' },
       new_announcement: { svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 17H2a3 3 0 0 0 3-3V9a7 7 0 0 1 14 0v5a3 3 0 0 0 3 3zm-8.27 4a2 2 0 0 1-3.46 0"/></svg>', color: '#F59E0B' },
       contact_reply:    { svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>', color: '#e07b3a' },
+      gallery_approved: { svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>', color: '#43A047' },
+      gallery_rejected: { svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>', color: '#e53935' },
     };
     const typeIcon = typeIconMap[n.type] || { svg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>', color: '#757575' };
-    const isBroadcast = n.type === 'new_event' || n.type === 'new_announcement' || n.type === 'contact_reply';
+    const isBroadcast = n.type === 'new_event' || n.type === 'new_announcement' || n.type === 'contact_reply' || n.type === 'gallery_approved' || n.type === 'gallery_rejected';
 
     // Broadcast notifications (new_event / new_announcement) use the church logo + name
     let avatarHtml;
@@ -5094,22 +5783,27 @@ function showPdMsg(text, isError) {
       new_event:        'New Event',
       new_announcement: 'New Announcement',
       contact_reply:    'Admin replied to your message',
+      gallery_approved: 'Your photo was approved',
+      gallery_rejected: 'Your photo was not approved',
     }[n.type] || 'interacted with your post';
 
     // For post-level actions show post title; for comment actions show the comment snippet
     const isCommentAction   = n.type === 'comment_like' || n.type === 'comment_reply';
     const isFollowAction    = n.type === 'follow' || n.type === 'follow_back';
+    const isGalleryAction   = n.type === 'gallery_approved' || n.type === 'gallery_rejected';
     const contextLabel      = isCommentAction
       ? `"${_esc(n.target_title)}"`
       : isFollowAction
         ? ''
-        : `<em>${_esc(n.target_title)}</em>`;
+        : isGalleryAction
+          ? `: <em>${_esc(n.target_title)}</em>`
+          : `<em>${_esc(n.target_title)}</em>`;
 
     const timeStr = typeof formatTimeAgo === 'function' ? formatTimeAgo(n.created_at) : '';
 
     // Broadcast: "Agape House Ministries" as sender + type label + title
     const mainText = isBroadcast
-      ? `<strong>Agape House Ministries</strong> · ${actionText}${contextLabel ? ': ' + contextLabel : ''}`
+      ? `<strong>Agape House Ministries</strong> · ${actionText}${contextLabel ? contextLabel : ''}`
       : `<strong>${_esc(name)}</strong> ${actionText}${contextLabel ? ': ' + contextLabel : ''}`;
 
     wrap.innerHTML = `
