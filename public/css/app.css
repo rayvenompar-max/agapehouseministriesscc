@@ -670,6 +670,48 @@ p { line-height: 1.65; color: var(--ink-soft); }
 }
 .btn-sm { padding: 8px 16px; font-size: 12px; }
 
+/* --- Custom File Input (Gallery) ------------------------------------------- */
+.custom-file-input-wrapper {
+  position: relative;
+  display: inline-block;
+}
+.custom-file-input {
+  opacity: 0;
+  position: absolute;
+  z-index: -1;
+  width: 0.1px;
+  height: 0.1px;
+}
+.custom-file-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 24px;
+  border: 2px solid #C1542E;
+  border-radius: 12px;
+  background: transparent;
+  color: #241C1F;
+  font-family: var(--body);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.custom-file-label:hover {
+  background: rgba(193, 84, 46, 0.05);
+  border-color: #E08152;
+}
+.custom-file-label svg {
+  flex-shrink: 0;
+  color: #C1542E;
+}
+.file-chosen-text {
+  margin-left: 12px;
+  color: var(--ink-soft);
+  font-size: 14px;
+  font-weight: 500;
+}
+
 /* --- HOME HERO --------------------------------------------------------------- */
 .hero {
   position: relative; overflow: hidden;
@@ -2510,6 +2552,22 @@ h1.hero-title em { font-style: italic; font-weight: 500; color: var(--sun-light)
 .article-modal-close:hover { background: #FBF6EC; color: #C1542E; border-color: #C1542E; }
 .article-modal-body { padding: 24px 28px 8px; color: var(--ink); line-height: 1.8; font-size: 16px; overflow-y: auto; }
 .article-modal-body p { margin-bottom: 20px; }
+
+/* Modal footer divider */
+.modal-foot-divider {
+  height: 1px;
+  background: var(--line);
+  flex-shrink: 0;
+}
+
+/* Modal footer with action buttons */
+.modal-foot {
+  padding: 20px 28px 26px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
 
 /* Modal footer with action buttons */
 .article-modal-foot {
@@ -4665,9 +4723,13 @@ nav.primary.open .nav-dropdown button svg {
   justify-content: center;
   flex-shrink: 0;
 }
-.sidebar-give-icon i[data-lucide] svg {
-  width: 18px; height: 18px;
-  stroke: var(--sun-light);
+.sidebar-give-icon i[data-lucide] svg,
+.sidebar-give-icon svg {
+  width: 18px !important; 
+  height: 18px !important;
+  stroke: #E08152 !important;
+  stroke-width: 2.5 !important;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.1));
 }
 
 /* -- Connect card row icons ? 11?11 -- */
@@ -6197,6 +6259,11 @@ nav.primary.open .nav-dropdown button svg {
 }
 .feed-layout.feed-layout--warm .sidebar-give-card .sidebar-section-title { color: var(--cream) !important; }
 .feed-layout.feed-layout--warm .sidebar-give-card p { color: rgba(251,246,236,.7) !important; }
+.feed-layout.feed-layout--warm .sidebar-give-card .sidebar-give-icon i[data-lucide] svg {
+  stroke: #E08152 !important;
+  stroke-width: 2.5;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+}
 .feed-layout.feed-layout--warm .sidebar-service-item {
   border-left-color: var(--ember) !important;
 }

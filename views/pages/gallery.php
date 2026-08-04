@@ -53,7 +53,20 @@
       <form id="uploadGalleryForm" novalidate>
         <div class="form-group">
           <label for="galImages">Choose Images <span class="form-hint">(required, max 10 photos)</span></label>
-          <input type="file" id="galImages" accept="image/jpeg,image/png,image/gif,image/webp" multiple required>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div class="custom-file-input-wrapper">
+              <input type="file" id="galImages" class="custom-file-input" accept="image/jpeg,image/png,image/gif,image/webp" multiple required>
+              <label for="galImages" class="custom-file-label">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="17 8 12 3 7 8"/>
+                  <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+                Choose Files
+              </label>
+            </div>
+            <span class="file-chosen-text" id="fileChosenText">No file chosen</span>
+          </div>
           <div style="font-size:12px;color:var(--ink-soft);margin-top:6px;">
             Max 10 MB per image. Up to 10 images at once. Supported formats: JPEG, PNG, GIF, WebP
           </div>
@@ -71,13 +84,17 @@
           <textarea id="galDescription" rows="3" maxlength="1000" placeholder="Tell us about these moments…"></textarea>
         </div>
         <div class="form-msg" id="uploadGalleryMsg" hidden></div>
-        <div style="display:flex;gap:12px;margin-top:24px;">
-          <button type="submit" class="btn btn-primary" id="uploadGallerySubmitBtn">
-            <span id="uploadBtnText">Submit for Approval</span>
-          </button>
-          <button type="button" class="btn btn-ghost-dark" id="uploadGalleryCancelBtn">Cancel</button>
-        </div>
       </form>
+    </div>
+    <div class="modal-foot-divider"></div>
+    <div class="modal-foot">
+      <button type="submit" form="uploadGalleryForm" class="btn btn-primary" id="uploadGallerySubmitBtn">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        <span id="uploadBtnText">Submit for Approval</span>
+      </button>
+      <button type="button" class="btn btn-ghost-dark" id="uploadGalleryCancelBtn">Cancel</button>
     </div>
   </div>
 </div>

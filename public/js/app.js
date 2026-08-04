@@ -5005,6 +5005,8 @@ async function openGalleryModal(id) {
       uploadForm.reset();
       selectedFiles = [];
       galImagesPreview.style.display = 'none';
+      const fileChosenText = document.getElementById('fileChosenText');
+      if (fileChosenText) fileChosenText.textContent = 'No file chosen';
       unlockScroll();
     });
   });
@@ -5014,6 +5016,8 @@ async function openGalleryModal(id) {
       uploadForm.reset();
       selectedFiles = [];
       galImagesPreview.style.display = 'none';
+      const fileChosenText = document.getElementById('fileChosenText');
+      if (fileChosenText) fileChosenText.textContent = 'No file chosen';
       unlockScroll();
     });
   });
@@ -5023,6 +5027,8 @@ async function openGalleryModal(id) {
       uploadForm.reset();
       selectedFiles = [];
       galImagesPreview.style.display = 'none';
+      const fileChosenText = document.getElementById('fileChosenText');
+      if (fileChosenText) fileChosenText.textContent = 'No file chosen';
       unlockScroll();
     });
   });
@@ -5039,10 +5045,12 @@ async function openGalleryModal(id) {
   // Images preview - support multiple files
   galImagesInput?.addEventListener('change', (e) => {
     const files = Array.from(e.target.files);
+    const fileChosenText = document.getElementById('fileChosenText');
     
     if (files.length === 0) {
       galImagesPreview.style.display = 'none';
       selectedFiles = [];
+      if (fileChosenText) fileChosenText.textContent = 'No file chosen';
       return;
     }
     
@@ -5050,11 +5058,22 @@ async function openGalleryModal(id) {
     if (files.length > 10) {
       alert('Maximum 10 images allowed at once.');
       galImagesInput.value = '';
+      if (fileChosenText) fileChosenText.textContent = 'No file chosen';
       return;
     }
     
     selectedFiles = files;
     photoCount.textContent = files.length;
+    
+    // Update file chosen text
+    if (fileChosenText) {
+      if (files.length === 1) {
+        fileChosenText.textContent = files[0].name;
+      } else {
+        fileChosenText.textContent = `${files.length} files selected`;
+      }
+    }
+    
     galPreviewGrid.innerHTML = '';
     galImagesPreview.style.display = 'block';
     
@@ -5166,6 +5185,8 @@ async function openGalleryModal(id) {
           uploadForm.reset();
           selectedFiles = [];
           galImagesPreview.style.display = 'none';
+          const fileChosenText = document.getElementById('fileChosenText');
+          if (fileChosenText) fileChosenText.textContent = 'No file chosen';
           unlockScroll();
         });
       } else {
@@ -6676,7 +6697,7 @@ async function deleteGalleryPost(id, title) {
 
   sendBtn.addEventListener('click', sendMessage);
   inputEl.addEventListener('keydown', e => {
-    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); sendMessage(); }
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
   });
 
   async function sendMessage() {
@@ -6973,7 +6994,7 @@ function openDirectMessageModal(conversationId, otherMember) {
   freshCloseBtn.addEventListener('click', closeModal);
   freshBackdrop.addEventListener('click', closeModal);
   freshInputEl.addEventListener('keydown', (e) => {
-    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+    if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       sendMessageFresh();
     }
