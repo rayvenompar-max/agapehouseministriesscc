@@ -3183,6 +3183,8 @@ async function loadHomeFeed() {
         authorUsername: g.poster_username || null,
         authorMemberId: g.member_id || null,
         commentCount:   g.comment_count || 0,
+        likeCount:      g.like_count || 0,
+        likedByMe:      g.liked_by_me || false,
         raw:            g,
       })),
     ];
@@ -3280,15 +3282,16 @@ function buildFeedCard(item) {
     }
   }
 
-  // ── Like state: start with 0/false then hydrate from server ──
-  // The DB is the source of truth; localStorage is gone.
+  // ── Like state: use data from item if available, otherwise hydrate from server ──
   const targetApiType = { watch: 'media', read: 'article', notice: 'announcement', gallery: 'gallery' }[item.type] || item.type;
+  const initialLiked = item.likedByMe || false;
+  const initialCount = item.likeCount || 0;
 
   const actionsHtml = `
     <div class="feed-card-actions">
-      <button class="feed-action-btn feed-like-btn" title="Like" data-liked="0" data-count="0">
-        <span class="feed-action-icon"><i data-lucide="heart" class="icon-heart-empty"></i></span>
-        <span class="feed-like-count"></span>
+      <button class="feed-action-btn feed-like-btn ${initialLiked ? 'liked' : ''}" title="Like" data-liked="${initialLiked ? '1' : '0'}" data-count="${initialCount}">
+        <span class="feed-action-icon"><i data-lucide="heart" class="icon-heart-empty" style="fill: ${initialLiked ? 'currentColor' : 'none'}"></i></span>
+        <span class="feed-like-count">${initialCount > 0 ? initialCount : ''}</span>
         <span>Like</span>
       </button>
       <button class="feed-action-btn feed-comment-btn" title="Comment" data-count="${item.commentCount || 0}">
@@ -3355,14 +3358,17 @@ function buildFeedCard(item) {
 
   const likeBtn = el.querySelector('.feed-like-btn');
 
-  // Hydrate like state from server (non-blocking)
-  apiFetch(`/likes/${targetApiType}/${item.id}`)
-    .then(res => {
-      if (res.status === 'success') {
-        applyLikeState(likeBtn, res.data.liked, res.data.like_count);
-      }
-    })
-    .catch(() => {});
+  // Hydrate like state from server if not already provided (non-blocking)
+  // For gallery items, this data should already be in the response
+  if (item.likeCount === undefined || item.likedByMe === undefined) {
+    apiFetch(`/likes/${targetApiType}/${item.id}`)
+      .then(res => {
+        if (res.status === 'success') {
+          applyLikeState(likeBtn, res.data.liked, res.data.like_count);
+        }
+      })
+      .catch(() => {});
+  }
 
   // Like button — toggle via server
   likeBtn.addEventListener('click', e => {

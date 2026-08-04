@@ -88,6 +88,7 @@ use Repository\NotificationRepository;
 use Repository\MemberRepository;
 use Repository\DirectMessageRepository;
 use Repository\GalleryRepository;
+use Repository\PostLikeRepository;
 use Service\MediaService;
 use Service\ArticleService;
 use Service\PrayerService;

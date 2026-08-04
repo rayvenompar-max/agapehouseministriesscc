@@ -158,7 +158,7 @@
                  onerror="this.closest('.donate-qr-wrap').innerHTML='<div class=\'donate-qr-placeholder\'>QR code<br>coming soon</div>'">
           </div>
           <div class="donate-wallet-name">Agape House Ministries</div>
-          <div class="donate-wallet-number">09XX XXX XXXX</div>
+          <div class="donate-wallet-number">0975 150 3967</div>
         </div>
 
         <!-- Maya (PayMaya) -->
@@ -171,7 +171,7 @@
                  onerror="this.closest('.donate-qr-wrap').innerHTML='<div class=\'donate-qr-placeholder\'>QR code<br>coming soon</div>'">
           </div>
           <div class="donate-wallet-name">Agape House Ministries</div>
-          <div class="donate-wallet-number">09XX XXX XXXX</div>
+          <div class="donate-wallet-number">0951 588 2518</div>
         </div>
 
       </div>
