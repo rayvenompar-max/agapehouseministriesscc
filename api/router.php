@@ -106,7 +106,7 @@ $announcementCtrl = new AnnouncementController(new AnnouncementService(new Annou
 $commentCtrl      = new CommentController(new CommentService(new CommentRepository($db)));
 $notifCtrl        = new NotificationController(new NotificationService(new NotificationRepository($db)));
 $dmCtrl           = new DirectMessageController(new DirectMessageRepository($db), new MemberRepository($db));
-$galleryCtrl      = new GalleryController(new GalleryRepository($db), new NotificationRepository($db));
+$galleryCtrl      = new GalleryController(new GalleryRepository($db), new NotificationRepository($db), new PostLikeRepository($db));
 
 // ---------- Route matching ----------
 $method = $_SERVER['REQUEST_METHOD'];

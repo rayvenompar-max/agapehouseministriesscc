@@ -5,16 +5,23 @@ namespace Controller;
 
 use Repository\GalleryRepository;
 use Repository\NotificationRepository;
+use Repository\PostLikeRepository;
 
 class GalleryController extends BaseController
 {
     private GalleryRepository $galleryRepo;
     private NotificationRepository $notifRepo;
+    private PostLikeRepository $likeRepo;
 
-    public function __construct(GalleryRepository $galleryRepo, NotificationRepository $notifRepo)
+    public function __construct(
+        GalleryRepository $galleryRepo, 
+        NotificationRepository $notifRepo,
+        PostLikeRepository $likeRepo
+    )
     {
         $this->galleryRepo = $galleryRepo;
         $this->notifRepo = $notifRepo;
+        $this->likeRepo = $likeRepo;
     }
 
     /**
@@ -283,9 +290,7 @@ class GalleryController extends BaseController
      */
     private function getLikeCount(string $type, int $id): int
     {
-        // We'll rely on the PostLikeRepository if needed, for now return 0
-        // This can be enhanced later with proper like count logic
-        return 0;
+        return $this->likeRepo->countFor($type, $id);
     }
 
     /**
@@ -293,9 +298,7 @@ class GalleryController extends BaseController
      */
     private function isLikedByUser(string $type, int $id, int $memberId): bool
     {
-        // We'll rely on the PostLikeRepository if needed, for now return false
-        // This can be enhanced later with proper like check logic
-        return false;
+        return $this->likeRepo->hasLiked($memberId, $type, $id);
     }
 
     /**
