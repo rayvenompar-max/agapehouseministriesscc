@@ -5999,9 +5999,18 @@ window.openGalleryModal = openGalleryModal;
 
       } else if (targetType === 'gallery') {
         // Fetch gallery data and open in Post Detail Modal (which supports comments/likes)
+        console.log('Opening gallery notification, ID:', targetId);
         res = await apiFetch(`/gallery/${targetId}`);
-        if (res.status !== 'success' || !res.data) return;
+        console.log('Gallery API response:', res);
+        
+        if (res.status !== 'success' || !res.data) {
+          console.error('Gallery not found or error:', res);
+          alert('Could not load gallery post. It may have been deleted.');
+          return;
+        }
+        
         data = res.data;
+        console.log('Gallery data:', data);
         
         // Build gallery images HTML
         const images = data.images || [];
@@ -6015,6 +6024,7 @@ window.openGalleryModal = openGalleryModal;
           galleryHtml += `<p style="margin-top:16px;font-size:14px;color:var(--ink-soft);line-height:1.6;">${escHtml(data.description)}</p>`;
         }
         
+        console.log('Opening Post Detail Modal for gallery...');
         openPostDetailModal({
           type:    'gallery',
           id:      data.id,
@@ -6023,6 +6033,7 @@ window.openGalleryModal = openGalleryModal;
           content: galleryHtml,
           authorMemberId: data.member_id, // For comment notifications
         });
+        console.log('Post Detail Modal opened for gallery');
 
       } else if (targetType === 'event') {
         // Navigate to the Events section so the member can see the event
@@ -7243,5 +7254,40 @@ function createDirectMessageModal() {
         console.log('[DM Auto-open] No pending message found');
       }
     }, 800); // Wait for app initialization
+  });
+})();
+
+
+// ─── Hero Minimize Toggle ─────────────────────────────────────────────────────
+(function initHeroMinimize() {
+  // Create and inject minimize buttons for all page-hero elements
+  document.querySelectorAll('.page-hero').forEach(hero => {
+    // Create button
+    const btn = document.createElement('button');
+    btn.className = 'hero-minimize-btn';
+    btn.setAttribute('aria-label', 'Minimize hero section');
+    btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>';
+    
+    // Add to hero
+    hero.appendChild(btn);
+    
+    // Load saved state from localStorage
+    const heroId = hero.closest('.page')?.id || 'default';
+    const savedState = localStorage.getItem(`hero-minimized-${heroId}`);
+    if (savedState === 'true') {
+      hero.classList.add('minimized');
+    }
+    
+    // Toggle on click
+    btn.addEventListener('click', () => {
+      hero.classList.toggle('minimized');
+      const isMinimized = hero.classList.contains('minimized');
+      
+      // Save state
+      localStorage.setItem(`hero-minimized-${heroId}`, isMinimized);
+      
+      // Update aria-label
+      btn.setAttribute('aria-label', isMinimized ? 'Expand hero section' : 'Minimize hero section');
+    });
   });
 })();

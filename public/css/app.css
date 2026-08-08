@@ -77,6 +77,7 @@ main {
   padding: 0; 
   width: 100%; 
   max-width: 100vw;
+  padding-top: 64px; /* Space for fixed header */
 }
 footer { flex-shrink: 0; }
 a { color: inherit; text-decoration: none; }
@@ -98,7 +99,7 @@ img { max-width: 100%; display: block; }
 
 /* --- NAV -------------------------------------------------------------------- */
 header.site {
-  position: sticky; top: 0; z-index: 100;
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
   background: var(--night);
   border-bottom: 1px solid rgba(127,196,232,.15);
   opacity: 0;
@@ -1621,7 +1622,7 @@ h1.hero-title em { font-style: italic; font-weight: 500; color: var(--sun-light)
 
 /* Individual feed card */
 .feed-card {
-  background: var(--white); border: 1px solid var(--line); border-radius: 8px;
+  background: #FFFDF8; border: 1px solid var(--line); border-radius: 8px;
   display: flex; flex-direction: column;
   box-shadow: 0 2px 12px rgba(42,20,55,.10);
   transition: box-shadow .3s var(--ease-out), border-color .3s var(--ease-out);
@@ -3054,7 +3055,7 @@ h1.hero-title em { font-style: italic; font-weight: 500; color: var(--sun-light)
 .article-modal-backdrop { position: fixed; inset: 0; background: rgba(21,13,27,.55); backdrop-filter: blur(2px); }
 .article-modal-box {
   position: relative; z-index: 1; width: 100%; max-width: 720px;
-  background: #FFFDF8; border-radius: 18px; box-shadow: 0 30px 70px rgba(20,10,20,.5);
+  background: #FBF6EC; border-radius: 18px; box-shadow: 0 30px 70px rgba(20,10,20,.5);
   margin: auto; border: none;
   overflow: hidden; display: flex; flex-direction: column;
 }
@@ -3068,7 +3069,7 @@ h1.hero-title em { font-style: italic; font-weight: 500; color: var(--sun-light)
 .article-modal-title { font-family: var(--display); font-size: 23px; line-height: 1.2; margin: 0; color: #20142A; }
 .article-modal-close {
   flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%;
-  background: #FFFDF8; border: 1px solid #E9E1D2; color: #6B6058;
+  background: #FFFFFF; border: 1px solid #E9E1D2; color: #6B6058;
   font-size: 14px; display: flex; align-items: center; justify-content: center;
   cursor: pointer; transition: background .18s ease, color .18s ease, border-color .18s ease;
   margin-top: 2px;
@@ -4087,7 +4088,7 @@ h1.hero-title em { font-style: italic; font-weight: 500; color: var(--sun-light)
   display: inline-flex; align-items: center; gap: 7px;
   padding: 10px 20px; border-radius: 999px; border: none;
   background: linear-gradient(135deg, #D9A544, #C1542E);
-  color: #241C1F; font-weight: 700; font-size: 12.5px; cursor: pointer;
+  color: #FFFFFF; font-weight: 700; font-size: 12.5px; cursor: pointer;
   transition: filter .18s ease, transform .18s ease;
 }
 .connect-btn-give:hover { filter: brightness(1.08); transform: translateY(-1px); }
@@ -4134,12 +4135,157 @@ footer .col a:hover { color: var(--sun-light); padding-left: 3px; }
 /* --- Page hero (non-home pages) ----------------------------------------------- */
 .page-hero {
   background: linear-gradient(180deg, var(--night) 0%, var(--dusk) 60%, var(--horizon) 100%);
-  padding: 60px 48px 52px;
+  padding: 20px 48px 18px;
   margin-top: 0;
+  margin-bottom: 40px; /* Space for the overlapping badge */
   width: 100%;
+  position: relative;
+  transition: max-height 0.3s ease, padding 0.3s ease, opacity 0.3s ease, border 0.3s ease, margin 0.3s ease;
+  overflow: visible;
+  max-height: 800px;
 }
-@media (max-width: 880px) { .page-hero { padding: 48px 22px 40px; } }
-.page-hero-inner { max-width: 100%; margin: 0; }
+@media (max-width: 880px) { .page-hero { padding: 18px 22px 16px; margin-bottom: 35px; } }
+
+/* Apply smooth transitions to ALL page hero variants */
+.page-hero--read,
+.page-hero--watch,
+.page-hero--bible,
+.page-hero--prayer,
+.page-hero--events,
+.page-hero--ann,
+.page-hero--about,
+.page-hero--quizzes,
+.page-hero--gallery {
+  transition: max-height 0.3s ease, padding 0.3s ease, opacity 0.3s ease, border 0.3s ease, margin 0.3s ease !important;
+  max-height: 800px;
+  overflow: visible !important;
+  margin-bottom: 40px !important;
+}
+
+/* Content should have z-index higher */
+.page-hero-inner {
+  position: relative;
+  z-index: 2;
+}
+
+/* Fully hidden state - applies to ALL page-hero variants */
+.page-hero.minimized,
+.page-hero--read.minimized,
+.page-hero--watch.minimized,
+.page-hero--bible.minimized,
+.page-hero--prayer.minimized,
+.page-hero--events.minimized,
+.page-hero--ann.minimized,
+.page-hero--about.minimized,
+.page-hero--quizzes.minimized,
+.page-hero--gallery.minimized {
+  max-height: 0 !important;
+  padding: 0 !important;
+  opacity: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Minimize toggle button - centered badge at right edge overlapping hero and content */
+.hero-minimize-btn {
+  position: absolute;
+  bottom: -30px; /* Overlaps hero and content */
+  right: 0;
+  transform: translateX(50%);
+  z-index: 99;
+  background: linear-gradient(135deg, #20142A 0%, #332039 60%, #4A3152 100%);
+  border: 2px solid rgba(217, 165, 68, 0.3);
+  border-radius: 50px;
+  width: 80px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #FBF6EC;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+/* When hero is minimized, button becomes fixed at top right */
+.page-hero.minimized .hero-minimize-btn,
+.page-hero--read.minimized .hero-minimize-btn,
+.page-hero--watch.minimized .hero-minimize-btn,
+.page-hero--bible.minimized .hero-minimize-btn,
+.page-hero--prayer.minimized .hero-minimize-btn,
+.page-hero--events.minimized .hero-minimize-btn,
+.page-hero--ann.minimized .hero-minimize-btn,
+.page-hero--about.minimized .hero-minimize-btn,
+.page-hero--quizzes.minimized .hero-minimize-btn,
+.page-hero--gallery.minimized .hero-minimize-btn {
+  position: fixed;
+  top: 80px;
+  right: 0;
+  bottom: auto;
+  transform: translateX(50%);
+}
+
+.hero-minimize-btn:hover {
+  background: linear-gradient(135deg, #2A1E3A 0%, #433049 60%, #5A4162 100%);
+  border-color: rgba(217, 165, 68, 0.5);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+  transform: translateX(50%) translateY(-2px);
+}
+
+.hero-minimize-btn svg {
+  width: 20px;
+  height: 20px;
+  transition: transform 0.3s ease;
+  stroke-width: 2.5;
+}
+
+.page-hero.minimized .hero-minimize-btn svg,
+.page-hero--read.minimized .hero-minimize-btn svg,
+.page-hero--watch.minimized .hero-minimize-btn svg,
+.page-hero--bible.minimized .hero-minimize-btn svg,
+.page-hero--prayer.minimized .hero-minimize-btn svg,
+.page-hero--events.minimized .hero-minimize-btn svg,
+.page-hero--ann.minimized .hero-minimize-btn svg,
+.page-hero--about.minimized .hero-minimize-btn svg,
+.page-hero--quizzes.minimized .hero-minimize-btn svg,
+.page-hero--gallery.minimized .hero-minimize-btn svg {
+  transform: rotate(180deg);
+}
+
+@media (max-width: 880px) { 
+  .hero-minimize-btn {
+    width: 70px;
+    height: 50px;
+    bottom: -25px;
+  }
+  .hero-minimize-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+  .hero-minimize-btn:hover {
+    transform: translateX(50%) translateY(-2px);
+  }
+  .page-hero.minimized .hero-minimize-btn,
+  .page-hero--read.minimized .hero-minimize-btn,
+  .page-hero--watch.minimized .hero-minimize-btn,
+  .page-hero--bible.minimized .hero-minimize-btn,
+  .page-hero--prayer.minimized .hero-minimize-btn,
+  .page-hero--events.minimized .hero-minimize-btn,
+  .page-hero--ann.minimized .hero-minimize-btn,
+  .page-hero--about.minimized .hero-minimize-btn,
+  .page-hero--quizzes.minimized .hero-minimize-btn,
+  .page-hero--gallery.minimized .hero-minimize-btn {
+    top: 75px;
+  }
+}
+
+.page-hero-inner { 
+  max-width: 100%; 
+  margin: 0; 
+  transition: opacity 0.2s ease;
+}
 .page-hero .eyebrow { color: var(--sun-light); margin-bottom: 14px; }
 .page-hero h2 { font-family: var(--display); color: var(--white); font-size: clamp(1.8rem,4vw,2.8rem); max-width: 540px; }
 .page-hero h2 em { color: var(--sun-light); }
@@ -5231,6 +5377,7 @@ nav.primary.open .nav-dropdown button svg {
   display: flex;
   align-items: center;
   gap: 6px;
+  margin-bottom: 10px;
 }
 .sidebar-section-title svg {
   width: 14px !important;
@@ -5260,7 +5407,7 @@ nav.primary.open .nav-dropdown button svg {
 .sci-row {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
+  gap: 10px;
   font-size: 13px;
   line-height: 1.5;
   color: var(--ink);
