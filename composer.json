@@ -1,0 +1,18 @@
+{
+    "name": "agape-house/digital-evangelization",
+    "description": "Digital Evangelization Platform for Agape House Ministries",
+    "type": "project",
+    "require": {
+        "php": ">=8.1",
+        "phpmailer/phpmailer": "^6.9"
+    },
+    "autoload": {
+        "psr-4": {
+            "": "src/"
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    }
+}

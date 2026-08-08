@@ -4,10 +4,21 @@ declare(strict_types=1);
 namespace Repository;
 
 use PDO;
+use Service\EmailService;
 
 class NotificationRepository
 {
-    public function __construct(private readonly PDO $db) {}
+    private EmailService $emailService;
+    private string $siteUrl;
+
+    public function __construct(private readonly PDO $db)
+    {
+        $this->emailService = new EmailService();
+        
+        // Load site URL from config
+        $emailConfig = require __DIR__ . '/../../config/email.php';
+        $this->siteUrl = $emailConfig['site_url'] ?? 'http://localhost/DigitalEvangelization';
+    }
 
     /**
      * Insert a notification.
@@ -39,6 +50,18 @@ class NotificationRepository
             'target_id'    => $targetId,
             'target_title' => mb_substr($targetTitle, 0, 255),
         ]);
+
+        // Send email notification if a new row was inserted
+        if ($stmt->rowCount() > 0) {
+            $this->sendEmailNotification([
+                'recipient_id' => $recipientId,
+                'actor_id'     => $actorId,
+                'type'         => $type,
+                'target_type'  => $targetType,
+                'target_id'    => $targetId,
+                'target_title' => $targetTitle,
+            ]);
+        }
     }
 
     /**
@@ -65,6 +88,18 @@ class NotificationRepository
             'target_id'    => $targetId,
             'target_title' => mb_substr($targetTitle, 0, 255),
         ]);
+
+        // Send email notification if a new row was inserted
+        if ($stmt->rowCount() > 0) {
+            $this->sendEmailNotification([
+                'recipient_id' => $recipientId,
+                'actor_id'     => 0,
+                'type'         => $type,
+                'target_type'  => $targetType,
+                'target_id'    => $targetId,
+                'target_title' => $targetTitle,
+            ]);
+        }
     }
 
     /**
@@ -170,5 +205,70 @@ class NotificationRepository
                AND type IN ("follow", "follow_back")'
         );
         $stmt->execute(['rid' => $recipientId, 'aid' => $actorId]);
+    }
+
+    /**
+     * Send email notification to the recipient
+     */
+    private function sendEmailNotification(array $notification): void
+    {
+        try {
+            // Get recipient email
+            $recipient = $this->getMemberEmailById($notification['recipient_id']);
+            if (!$recipient || empty($recipient['email'])) {
+                return; // Skip if no email found
+            }
+
+            // Get actor details (if not system notification)
+            $actor = null;
+            if ($notification['actor_id'] > 0) {
+                $actor = $this->getMemberById($notification['actor_id']);
+            }
+
+            // Build email content
+            $content = $this->emailService->buildNotificationContent(
+                $notification,
+                $actor,
+                $this->siteUrl
+            );
+
+            // Send email
+            $this->emailService->sendNotificationEmail(
+                $recipient['email'],
+                $recipient['display_name'] ?? 'Member',
+                $content['subject'],
+                $content['html'],
+                $content['text']
+            );
+        } catch (\Exception $e) {
+            // Log error but don't fail the notification creation
+            error_log("Failed to send email notification: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get member email by ID
+     */
+    private function getMemberEmailById(int $memberId): ?array
+    {
+        $stmt = $this->db->prepare(
+            'SELECT id, email, display_name FROM members WHERE id = :id LIMIT 1'
+        );
+        $stmt->execute(['id' => $memberId]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result ?: null;
+    }
+
+    /**
+     * Get member details by ID (for actor information)
+     */
+    private function getMemberById(int $memberId): ?array
+    {
+        $stmt = $this->db->prepare(
+            'SELECT id, display_name, username, profile_picture FROM members WHERE id = :id LIMIT 1'
+        );
+        $stmt->execute(['id' => $memberId]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result ?: null;
     }
 }

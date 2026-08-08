@@ -1,29 +1,30 @@
-# ── Credentials & environment ──────────────────────────────────────────────
-config/database.php
-.env
-*.env
+# Composer dependencies
+/vendor/
+composer.lock
 
-# ── XAMPP / local server logs ───────────────────────────────────────────────
+# Configuration files (contain sensitive data)
+/config/database.php
+/config/email.php
+
+# Uploaded files
+/public/uploads/*
+!/public/uploads/.gitkeep
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
 *.log
 error_log
 
-# ── OS junk ─────────────────────────────────────────────────────────────────
-.DS_Store
-Thumbs.db
-desktop.ini
-
-# ── Editor folders ──────────────────────────────────────────────────────────
-.vscode/
-.idea/
-
-# ── Uploaded user files (large binary files, not for git) ───────────────────
-public/uploads/videos/*.mp4
-public/uploads/videos/*.webm
-public/uploads/avatars/*.jpg
-public/uploads/avatars/*.png
-public/uploads/avatars/*.jpeg
-public/uploads/avatars/*.gif
-public/uploads/avatars/*.webp
-
-# ── Local SQL dumps ─────────────────────────────────────────────────────────
-daybreak.sql
+# Temporary files
+/tmp/
+*.tmp

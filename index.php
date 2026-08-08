@@ -14,6 +14,11 @@ session_start(); // Enable sessions for admin authentication
 define('BASE_PATH', __DIR__);
 define('BASE_URL',  '/DigitalEvangelization');
 
+// Load Composer autoloader for dependencies (PHPMailer, etc.)
+if (file_exists(BASE_PATH . '/vendor/autoload.php')) {
+    require_once BASE_PATH . '/vendor/autoload.php';
+}
+
 require_once BASE_PATH . '/config/app.php';
 require_once BASE_PATH . '/config/database.php';
 

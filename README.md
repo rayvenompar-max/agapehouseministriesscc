@@ -29,6 +29,7 @@ A comprehensive church community platform built with PHP, featuring member manag
 - **Contact Chat** - Live chat between members and admin team
 - **Messages Dropdown** - Quick access to conversations
 - **Notifications** - Real-time updates with badge counters
+- **Email Notifications** - Gmail notifications for all activities
 
 ### 📖 Bible Resources
 - **Daily Verse** - Verse of the day with reflection
@@ -68,8 +69,10 @@ A comprehensive church community platform built with PHP, featuring member manag
 
 ### Prerequisites
 - XAMPP (Apache + MySQL) or similar stack
-- PHP 7.4 or higher
+- PHP 8.1 or higher
 - MySQL 5.7+ or MariaDB 10.2+
+- Composer (for email notifications)
+- Gmail account (for email notifications)
 
 ### Setup Steps
 
@@ -120,16 +123,57 @@ A comprehensive church community platform built with PHP, featuring member manag
    define('DB_PASS', '');
    ```
 
-4. **Create Upload Directories**
+4. **Install Dependencies (for email notifications)**
+   ```bash
+   cd d:\xampp\htdocs\DigitalEvangelization
+   composer install
+   ```
+
+5. **Configure Email Notifications (Optional but Recommended)**
+   - See **[QUICK_START_EMAIL.md](QUICK_START_EMAIL.md)** for 5-minute setup
+   - Or see **[EMAIL_SETUP.md](EMAIL_SETUP.md)** for detailed guide
+   - Copy `config/email.example.php` to `config/email.php`
+   - Get Gmail App Password and configure settings
+   - Test with: `php test_email.php`
+
+6. **Create Upload Directories**
    ```bash
    mkdir public\uploads\gallery
    mkdir public\uploads\avatars
    mkdir public\uploads\videos
    ```
 
-5. **Start XAMPP**
+7. **Start XAMPP**
    - Start Apache and MySQL
    - Visit: `http://localhost/DigitalEvangelization/`
+
+## Email Notifications
+
+The platform sends email notifications through Gmail SMTP for all in-app notifications:
+
+### Notification Types
+- **Post Interactions**: Likes, comments, shares
+- **Comment Activity**: Comment likes and replies
+- **Social Actions**: New followers, follow-backs
+- **System Announcements**: New events, announcements
+- **Gallery Updates**: Photo approvals/rejections
+- **Contact Replies**: Admin responses to messages
+
+### Quick Setup
+1. **Install dependencies**: `composer install`
+2. **Get Gmail App Password**: Visit [Google App Passwords](https://myaccount.google.com/apppasswords)
+3. **Configure**: Edit `config/email.php` with your credentials
+4. **Test**: Run `php test_email.php`
+
+📖 **Full Guide**: See [EMAIL_SETUP.md](EMAIL_SETUP.md) for detailed instructions
+
+### Features
+- ✅ Beautiful HTML emails with church branding
+- ✅ Direct links to view notifications
+- ✅ Automatic deduplication (no spam)
+- ✅ Plain text fallback for all email clients
+- ✅ Graceful error handling (notifications still save if email fails)
+- ✅ Easy to disable (set `enabled => false` in config)
 
 ## Project Structure
 
@@ -141,7 +185,8 @@ DigitalEvangelization/
 │   └── router.php          # Route definitions
 ├── config/                  # Configuration
 │   ├── app.php             # App constants
-│   └── database.php        # DB credentials
+│   ├── database.php        # DB credentials
+│   └── email.php           # Email/SMTP settings
 ├── database/               # SQL migrations
 │   ├── schema.sql         # Main schema
 │   └── add_*.sql          # Feature migrations
@@ -156,14 +201,18 @@ DigitalEvangelization/
 │   ├── Controller/        # API controllers
 │   ├── Model/             # Data models
 │   ├── Repository/        # Database access
-│   └── Service/           # Business logic
+│   └── Service/           # Business logic (includes EmailService)
 ├── views/                  # Frontend views
 │   ├── pages/             # Page templates
 │   ├── partials/          # Reusable components
 │   └── layout.php         # Main layout
 ├── index.php              # Entry point
 ├── manifest.json          # PWA manifest
-└── service-worker.js      # Service worker
+├── service-worker.js      # Service worker
+├── composer.json          # PHP dependencies
+├── test_email.php         # Email testing script
+├── QUICK_START_EMAIL.md   # Quick email setup guide
+└── EMAIL_SETUP.md         # Detailed email setup guide
 ```
 
 ## API Endpoints
@@ -307,6 +356,13 @@ DigitalEvangelization/
 - Hard refresh browser (Ctrl+F5)
 - Check `public/css/app.css` exists
 - Verify file permissions
+
+### Email Notifications Not Sending
+- Run `php test_email.php` to diagnose
+- Check `'enabled' => true` in `config/email.php`
+- Verify Gmail App Password (no spaces, 16 characters)
+- Enable 2-Factor Auth on Google account first
+- See [EMAIL_SETUP.md](EMAIL_SETUP.md) for troubleshooting
 
 ## License
 

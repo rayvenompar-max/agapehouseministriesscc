@@ -481,10 +481,127 @@ if ($method === 'GET' && matchRoute('/media/featured', $path)) {
     
     try {
         $memberRepo = new \Repository\MemberRepository($db);
+        $member = $memberRepo->findById((int) $params['id']);
+        
+        if (!$member) {
+            http_response_code(404);
+            echo json_encode(['status' => 'error', 'message' => 'Member not found.']);
+            exit;
+        }
+        
         $newHash = password_hash($newPassword, PASSWORD_BCRYPT, ['cost' => 12]);
         $memberRepo->updatePassword((int) $params['id'], $newHash);
         
-        echo json_encode(['status' => 'success', 'message' => 'Password reset successfully.']);
+        // Send email notification with new password
+        try {
+            $emailService = new \Service\EmailService();
+            $emailConfig = require BASE_PATH . '/config/email.php';
+            $siteUrl = $emailConfig['site_url'] ?? BASE_URL;
+            
+            $subject = 'Your Password Has Been Reset';
+            
+            $htmlBody = <<<HTML
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{$subject}</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4; }
+        .container { max-width: 600px; margin: 20px auto; background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px 20px; text-align: center; }
+        .header h1 { margin: 0; font-size: 24px; font-weight: 600; }
+        .content { padding: 30px 20px; }
+        .message { font-size: 16px; margin-bottom: 20px; color: #555; }
+        .password-box { background: #f8f9fa; border: 2px solid #667eea; border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center; }
+        .password-label { font-size: 14px; color: #666; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+        .password-value { font-size: 24px; font-weight: bold; color: #667eea; font-family: 'Courier New', monospace; letter-spacing: 2px; }
+        .warning-box { background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 4px; }
+        .warning-box strong { color: #856404; }
+        .button-container { text-align: center; margin: 30px 0; }
+        .button { display: inline-block; padding: 12px 30px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; font-weight: 600; }
+        .button:hover { background: #5568d3; }
+        .footer { background: #f8f9fa; padding: 20px; text-align: center; font-size: 12px; color: #777; border-top: 1px solid #e9ecef; }
+        .footer a { color: #667eea; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 Password Reset</h1>
+        </div>
+        <div class="content">
+            <p class="message">Hello <strong>{$member->displayName}</strong>,</p>
+            <p class="message">Your password reset request has been processed by our administrator. Your new temporary password is:</p>
+            
+            <div class="password-box">
+                <div class="password-label">Your New Password</div>
+                <div class="password-value">{$newPassword}</div>
+            </div>
+            
+            <div class="warning-box">
+                <strong>⚠️ Important Security Notice:</strong><br>
+                For your security, please log in and change this temporary password immediately.
+            </div>
+            
+            <div class="button-container">
+                <a href="{$siteUrl}/?page=login" class="button">Log In Now</a>
+            </div>
+            
+            <p style="font-size: 14px; color: #666; margin-top: 20px;">
+                <strong>Security Tips:</strong><br>
+                • Change your password after logging in<br>
+                • Use a strong, unique password<br>
+                • Never share your password with anyone
+            </p>
+        </div>
+        <div class="footer">
+            <p>This password reset was performed by an administrator at Agape House Ministries</p>
+            <p>If you did not request this reset, please contact us immediately at <a href="{$siteUrl}/?page=contact">our contact page</a></p>
+            <p>Visit us at <a href="{$siteUrl}">Agape House Ministries</a></p>
+        </div>
+    </div>
+</body>
+</html>
+HTML;
+            
+            $textBody = <<<TEXT
+Password Reset - Agape House Ministries
+
+Hello {$member->displayName},
+
+Your password reset request has been processed by our administrator.
+
+Your New Password: {$newPassword}
+
+⚠️ IMPORTANT: For your security, please log in and change this temporary password immediately.
+
+Log in here: {$siteUrl}/?page=login
+
+Security Tips:
+• Change your password after logging in
+• Use a strong, unique password
+• Never share your password with anyone
+
+---
+This password reset was performed by an administrator at Agape House Ministries.
+If you did not request this reset, please contact us immediately.
+TEXT;
+            
+            $emailService->sendNotificationEmail(
+                $member->email,
+                $member->displayName,
+                $subject,
+                $htmlBody,
+                $textBody
+            );
+        } catch (\Throwable $emailError) {
+            // Log email error but don't fail the password reset
+            error_log('Failed to send password reset email: ' . $emailError->getMessage());
+        }
+        
+        echo json_encode(['status' => 'success', 'message' => 'Password reset successfully. User has been notified via email.']);
     } catch (\Throwable $e) {
         error_log('Reset password error: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
         http_response_code(500);

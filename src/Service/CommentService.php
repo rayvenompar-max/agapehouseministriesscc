@@ -10,7 +10,7 @@ use Repository\CommentRepository;
 
 class CommentService
 {
-    private const ALLOWED_TYPES = ['media', 'article', 'announcement'];
+    private const ALLOWED_TYPES = ['media', 'article', 'announcement', 'gallery'];
     private const MAX_BODY      = 1000;
     private const MIN_BODY      = 1;
 

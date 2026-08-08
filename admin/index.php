@@ -69,7 +69,7 @@ $isLoggedIn   = true;
       position: sticky; top: 0; z-index: 100;
     }
     .admin-header .inner {
-      max-width: 1200px; margin: 0 auto; padding: 0 32px;
+      padding: 0 32px;
       display: flex; align-items: center; justify-content: space-between; height: 60px;
     }
     .admin-brand { display: flex; align-items: center; gap: 12px; }
@@ -93,22 +93,30 @@ $isLoggedIn   = true;
     }
     .admin-header .logout-form button:hover { filter: brightness(1.12); }
 
-    /* ── Tabs ── */
-    .tab-bar { background: var(--paper); border-bottom: 1px solid var(--line); overflow-x: auto; }
-    .tab-bar .inner { max-width: 1200px; margin: 0 auto; padding: 0 32px; display: flex; align-items: center; gap: 4px; }
-    .tab-btn {
-      display: flex; align-items: center; gap: 7px;
-      padding: 14px 16px; background: none; border: none;
-      border-bottom: 2.5px solid transparent;
-      font-size: 13.5px; font-weight: 600; color: var(--ink-soft);
-      cursor: pointer; font-family: inherit; white-space: nowrap;
-      transition: color .18s ease, border-color .18s ease;
+    /* ── Sidebar ── */
+    .admin-layout { display: flex; min-height: calc(100vh - 60px); }
+    .sidebar {
+      width: 260px; background: var(--paper); border-right: 1px solid var(--line);
+      flex-shrink: 0; overflow-y: auto; position: sticky; top: 60px; height: calc(100vh - 60px);
     }
-    .tab-btn:hover { color: var(--ink); }
-    .tab-btn.active { color: var(--plum-deep); border-bottom-color: var(--ember); }
+    .sidebar-inner { padding: 24px 16px; }
+    .tab-btn {
+      display: flex; align-items: center; gap: 10px; width: 100%;
+      padding: 12px 16px; background: none; border: none;
+      border-left: 3px solid transparent;
+      font-size: 14px; font-weight: 600; color: var(--ink-soft);
+      cursor: pointer; font-family: inherit; text-align: left;
+      transition: all .2s ease; border-radius: 8px; margin-bottom: 4px;
+    }
+    .tab-btn:hover { color: var(--ink); background: rgba(51,32,57,0.04); }
+    .tab-btn.active {
+      color: var(--plum-deep); background: rgba(193,84,46,0.08);
+      border-left-color: var(--ember);
+    }
+    .tab-btn svg { flex-shrink: 0; }
 
     /* ── Container ── */
-    .container { max-width: 1200px; margin: 0 auto; padding: 36px 32px; }
+    .container { flex: 1; padding: 36px 32px; overflow-x: auto; }
     .tab-panel { display: none; }
     .tab-panel.active { display: block; }
     .section-title { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 600; color: var(--plum-deep); margin-bottom: 24px; }
@@ -482,7 +490,10 @@ $isLoggedIn   = true;
 
     @media (max-width: 720px) {
       .admin-header .inner { padding: 0 18px; }
-      .tab-bar .inner { padding: 0 18px; }
+      .admin-layout { flex-direction: column; }
+      .sidebar { width: 100%; height: auto; position: static; border-right: none; border-bottom: 1px solid var(--line); }
+      .sidebar-inner { padding: 12px 18px; display: flex; overflow-x: auto; gap: 4px; }
+      .tab-btn { margin-bottom: 0; width: auto; white-space: nowrap; }
       .container { padding: 26px 18px 60px; }
     }
   </style>
@@ -514,50 +525,52 @@ $isLoggedIn   = true;
   </div>
 </div>
 
-<div class="tab-bar">
-  <div class="inner">
-    <button class="tab-btn active" data-tab="prayers">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-      Prayer Requests
-    </button>
-    <button class="tab-btn" data-tab="articles">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-      Articles
-    </button>
-    <button class="tab-btn" data-tab="media-pending">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
-      Videos
-    </button>
-    <button class="tab-btn" data-tab="media">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
-      All Media
-    </button>
-    <button class="tab-btn" data-tab="announcements">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4v6l2 4H6l2-4V4h8z"/><path d="M12 14v6"/></svg>
-      Announcements
-    </button>
-    <button class="tab-btn" data-tab="gallery">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
-      Gallery
-    </button>
-    <button class="tab-btn" data-tab="events">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-      Events
-    </button>
-    <button class="tab-btn" data-tab="quizzes">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
-      Quizzes
-    </button>
-    <button class="tab-btn" data-tab="messages">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-      Messages
-    </button>
-    <button class="tab-btn" data-tab="users">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-      Users
-    </button>
+<div class="admin-layout">
+  <!-- ── Sidebar Navigation ── -->
+  <div class="sidebar">
+    <div class="sidebar-inner">
+      <button class="tab-btn active" data-tab="prayers">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        Prayer Requests
+      </button>
+      <button class="tab-btn" data-tab="articles">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        Articles
+      </button>
+      <button class="tab-btn" data-tab="media-pending">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+        Videos
+      </button>
+      <button class="tab-btn" data-tab="media">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+        All Media
+      </button>
+      <button class="tab-btn" data-tab="announcements">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4v6l2 4H6l2-4V4h8z"/><path d="M12 14v6"/></svg>
+        Announcements
+      </button>
+      <button class="tab-btn" data-tab="gallery">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+        Gallery
+      </button>
+      <button class="tab-btn" data-tab="events">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        Events
+      </button>
+      <button class="tab-btn" data-tab="quizzes">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+        Quizzes
+      </button>
+      <button class="tab-btn" data-tab="messages">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Messages
+      </button>
+      <button class="tab-btn" data-tab="users">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Users
+      </button>
+    </div>
   </div>
-</div>
 
 <div class="container">
 
@@ -682,6 +695,8 @@ $isLoggedIn   = true;
   </div>
 
 </div><!-- /container -->
+
+</div><!-- /admin-layout -->
 
 <!-- ── Admin Chat Modal ──────────────────────────────────────────────────── -->
 <div class="ann-form-modal" id="adminChatModal" hidden>
@@ -1019,12 +1034,93 @@ function escHtml(str) {
 }
 
 // ── Tabs ──────────────────────────────────────────────────────────────────────
+function loadTabContent(tabName) {
+  // Trigger lazy-loading for each tab type
+  switch(tabName) {
+    case 'articles':
+      if (!document.getElementById('articlePendingList')._loaded) {
+        document.getElementById('articlePendingList')._loaded = true;
+        loadArticlesPending();
+      }
+      break;
+    case 'media-pending':
+      if (!document.getElementById('videoPendingList')._loaded) {
+        document.getElementById('videoPendingList')._loaded = true;
+        loadVideosPending();
+      }
+      break;
+    case 'media':
+      if (!document.getElementById('mediaList')._loaded) {
+        document.getElementById('mediaList')._loaded = true;
+        loadAllMedia();
+      }
+      break;
+    case 'gallery':
+      if (!document.getElementById('galleryPendingList')._loaded) {
+        document.getElementById('galleryPendingList')._loaded = true;
+        loadGalleryPending();
+      }
+      break;
+    case 'announcements':
+      if (!document.getElementById('annAdminList')._loaded) {
+        document.getElementById('annAdminList')._loaded = true;
+        loadAnnouncements();
+      }
+      break;
+    case 'events':
+      if (!document.getElementById('eventsAdminList')._loaded) {
+        document.getElementById('eventsAdminList')._loaded = true;
+        loadAdminEvents();
+      }
+      break;
+    case 'quizzes':
+      if (!document.getElementById('quizAdminList')._loaded) {
+        document.getElementById('quizAdminList')._loaded = true;
+        loadQuizAdmin();
+      }
+      break;
+    case 'messages':
+      if (!document.getElementById('messagesList')._loaded) {
+        document.getElementById('messagesList')._loaded = true;
+        loadMessages();
+      }
+      break;
+    case 'users':
+      if (!document.getElementById('usersList')._loaded) {
+        document.getElementById('usersList')._loaded = true;
+        loadUsers();
+      }
+      break;
+  }
+}
+
+function switchTab(tabName) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  
+  const targetBtn = document.querySelector(`.tab-btn[data-tab="${tabName}"]`);
+  const targetPanel = document.getElementById('tab-' + tabName);
+  
+  if (targetBtn && targetPanel) {
+    targetBtn.classList.add('active');
+    targetPanel.classList.add('active');
+    // Save the active tab to localStorage
+    localStorage.setItem('adminActiveTab', tabName);
+    // Load content for this tab
+    loadTabContent(tabName);
+  }
+}
+
+// Restore last active tab on page load
+const savedTab = localStorage.getItem('adminActiveTab');
+if (savedTab) {
+  switchTab(savedTab);
+}
+
+// Set up click listeners for all tabs
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    switchTab(btn.dataset.tab);
   });
 });
 
@@ -1147,17 +1243,8 @@ async function handleArticle(id, action) {
   }
 }
 
-// Lazy-load articles tab when first clicked
-document.querySelectorAll('.tab-btn').forEach(btn => {
-  if (btn.dataset.tab === 'articles') {
-    btn.addEventListener('click', () => {
-      if (!document.getElementById('articlePendingList')._loaded) {
-        document.getElementById('articlePendingList')._loaded = true;
-        loadArticlesPending();
-      }
-    });
-  }
-});
+// Lazy-load articles tab when first clicked (handled by switchTab function now)
+
 
 // ── Videos Pending Panel ──────────────────────────────────────────────────────
 async function loadVideosPending() {
@@ -1234,17 +1321,8 @@ async function handleVideo(id, action) {
   }
 }
 
-// Lazy-load videos pending tab when first clicked
-document.querySelectorAll('.tab-btn').forEach(btn => {
-  if (btn.dataset.tab === 'media-pending') {
-    btn.addEventListener('click', () => {
-      if (!document.getElementById('videoPendingList')._loaded) {
-        document.getElementById('videoPendingList')._loaded = true;
-        loadVideosPending();
-      }
-    });
-  }
-});
+// Lazy-load videos pending tab when first clicked (handled by switchTab function now)
+
 
 // ── Gallery Pending Panel ─────────────────────────────────────────────────────
 async function loadGalleryPending() {
@@ -1318,17 +1396,8 @@ async function handleGallery(id, action) {
   }
 }
 
-// Lazy-load gallery pending tab when first clicked
-document.querySelectorAll('.tab-btn').forEach(btn => {
-  if (btn.dataset.tab === 'gallery') {
-    btn.addEventListener('click', () => {
-      if (!document.getElementById('galleryPendingList')._loaded) {
-        document.getElementById('galleryPendingList')._loaded = true;
-        loadGalleryPending();
-      }
-    });
-  }
-});
+// Lazy-load gallery pending tab when first clicked (handled by switchTab function now)
+
 
 let allMedia = [];
 
@@ -1578,17 +1647,8 @@ async function deleteAnn(id) {
   }
 }
 
-// Lazy-load announcements tab when first clicked
-document.querySelectorAll('.tab-btn').forEach(btn => {
-  if (btn.dataset.tab === 'announcements') {
-    btn.addEventListener('click', () => {
-      if (!document.getElementById('annAdminList')._loaded) {
-        document.getElementById('annAdminList')._loaded = true;
-        loadAnnouncements();
-      }
-    });
-  }
-});
+// Lazy-load announcements tab when first clicked (handled by switchTab function now)
+
 
 // ── Events Panel ─────────────────────────────────────────────────────────────
 
@@ -1731,17 +1791,8 @@ function formatAdminTime(t) {
   return `${h % 12 || 12}:${String(m).padStart(2,'0')} ${ampm}`;
 }
 
-// Lazy-load events tab when first clicked
-document.querySelectorAll('.tab-btn').forEach(btn => {
-  if (btn.dataset.tab === 'events') {
-    btn.addEventListener('click', () => {
-      if (!document.getElementById('eventsAdminList')._loaded) {
-        document.getElementById('eventsAdminList')._loaded = true;
-        loadAdminEvents();
-      }
-    });
-  }
-});
+// Lazy-load events tab when first clicked (handled by switchTab function now)
+
 
 // ── Event Form Modal ─────────────────────────────────────────────────────────
 
@@ -2048,17 +2099,8 @@ document.getElementById('qfAddQuestionBtn').addEventListener('click', () => addQ
 document.getElementById('qfDraftBtn').addEventListener('click',   () => saveQuiz(true));
 document.getElementById('qfPublishBtn').addEventListener('click', () => saveQuiz(false));
 
-// Lazy-load quizzes tab when first clicked
-document.querySelectorAll('.tab-btn').forEach(btn => {
-  if (btn.dataset.tab === 'quizzes') {
-    btn.addEventListener('click', () => {
-      if (!document.getElementById('quizAdminList')._loaded) {
-        document.getElementById('quizAdminList')._loaded = true;
-        loadQuizAdmin();
-      }
-    });
-  }
-});
+// Lazy-load quizzes tab when first clicked (handled by switchTab function now)
+
 
 // ── Messages Panel ────────────────────────────────────────────────────────────
 
@@ -2254,17 +2296,8 @@ adminChatInput.addEventListener('keydown', e => {
   }
 });
 
-// Lazy-load messages tab when first clicked
-document.querySelectorAll('.tab-btn').forEach(btn => {
-  if (btn.dataset.tab === 'messages') {
-    btn.addEventListener('click', () => {
-      if (!document.getElementById('messagesList')._loaded) {
-        document.getElementById('messagesList')._loaded = true;
-        loadMessages();
-      }
-    });
-  }
-});
+// Lazy-load messages tab when first clicked (handled by switchTab function now)
+
 
 // ── Users Panel ───────────────────────────────────────────────────────────────
 
@@ -2607,7 +2640,7 @@ document.getElementById('resetPasswordConfirm').addEventListener('click', async 
         <div style="background: #dcfce7; border: 1px solid #86efac; border-radius: 8px; padding: 14px; margin-top: 10px;">
           <div style="color: #14532d; font-weight: 600; margin-bottom: 8px;">✓ Password Reset Successfully!</div>
           <div style="color: #166534; font-size: 13px; line-height: 1.6; margin-bottom: 12px;">
-            <strong>Important:</strong> Copy this password and send it to the user securely. The user can log in immediately with this new password.
+            <strong>✉️ Email Sent:</strong> A notification email with the new password has been sent to <strong>${escHtml(userEmail)}</strong>. The user will receive instructions to log in and change their password.
           </div>
           <div style="background: #fff; border: 1px solid #86efac; border-radius: 6px; padding: 10px; margin-bottom: 10px;">
             <div style="font-size: 11px; color: #166534; font-weight: 600; margin-bottom: 4px;">NEW TEMPORARY PASSWORD:</div>
@@ -2617,8 +2650,10 @@ document.getElementById('resetPasswordConfirm').addEventListener('click', async 
             📋 Copy Password
           </button>
           <div style="font-size: 12px; color: #166534; margin-top: 12px; padding-top: 12px; border-top: 1px solid #86efac;">
-            <strong>User Email:</strong> ${escHtml(userEmail)}<br>
-            <span style="font-size: 11px; color: #166534; opacity: 0.8;">Recommend the user changes this password after logging in.</span>
+            <div style="margin-bottom: 8px;"><strong>📧 User Email:</strong> ${escHtml(userEmail)}</div>
+            <div style="font-size: 11px; color: #166534; opacity: 0.9; background: #f0fdf4; padding: 8px; border-radius: 4px;">
+              <strong>Note:</strong> The user has been notified via email and can log in immediately. They should change this temporary password after logging in for security.
+            </div>
           </div>
         </div>
       `;
@@ -2675,17 +2710,8 @@ document.getElementById('resetConfirmPassword').addEventListener('keydown', (e) 
   }
 });
 
-// Lazy-load users tab when first clicked
-document.querySelectorAll('.tab-btn').forEach(btn => {
-  if (btn.dataset.tab === 'users') {
-    btn.addEventListener('click', () => {
-      if (!document.getElementById('usersList')._loaded) {
-        document.getElementById('usersList')._loaded = true;
-        loadUsers();
-      }
-    });
-  }
-});
+// Lazy-load users tab when first clicked (handled by switchTab function now)
+
 </script>
 </body>
 </html>

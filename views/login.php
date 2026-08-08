@@ -122,6 +122,35 @@
       from { opacity: 0; transform: translateY(24px) scale(.98); }
       to   { opacity: 1; transform: translateY(0) scale(1); }
     }
+    /* ── Forgot password modal animation ── */
+    @keyframes modalFadeIn {
+      from { opacity: 0; transform: translate(-50%, -50%) scale(.95); }
+      to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    }
+    @keyframes modalFadeOut {
+      from { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+      to   { opacity: 0; transform: translate(-50%, -50%) scale(.95); }
+    }
+    @keyframes backdropFadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+    @keyframes backdropFadeOut {
+      from { opacity: 1; }
+      to   { opacity: 0; }
+    }
+    .modal-show {
+      animation: modalFadeIn .25s cubic-bezier(.16,1,.3,1) forwards;
+    }
+    .modal-hide {
+      animation: modalFadeOut .25s cubic-bezier(.16,1,.3,1) forwards;
+    }
+    .backdrop-show {
+      animation: backdropFadeIn .25s ease-out forwards;
+    }
+    .backdrop-hide {
+      animation: backdropFadeOut .25s ease-out forwards;
+    }
     .seal-float {
       width: 64px; height: 64px; border-radius: 50%;
       margin: -68px auto 18px;
@@ -404,13 +433,13 @@
   </div><!-- /card -->
 
   <!-- Forgot Password Modal -->
-  <div id="forgotPasswordModal" class="card" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); z-index:1000; max-width:440px;">
+  <div id="forgotPasswordModal" class="card" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); z-index:1001; max-width:440px; width:90%; max-height:90vh; overflow-y:auto; opacity:0;">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
       <h2 style="font-family:'Fraunces',serif; font-size:20px; margin:0;">Forgot Password?</h2>
-      <button id="closeForgotModal" style="background:none; border:none; font-size:24px; color:var(--ink-soft); cursor:pointer; padding:0; line-height:1;">&times;</button>
+      <button id="closeForgotModal" style="background:none; border:none; font-size:24px; color:var(--ink-soft); cursor:pointer; padding:4px 8px; line-height:1; transition:color .2s;" aria-label="Close">&times;</button>
     </div>
     
-    <p style="font-size:13.5px; color:var(--ink-soft); margin-bottom:20px;">
+    <p style="font-size:13.5px; color:var(--ink-soft); margin-bottom:20px; line-height:1.5;">
       Enter your email address and we'll help you reset your password through our admin team.
     </p>
 
@@ -420,7 +449,7 @@
       <div class="field">
         <label for="forgotEmail">Email Address</label>
         <div class="input-wrap">
-          <input id="forgotEmail" type="email" name="email" placeholder="you@example.com" required>
+          <input id="forgotEmail" type="email" name="email" placeholder="you@example.com" required autocomplete="email">
         </div>
       </div>
 
@@ -430,17 +459,19 @@
           <textarea id="forgotMessage" name="message" rows="3" placeholder="Any additional information..."
                     style="width:100%; padding:12px 14px; font-family:'Source Sans 3',sans-serif; font-size:14px; 
                            color:var(--ink); background:#FDFBF6; border:1.5px solid var(--line); border-radius:10px;
-                           outline:none; resize:vertical; transition:border-color .2s, box-shadow .2s;"></textarea>
+                           outline:none; resize:vertical; transition:border-color .2s, box-shadow .2s, background .2s;"
+                    onfocus="this.style.borderColor='var(--ember)'; this.style.background='#fff'; this.style.boxShadow='0 0 0 4px rgba(193,84,46,.1)';"
+                    onblur="this.style.borderColor='var(--line)'; this.style.background='#FDFBF6'; this.style.boxShadow='none';"></textarea>
         </div>
       </div>
 
-      <button type="submit" class="btn-primary" id="forgotBtn">Request Password Reset</button>
-      <p class="switch-line"><a id="backToLogin">Back to Sign In</a></p>
+      <button type="submit" class="btn-primary" id="forgotBtn" style="margin-bottom:12px;">Request Password Reset</button>
+      <p class="switch-line" style="margin:0;"><a id="backToLogin" style="cursor:pointer;">Back to Sign In</a></p>
     </form>
   </div>
 
   <!-- Modal Backdrop -->
-  <div id="modalBackdrop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:999; backdrop-filter:blur(4px);"></div>
+  <div id="modalBackdrop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:1000; backdrop-filter:blur(4px); opacity:0;"></div>
 
   <!-- Stage footer -->
   <div class="stage-foot">
@@ -530,15 +561,34 @@ const forgotAlert = document.getElementById('forgotAlert');
 function showForgotModal() {
   forgotModal.style.display = 'block';
   modalBackdrop.style.display = 'block';
+  
+  // Trigger animations
+  requestAnimationFrame(() => {
+    modalBackdrop.classList.add('backdrop-show');
+    forgotModal.classList.add('modal-show');
+  });
+  
   document.getElementById('forgotEmail').focus();
   forgotAlert.style.display = 'none';
 }
 
 function hideForgotModal() {
-  forgotModal.style.display = 'none';
-  modalBackdrop.style.display = 'none';
-  forgotForm.reset();
-  forgotAlert.style.display = 'none';
+  // Remove show classes and add hide classes
+  modalBackdrop.classList.remove('backdrop-show');
+  forgotModal.classList.remove('modal-show');
+  modalBackdrop.classList.add('backdrop-hide');
+  forgotModal.classList.add('modal-hide');
+  
+  // Hide after animation completes
+  setTimeout(() => {
+    forgotModal.style.display = 'none';
+    modalBackdrop.style.display = 'none';
+    // Remove hide classes for next time
+    modalBackdrop.classList.remove('backdrop-hide');
+    forgotModal.classList.remove('modal-hide');
+    forgotForm.reset();
+    forgotAlert.style.display = 'none';
+  }, 250);
 }
 
 forgotLink?.addEventListener('click', (e) => {
@@ -547,12 +597,22 @@ forgotLink?.addEventListener('click', (e) => {
 });
 
 closeForgotModal?.addEventListener('click', hideForgotModal);
+closeForgotModal?.addEventListener('mouseenter', (e) => { e.target.style.color = 'var(--ember)'; });
+closeForgotModal?.addEventListener('mouseleave', (e) => { e.target.style.color = 'var(--ink-soft)'; });
+
 backToLogin?.addEventListener('click', (e) => {
   e.preventDefault();
   hideForgotModal();
 });
 
 modalBackdrop?.addEventListener('click', hideForgotModal);
+
+// Close modal with Escape key
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && forgotModal.style.display === 'block') {
+    hideForgotModal();
+  }
+});
 
 // Handle forgot password form submission
 forgotForm?.addEventListener('submit', async (e) => {
