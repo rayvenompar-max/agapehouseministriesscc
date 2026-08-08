@@ -210,7 +210,7 @@
       padding: 4px; display: flex; transition: color .2s;
     }
     .toggle-pw:hover { color: var(--ember); }
-    .row-between { display: flex; justify-content: flex-end; margin: -6px 0 20px; }
+    .row-between { display: flex; justify-content: flex-end; margin: 10px 0 20px; }
     .row-between a { font-size: 12.5px; color: var(--ink-soft); text-decoration: none; }
     .row-between a:hover { color: var(--ember); }
 

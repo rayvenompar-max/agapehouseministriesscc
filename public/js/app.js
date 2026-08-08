@@ -5415,6 +5415,9 @@ async function deleteGalleryPost(id, title) {
   });
 })();
 
+// Expose gallery modal function globally so notifications can open gallery items
+window.openGalleryModal = openGalleryModal;
+
 
 // ═══════════════════════════════════════════════════════════════════════════════
 //  MEMBER PROFILE MODAL
@@ -5937,6 +5940,7 @@ async function deleteGalleryPost(id, title) {
           meta:    `${data.read_minutes} min read · ${_fmtDate(data.published_at)}`,
           title:   data.title,
           content: _renderBody(data.body),
+          authorMemberId: data.member_id,
         });
 
       } else if (targetType === 'media') {
@@ -5950,7 +5954,7 @@ async function deleteGalleryPost(id, title) {
                  id="pdm-yt-iframe-${ytId}"
                  src="https://www.youtube.com/embed/${ytId}?rel=0&modestbranding=1&enablejsapi=1&origin=${encodeURIComponent(location.origin)}"
                  allow="encrypted-media; fullscreen"
-                 title="${_esc(data.title)}"></iframe>
+                 title="${escHtml(data.title)}"></iframe>
                <div class="pdm-yt-fallback" id="pdm-yt-fallback-${ytId}" hidden>
                  <div class="pdm-yt-fallback-inner">
                    <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="7" width="20" height="15" rx="2"/><polyline points="17 2 12 7 7 2"/></svg>
@@ -5962,10 +5966,10 @@ async function deleteGalleryPost(id, title) {
                  </div>
                </div>
              </div>
-             <div class="pdm-video-meta">${_esc(data.series || data.type || '')} · ${_esc(data.duration_label || '')}</div>`
+             <div class="pdm-video-meta">${escHtml(data.series || data.type || '')} · ${escHtml(data.duration_label || '')}</div>`
           : (data.video_url
               ? `<div class="pdm-video-wrap" style="background:#111;display:flex;align-items:center;justify-content:center;">
-                   <a class="pdm-yt-watch-btn" href="${_esc(data.video_url)}" target="_blank" rel="noopener noreferrer" style="margin:auto;">
+                   <a class="pdm-yt-watch-btn" href="${escHtml(data.video_url)}" target="_blank" rel="noopener noreferrer" style="margin:auto;">
                      <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.8 15.5V8.5l6.3 3.5-6.3 3.5z"/></svg>
                      Watch on YouTube
                    </a>
@@ -5976,7 +5980,8 @@ async function deleteGalleryPost(id, title) {
           id:      data.id,
           meta:    (data.series || data.type || '').toUpperCase(),
           title:   data.title,
-          content: videoHtml + (data.description ? `<p style="margin-top:12px;font-size:14px;color:var(--ink-soft)">${_esc(data.description)}</p>` : ''),
+          content: videoHtml + (data.description ? `<p style="margin-top:12px;font-size:14px;color:var(--ink-soft)">${escHtml(data.description)}</p>` : ''),
+          authorMemberId: data.member_id,
         });
 
       } else if (targetType === 'announcement') {
@@ -5989,16 +5994,48 @@ async function deleteGalleryPost(id, title) {
           meta:    `${(data.category || 'Announcement').toUpperCase()} · ${_fmtDate(data.published_at || data.created_at)}`,
           title:   data.title,
           content: _renderBody(data.body),
+          authorMemberId: data.member_id,
+        });
+
+      } else if (targetType === 'gallery') {
+        // Fetch gallery data and open in Post Detail Modal (which supports comments/likes)
+        res = await apiFetch(`/gallery/${targetId}`);
+        if (res.status !== 'success' || !res.data) return;
+        data = res.data;
+        
+        // Build gallery images HTML
+        const images = data.images || [];
+        let galleryHtml = '';
+        if (images.length > 0) {
+          galleryHtml = images.map((img, index) => 
+            `<img src="${escHtml(img.image_url)}" alt="${escHtml(data.title)}" style="max-width:100%;border-radius:8px;margin-bottom:${index < images.length - 1 ? '12px' : '0'};">`
+          ).join('');
+        }
+        if (data.description) {
+          galleryHtml += `<p style="margin-top:16px;font-size:14px;color:var(--ink-soft);line-height:1.6;">${escHtml(data.description)}</p>`;
+        }
+        
+        openPostDetailModal({
+          type:    'gallery',
+          id:      data.id,
+          meta:    `Posted by ${data.display_name || data.username} · ${_fmtDate(data.created_at)}`,
+          title:   data.title,
+          content: galleryHtml,
+          authorMemberId: data.member_id, // For comment notifications
         });
 
       } else if (targetType === 'event') {
         // Navigate to the Events section so the member can see the event
-        navigateTo('events');
+        goTo('events');
 
       } else if (targetType === 'contact_message') {
         openMemberChatModal(targetId);
       }
-    } catch { /* silent — post may be deleted */ }
+    } catch (err) {
+      // Log error for debugging
+      console.error('Error opening notification target:', err);
+      console.log('Target type:', targetType, 'Target ID:', targetId);
+    }
   }
 
   // ── Post Detail Modal ─────────────────────────────────────────────────────
@@ -6013,7 +6050,7 @@ async function deleteGalleryPost(id, title) {
 
   let _pdmTarget = null;
 
-  function openPostDetailModal({ type, id, meta, title, content }) {
+  function openPostDetailModal({ type, id, meta, title, content, authorMemberId }) {
     _pdmMetaEl.textContent    = meta;
     _pdmTitleEl.textContent   = title;
     _pdmContentEl.innerHTML   = content;
@@ -6023,7 +6060,7 @@ async function deleteGalleryPost(id, title) {
     _pdmTarget = { type, id, title };
 
     // Sync into _commentTarget so buildCommentItem's reply form works inside this modal
-    _commentTarget = { type, id, title };
+    _commentTarget = { type, id, title, authorMemberId };
 
     // Clear any leftover closing state so the open animation plays cleanly
     _pdmModal.classList.remove('modal-is-closing');
@@ -6190,6 +6227,20 @@ async function deleteGalleryPost(id, title) {
         _pdmListEl.appendChild(buildCommentItem(res.data, _pdmListEl));
         _pdmListEl.scrollTop = _pdmListEl.scrollHeight;
         updateCommentCount(_pdmTarget.type, _pdmTarget.id, 1);
+
+        // ── Notify the post author (fire-and-forget) ──
+        if (_commentTarget.authorMemberId && window.CURRENT_MEMBER &&
+            _commentTarget.authorMemberId !== window.CURRENT_MEMBER.id) {
+          apiFetch('/notifications/comment', {
+            method: 'POST',
+            body: JSON.stringify({
+              target_type:  _commentTarget.type,
+              target_id:    _commentTarget.id,
+              target_title: _commentTarget.title,
+              recipient_id: _commentTarget.authorMemberId,
+            }),
+          }).then(() => window._refreshNotifBadge?.()).catch(() => {});
+        }
       } else {
         alert(res.message || 'Could not post comment.');
       }

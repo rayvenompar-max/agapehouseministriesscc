@@ -6,22 +6,26 @@ namespace Controller;
 use Repository\GalleryRepository;
 use Repository\NotificationRepository;
 use Repository\PostLikeRepository;
+use Repository\CommentRepository;
 
 class GalleryController extends BaseController
 {
     private GalleryRepository $galleryRepo;
     private NotificationRepository $notifRepo;
     private PostLikeRepository $likeRepo;
+    private CommentRepository $commentRepo;
 
     public function __construct(
         GalleryRepository $galleryRepo, 
         NotificationRepository $notifRepo,
-        PostLikeRepository $likeRepo
+        PostLikeRepository $likeRepo,
+        CommentRepository $commentRepo
     )
     {
         $this->galleryRepo = $galleryRepo;
         $this->notifRepo = $notifRepo;
         $this->likeRepo = $likeRepo;
+        $this->commentRepo = $commentRepo;
     }
 
     /**
@@ -37,6 +41,7 @@ class GalleryController extends BaseController
         // Enhance with like counts and format for feed
         foreach ($items as &$item) {
             $item['like_count'] = $this->getLikeCount('gallery', (int) $item['id']);
+            $item['comment_count'] = $this->getCommentCount('gallery', (int) $item['id']);
             
             // Add user's like status if logged in
             if (!empty($_SESSION['member']['id'])) {
@@ -86,6 +91,7 @@ class GalleryController extends BaseController
         
         // Enhance with like count
         $item['like_count'] = $this->getLikeCount('gallery', $id);
+        $item['comment_count'] = $this->getCommentCount('gallery', $id);
         
         if (!empty($_SESSION['member']['id'])) {
             $item['liked_by_me'] = $this->isLikedByUser('gallery', $id, (int) $_SESSION['member']['id']);
@@ -291,6 +297,14 @@ class GalleryController extends BaseController
     private function getLikeCount(string $type, int $id): int
     {
         return $this->likeRepo->countFor($type, $id);
+    }
+
+    /**
+     * Helper: Get comment count for a gallery item
+     */
+    private function getCommentCount(string $type, int $id): int
+    {
+        return $this->commentRepo->countByTarget($type, $id);
     }
 
     /**

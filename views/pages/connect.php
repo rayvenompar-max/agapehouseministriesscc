@@ -152,7 +152,7 @@
         <div class="donate-wallet-card">
           <div class="donate-wallet-logo donate-wallet-logo--gcash">GCash</div>
           <div class="donate-qr-wrap">
-            <img src="/DigitalEvangelization/public/images/qr-gcash.png"
+            <img src="/DigitalEvangelization/public/images/gcash.jpg"
                  alt="GCash QR Code"
                  class="donate-qr-img"
                  onerror="this.closest('.donate-qr-wrap').innerHTML='<div class=\'donate-qr-placeholder\'>QR code<br>coming soon</div>'">
