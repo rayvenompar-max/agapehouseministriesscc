@@ -407,6 +407,94 @@ if ($method === 'GET' && matchRoute('/media/featured', $path)) {
     $announcementCtrl->delete((int) $params['id']);
 
 // ---- Member profile ----
+} elseif ($method === 'GET' && matchRoute('/members/all', $path)) {
+    // Get all members for admin panel
+    if (empty($_SESSION['admin']['id']) && empty($_SESSION['admin_logged_in'])) {
+        http_response_code(401);
+        echo json_encode(['status' => 'error', 'message' => 'Admin authentication required.']);
+        exit;
+    }
+    
+    try {
+        $memberRepo = new \Repository\MemberRepository($db);
+        $members = $memberRepo->getAllMembersForAdmin(100, 0);
+        
+        echo json_encode(['status' => 'success', 'data' => $members]);
+    } catch (\Throwable $e) {
+        error_log('Get all members error: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+        http_response_code(500);
+        echo json_encode([
+            'status' => 'error', 
+            'message' => 'Failed to load members: ' . $e->getMessage()
+        ]);
+    }
+    exit;
+
+} elseif ($method === 'PATCH' && matchRoute('/members/{id}/status', $path, $params)) {
+    // Update member status
+    if (empty($_SESSION['admin']['id']) && empty($_SESSION['admin_logged_in'])) {
+        http_response_code(401);
+        echo json_encode(['status' => 'error', 'message' => 'Admin authentication required.']);
+        exit;
+    }
+    
+    $body = json_decode(file_get_contents('php://input'), true) ?? [];
+    $status = trim((string)($body['status'] ?? ''));
+    
+    if (!in_array($status, ['active', 'inactive', 'banned'], true)) {
+        http_response_code(400);
+        echo json_encode(['status' => 'error', 'message' => 'Invalid status. Must be active, inactive, or banned.']);
+        exit;
+    }
+    
+    try {
+        $memberRepo = new \Repository\MemberRepository($db);
+        $memberRepo->updateStatus((int) $params['id'], $status);
+        
+        echo json_encode(['status' => 'success', 'message' => 'User status updated successfully.']);
+    } catch (\Throwable $e) {
+        error_log('Update member status error: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+        http_response_code(500);
+        echo json_encode([
+            'status' => 'error', 
+            'message' => 'Failed to update status: ' . $e->getMessage()
+        ]);
+    }
+    exit;
+
+} elseif ($method === 'POST' && matchRoute('/members/{id}/reset-password', $path, $params)) {
+    // Admin reset user password
+    if (empty($_SESSION['admin']['id']) && empty($_SESSION['admin_logged_in'])) {
+        http_response_code(401);
+        echo json_encode(['status' => 'error', 'message' => 'Admin authentication required.']);
+        exit;
+    }
+    
+    $body = json_decode(file_get_contents('php://input'), true) ?? [];
+    $newPassword = trim((string)($body['new_password'] ?? ''));
+    
+    if (strlen($newPassword) < 8) {
+        http_response_code(400);
+        echo json_encode(['status' => 'error', 'message' => 'Password must be at least 8 characters.']);
+        exit;
+    }
+    
+    try {
+        $memberRepo = new \Repository\MemberRepository($db);
+        $newHash = password_hash($newPassword, PASSWORD_BCRYPT, ['cost' => 12]);
+        $memberRepo->updatePassword((int) $params['id'], $newHash);
+        
+        echo json_encode(['status' => 'success', 'message' => 'Password reset successfully.']);
+    } catch (\Throwable $e) {
+        error_log('Reset password error: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+        http_response_code(500);
+        echo json_encode([
+            'status' => 'error', 
+            'message' => 'Failed to reset password: ' . $e->getMessage()
+        ]);
+    }
+    exit;
+
 } elseif ($method === 'GET' && matchRoute('/member/search', $path)) {
     // Search for members by username or display name
     $query = trim((string)($_GET['q'] ?? ''));

@@ -243,6 +243,55 @@ $isLoggedIn   = true;
     .join-badge-online    { background: rgba(193,84,46,.1); color: var(--ember); padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
     .join-badge-in_person { background: rgba(110,143,110,.14); color: var(--sage); padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
 
+    /* ── Users Panel ── */
+    .users-table { width: 100%; border-collapse: collapse; background: var(--paper); border-radius: 14px; overflow: hidden; border: 1px solid var(--line); box-shadow: 0 6px 18px rgba(42,36,28,.05); }
+    .users-table th { background: var(--plum-black); color: var(--cream); font-family: 'IBM Plex Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; padding: 13px 16px; text-align: left; font-weight: 500; }
+    .users-table td { padding: 14px 16px; border-bottom: 1px solid var(--line); font-size: 14px; vertical-align: middle; color: var(--ink); }
+    .users-table tr:last-child td { border-bottom: none; }
+    .users-table tr:hover td { background: rgba(251,246,236,.6); }
+    .user-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: var(--line); }
+    .user-info { display: flex; align-items: center; gap: 12px; }
+    .user-details { display: flex; flex-direction: column; gap: 2px; }
+    .user-name { font-weight: 600; color: var(--plum-deep); }
+    .user-email { font-size: 12px; color: var(--ink-soft); }
+    .status-badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+    .status-active   { background: rgba(110,143,110,.14); color: var(--sage); }
+    .status-inactive { background: rgba(217,165,68,.15); color: #7a5200; }
+    .status-banned   { background: rgba(178,58,46,.1); color: var(--reject); }
+    .btn-user-action {
+      background: var(--plum); color: var(--cream); border: none;
+      padding: 6px 14px; border-radius: 8px; cursor: pointer;
+      font-size: 12px; font-weight: 700; font-family: inherit; white-space: nowrap; transition: filter .18s ease;
+    }
+    .btn-user-action:hover { filter: brightness(1.2); }
+
+    /* ── User Detail Modal ── */
+    .user-detail-modal { position: fixed; inset: 0; z-index: 500; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .user-detail-modal[hidden] { display: none; }
+    .user-detail-backdrop { position: absolute; inset: 0; background: rgba(21,13,27,.55); backdrop-filter: blur(2px); }
+    .user-detail-box {
+      position: relative; background: var(--paper); border-radius: 14px;
+      padding: 32px; width: 100%; max-width: 600px;
+      box-shadow: 0 16px 48px rgba(51,32,57,.2); border: 1px solid var(--line);
+    }
+    .user-detail-box h3 { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 600; margin-bottom: 22px; color: var(--plum-deep); }
+    .user-detail-section { margin-bottom: 20px; }
+    .user-detail-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-soft); margin-bottom: 6px; }
+    .user-detail-value { font-size: 14px; color: var(--ink); }
+    .user-detail-actions { display: flex; gap: 10px; margin-top: 22px; justify-content: flex-end; flex-wrap: wrap; }
+    .btn-status-change {
+      padding: 8px 16px; border-radius: 8px; border: none;
+      font-size: 12.5px; font-weight: 700; font-family: inherit;
+      cursor: pointer; transition: filter .18s ease;
+    }
+    .btn-status-active   { background: var(--approve); color: var(--white); }
+    .btn-status-inactive { background: var(--gold); color: var(--white); }
+    .btn-status-banned   { background: var(--reject); color: var(--white); }
+    .btn-status-change:hover { filter: brightness(1.12); }
+    
+    /* Search input focus */
+    #usersSearchInput:focus { outline: none; border-color: var(--ember); box-shadow: 0 0 0 3px rgba(193,84,46,.18); }
+
     /* ── Announcements ── */
     .btn-new-ann {
       background: var(--plum); color: var(--cream); border: none;
@@ -503,6 +552,10 @@ $isLoggedIn   = true;
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
       Messages
     </button>
+    <button class="tab-btn" data-tab="users">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Users
+    </button>
   </div>
 </div>
 
@@ -595,6 +648,37 @@ $isLoggedIn   = true;
       Messages sent by visitors through the Connect form. Click <strong>Reply</strong> to open the live chat thread.
     </p>
     <div id="messagesList"><div class="loading-state">Loading…</div></div>
+  </div>
+
+  <!-- ── Users Panel ── -->
+  <div class="tab-panel" id="tab-users">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:12px;">
+      <div class="section-title" style="margin-bottom:0;">Registered Users</div>
+      <div style="font-family:'IBM Plex Mono', monospace; font-size:13px; color:var(--ink-soft);">
+        Total: <span id="usersTotalCount">0</span> | Showing: <span id="usersShowingCount">0</span>
+      </div>
+    </div>
+    <p style="margin-bottom:20px; font-size:14px; color:var(--ink-soft);">
+      All registered members of the website. You can view their details and manage their account status.
+    </p>
+    
+    <!-- Search Bar -->
+    <div style="margin-bottom:20px;">
+      <div style="position:relative; max-width:500px;">
+        <input type="text" id="usersSearchInput" placeholder="Search by name, username, or email..." 
+               style="width:100%; padding:12px 40px 12px 16px; border:1.5px solid var(--line); border-radius:8px; 
+                      font-size:14px; font-family:inherit; background:var(--white); color:var(--ink); 
+                      transition:border-color .2s, box-shadow .2s;">
+        <svg style="position:absolute; right:14px; top:50%; transform:translateY(-50%); pointer-events:none; opacity:0.5;" 
+             width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" 
+             stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+      </div>
+      <div id="usersSearchMsg" style="font-size:12px; color:var(--ink-soft); margin-top:8px;"></div>
+    </div>
+    
+    <div id="usersList"><div class="loading-state">Loading…</div></div>
   </div>
 
 </div><!-- /container -->
@@ -818,6 +902,84 @@ $isLoggedIn   = true;
     <div class="confirm-actions">
       <button class="btn-cancel"     id="confirmCancelBtn">Cancel</button>
       <button class="btn-confirm-ok" id="confirmOkBtn">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── User Detail Modal ── -->
+<div class="user-detail-modal" id="userDetailModal" hidden>
+  <div class="user-detail-backdrop" id="userDetailBackdrop"></div>
+  <div class="user-detail-box">
+    <h3>User Details</h3>
+    
+    <div class="user-detail-section" style="display:flex; align-items:center; gap:16px; border-bottom:1px solid var(--line); padding-bottom:20px;">
+      <img id="userDetailAvatar" class="user-avatar" style="width:60px; height:60px;" src="" alt="Avatar">
+      <div>
+        <div style="font-family:'Fraunces',serif; font-size:18px; font-weight:600; color:var(--plum-deep);" id="userDetailDisplayName"></div>
+        <div style="font-size:13px; color:var(--ink-soft); margin-top:2px;" id="userDetailUsername"></div>
+      </div>
+    </div>
+
+    <div class="user-detail-section">
+      <div class="user-detail-label">Email</div>
+      <div class="user-detail-value" id="userDetailEmail"></div>
+    </div>
+
+    <div class="user-detail-section">
+      <div class="user-detail-label">Status</div>
+      <div id="userDetailStatus"></div>
+    </div>
+
+    <div class="user-detail-section">
+      <div class="user-detail-label">Member Since</div>
+      <div class="user-detail-value" id="userDetailCreated"></div>
+    </div>
+
+    <div class="user-detail-section">
+      <div class="user-detail-label">Last Login</div>
+      <div class="user-detail-value" id="userDetailLastLogin"></div>
+    </div>
+
+    <input type="hidden" id="userDetailId">
+    <input type="hidden" id="userDetailCurrentStatus">
+
+    <div class="user-detail-actions">
+      <button class="btn-cancel" id="userDetailClose">Close</button>
+      <button class="btn-status-change" id="userResetPassword" style="background: var(--ember); color: var(--white);">Reset Password</button>
+      <button class="btn-status-change btn-status-active" id="userSetActive">Set Active</button>
+      <button class="btn-status-change btn-status-inactive" id="userSetInactive">Set Inactive</button>
+      <button class="btn-status-change btn-status-banned" id="userSetBanned">Ban User</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Reset Password Modal ── -->
+<div class="user-detail-modal" id="resetPasswordModal" hidden>
+  <div class="user-detail-backdrop" id="resetPasswordBackdrop"></div>
+  <div class="user-detail-box" style="max-width: 500px;">
+    <h3>Reset User Password</h3>
+    
+    <p style="font-size: 14px; color: var(--ink-soft); margin-bottom: 20px;">
+      Enter a new password for <strong id="resetPasswordUsername"></strong>. The user will be able to login with this new password immediately.
+    </p>
+
+    <div class="field">
+      <label for="resetNewPassword">New Password</label>
+      <input type="password" id="resetNewPassword" placeholder="Enter new password (min 8 characters)" minlength="8">
+    </div>
+
+    <div class="field">
+      <label for="resetConfirmPassword">Confirm Password</label>
+      <input type="password" id="resetConfirmPassword" placeholder="Re-enter new password">
+    </div>
+
+    <div id="resetPasswordMsg" style="font-size: 13px; margin-top: 10px; min-height: 20px;"></div>
+
+    <input type="hidden" id="resetPasswordUserId">
+
+    <div class="user-detail-actions" style="margin-top: 20px;">
+      <button class="btn-cancel" id="resetPasswordCancel">Cancel</button>
+      <button class="btn-status-change" id="resetPasswordConfirm" style="background: var(--ember); color: var(--white);">Reset Password</button>
     </div>
   </div>
 </div>
@@ -2099,6 +2261,427 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
       if (!document.getElementById('messagesList')._loaded) {
         document.getElementById('messagesList')._loaded = true;
         loadMessages();
+      }
+    });
+  }
+});
+
+// ── Users Panel ───────────────────────────────────────────────────────────────
+
+let allUsers = [];
+let filteredUsers = [];
+
+async function loadUsers() {
+  const container = document.getElementById('usersList');
+  const countEl   = document.getElementById('usersTotalCount');
+
+  container.innerHTML = '<div class="loading-state">Loading…</div>';
+
+  try {
+    const res  = await fetch(API + '/members/all');
+    const json = await res.json();
+
+    if (json.status !== 'success') {
+      container.innerHTML = '<div class="empty-state">Could not load users.</div>';
+      return;
+    }
+
+    allUsers = json.data || [];
+    filteredUsers = [...allUsers]; // Initialize filtered list
+    container._loaded = true;
+    countEl.textContent = allUsers.length;
+
+    if (!allUsers.length) {
+      container.innerHTML = '<div class="empty-state">No registered users yet.</div>';
+      return;
+    }
+
+    renderUsersTable();
+  } catch (err) {
+    container.innerHTML = `<div class="empty-state">Failed to load users. ${escHtml(err.message)}</div>`;
+  }
+}
+
+function renderUsersTable() {
+  const container = document.getElementById('usersList');
+  const showingCountEl = document.getElementById('usersShowingCount');
+  
+  showingCountEl.textContent = filteredUsers.length;
+
+  if (!filteredUsers.length) {
+    container.innerHTML = '<div class="empty-state">No users found matching your search.</div>';
+    return;
+  }
+
+  const rows = filteredUsers.map(u => {
+    // Handle profile picture - only show if it exists and is not null/empty
+    let avatar = '/DigitalEvangelization/public/images/agape1.jpg';
+    if (u.profile_picture && u.profile_picture.trim() !== '') {
+      // Check if it's already a full URL or just a filename
+      if (u.profile_picture.startsWith('http') || u.profile_picture.startsWith('/')) {
+        avatar = u.profile_picture;
+      } else {
+        avatar = `/DigitalEvangelization/public/uploads/avatars/${u.profile_picture}`;
+      }
+    }
+    
+    const statusClass = `status-${u.status}`;
+    const createdDate = new Date(u.created_at).toLocaleDateString('en-US', { 
+      month: 'short', day: 'numeric', year: 'numeric' 
+    });
+    const lastLogin = u.last_login 
+      ? new Date(u.last_login).toLocaleDateString('en-US', { 
+          month: 'short', day: 'numeric', year: 'numeric' 
+        })
+      : 'Never';
+
+    return `
+      <tr data-user-id="${u.id}">
+        <td>${u.id}</td>
+        <td>
+          <div class="user-info">
+            <img src="${avatar}" alt="${escHtml(u.display_name)}" class="user-avatar" onerror="this.src='/DigitalEvangelization/public/images/agape1.jpg'">
+            <div class="user-details">
+              <div class="user-name">${escHtml(u.display_name)}</div>
+              <div class="user-email">@${escHtml(u.username)}</div>
+            </div>
+          </div>
+        </td>
+        <td>${escHtml(u.email)}</td>
+        <td><span class="status-badge ${statusClass}">${escHtml(u.status)}</span></td>
+        <td>${createdDate}</td>
+        <td>${lastLogin}</td>
+        <td><button class="btn-user-action" onclick="openUserDetail(${u.id})">View Details</button></td>
+      </tr>
+    `;
+  }).join('');
+
+  container.innerHTML = `
+    <table class="users-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>User</th>
+          <th>Email</th>
+          <th>Status</th>
+          <th>Joined</th>
+          <th>Last Login</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+}
+
+// Search functionality
+let searchTimeout;
+document.getElementById('usersSearchInput').addEventListener('input', (e) => {
+  clearTimeout(searchTimeout);
+  const query = e.target.value.trim().toLowerCase();
+  const msgEl = document.getElementById('usersSearchMsg');
+
+  if (!query) {
+    filteredUsers = [...allUsers];
+    msgEl.textContent = '';
+    renderUsersTable();
+    return;
+  }
+
+  // Debounce search
+  searchTimeout = setTimeout(() => {
+    filteredUsers = allUsers.filter(u => {
+      const displayName = u.display_name.toLowerCase();
+      const username = u.username.toLowerCase();
+      const email = u.email.toLowerCase();
+      
+      return displayName.includes(query) || 
+             username.includes(query) || 
+             email.includes(query);
+    });
+
+    if (filteredUsers.length === 0) {
+      msgEl.textContent = `No users found matching "${e.target.value}"`;
+      msgEl.style.color = 'var(--ink-soft)';
+    } else {
+      msgEl.textContent = `Found ${filteredUsers.length} user${filteredUsers.length === 1 ? '' : 's'}`;
+      msgEl.style.color = 'var(--approve)';
+    }
+
+    renderUsersTable();
+  }, 300);
+});
+
+// ── User Detail Modal ─────────────────────────────────────────────────────────
+
+function openUserDetail(userId) {
+  const user = allUsers.find(u => u.id === userId);
+  if (!user) return;
+
+  // Handle profile picture - only show if it exists and is not null/empty
+  let avatar = '/DigitalEvangelization/public/images/agape1.jpg';
+  if (user.profile_picture && user.profile_picture.trim() !== '') {
+    // Check if it's already a full URL or just a filename
+    if (user.profile_picture.startsWith('http') || user.profile_picture.startsWith('/')) {
+      avatar = user.profile_picture;
+    } else {
+      avatar = `/DigitalEvangelization/public/uploads/avatars/${user.profile_picture}`;
+    }
+  }
+  
+  const createdDate = new Date(user.created_at).toLocaleString('en-US', { 
+    month: 'long', day: 'numeric', year: 'numeric', 
+    hour: 'numeric', minute: '2-digit' 
+  });
+  
+  const lastLogin = user.last_login 
+    ? new Date(user.last_login).toLocaleString('en-US', { 
+        month: 'long', day: 'numeric', year: 'numeric', 
+        hour: 'numeric', minute: '2-digit' 
+      })
+    : 'Never logged in';
+
+  document.getElementById('userDetailId').value = userId;
+  document.getElementById('userDetailCurrentStatus').value = user.status;
+  const avatarImg = document.getElementById('userDetailAvatar');
+  avatarImg.src = avatar;
+  avatarImg.onerror = function() { this.src = '/DigitalEvangelization/public/images/agape1.jpg'; };
+  document.getElementById('userDetailDisplayName').textContent = user.display_name;
+  document.getElementById('userDetailUsername').textContent = '@' + user.username;
+  document.getElementById('userDetailEmail').textContent = user.email;
+  
+  const statusBadge = `<span class="status-badge status-${user.status}">${user.status}</span>`;
+  document.getElementById('userDetailStatus').innerHTML = statusBadge;
+  
+  document.getElementById('userDetailCreated').textContent = createdDate;
+  document.getElementById('userDetailLastLogin').textContent = lastLogin;
+
+  // Show/hide status buttons based on current status
+  document.getElementById('userSetActive').style.display = user.status === 'active' ? 'none' : 'inline-block';
+  document.getElementById('userSetInactive').style.display = user.status === 'inactive' ? 'none' : 'inline-block';
+  document.getElementById('userSetBanned').style.display = user.status === 'banned' ? 'none' : 'inline-block';
+
+  document.getElementById('userDetailModal').hidden = false;
+}
+
+function closeUserDetail() {
+  document.getElementById('userDetailModal').hidden = true;
+}
+
+document.getElementById('userDetailClose').addEventListener('click', closeUserDetail);
+document.getElementById('userDetailBackdrop').addEventListener('click', closeUserDetail);
+
+async function changeUserStatus(userId, newStatus) {
+  const statusLabels = {
+    'active': 'activate',
+    'inactive': 'set as inactive',
+    'banned': 'ban'
+  };
+
+  const ok = await showConfirm({ 
+    title: `${statusLabels[newStatus]} this user?`, 
+    message: `This will change the user's account status to "${newStatus}".`, 
+    okLabel: 'Confirm',
+    danger: newStatus === 'banned'
+  });
+  
+  if (!ok) return;
+
+  try {
+    const res = await fetch(API + `/members/${userId}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: newStatus })
+    });
+    
+    const json = await res.json();
+
+    if (json.status === 'success') {
+      // Update local cache
+      const idx = allUsers.findIndex(u => u.id === userId);
+      if (idx !== -1) allUsers[idx].status = newStatus;
+
+      // Reload users list
+      loadUsers();
+      closeUserDetail();
+    } else {
+      alert('Error: ' + json.message);
+    }
+  } catch (err) {
+    alert('Network error: ' + err.message);
+  }
+}
+
+document.getElementById('userSetActive').addEventListener('click', () => {
+  const userId = parseInt(document.getElementById('userDetailId').value, 10);
+  changeUserStatus(userId, 'active');
+});
+
+document.getElementById('userSetInactive').addEventListener('click', () => {
+  const userId = parseInt(document.getElementById('userDetailId').value, 10);
+  changeUserStatus(userId, 'inactive');
+});
+
+document.getElementById('userSetBanned').addEventListener('click', () => {
+  const userId = parseInt(document.getElementById('userDetailId').value, 10);
+  changeUserStatus(userId, 'banned');
+});
+
+// ── Reset Password Modal ──────────────────────────────────────────────────────
+
+document.getElementById('userResetPassword').addEventListener('click', () => {
+  const userId = parseInt(document.getElementById('userDetailId').value, 10);
+  const user = allUsers.find(u => u.id === userId);
+  if (!user) return;
+
+  document.getElementById('resetPasswordUserId').value = userId;
+  document.getElementById('resetPasswordUsername').textContent = user.display_name + ' (@' + user.username + ')';
+  document.getElementById('resetNewPassword').value = '';
+  document.getElementById('resetConfirmPassword').value = '';
+  document.getElementById('resetPasswordMsg').textContent = '';
+  document.getElementById('resetPasswordMsg').className = '';
+  
+  document.getElementById('resetPasswordModal').hidden = false;
+  document.getElementById('resetNewPassword').focus();
+});
+
+function closeResetPasswordModal() {
+  document.getElementById('resetPasswordModal').hidden = true;
+  
+  // Reset the modal to its initial state
+  document.getElementById('resetNewPassword').style.display = 'block';
+  document.getElementById('resetConfirmPassword').style.display = 'block';
+  document.querySelectorAll('#resetPasswordModal .field').forEach(f => f.style.display = 'block');
+  document.getElementById('resetPasswordConfirm').style.display = 'inline-block';
+  document.querySelector('#resetPasswordModal h3').textContent = 'Reset User Password';
+  document.getElementById('resetPasswordMsg').innerHTML = '';
+}
+
+document.getElementById('resetPasswordCancel').addEventListener('click', closeResetPasswordModal);
+document.getElementById('resetPasswordBackdrop').addEventListener('click', closeResetPasswordModal);
+
+document.getElementById('resetPasswordConfirm').addEventListener('click', async () => {
+  const userId = parseInt(document.getElementById('resetPasswordUserId').value, 10);
+  const newPassword = document.getElementById('resetNewPassword').value.trim();
+  const confirmPassword = document.getElementById('resetConfirmPassword').value.trim();
+  const msgEl = document.getElementById('resetPasswordMsg');
+  const btn = document.getElementById('resetPasswordConfirm');
+
+  // Validation
+  if (!newPassword) {
+    msgEl.textContent = 'Please enter a new password.';
+    msgEl.style.color = 'var(--reject)';
+    return;
+  }
+
+  if (newPassword.length < 8) {
+    msgEl.textContent = 'Password must be at least 8 characters.';
+    msgEl.style.color = 'var(--reject)';
+    return;
+  }
+
+  if (newPassword !== confirmPassword) {
+    msgEl.textContent = 'Passwords do not match.';
+    msgEl.style.color = 'var(--reject)';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Resetting...';
+  msgEl.textContent = '';
+
+  try {
+    const res = await fetch(API + `/members/${userId}/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ new_password: newPassword })
+    });
+    
+    const json = await res.json();
+
+    if (json.status === 'success') {
+      const user = allUsers.find(u => u.id === userId);
+      const userEmail = user ? user.email : 'the user';
+      
+      msgEl.innerHTML = `
+        <div style="background: #dcfce7; border: 1px solid #86efac; border-radius: 8px; padding: 14px; margin-top: 10px;">
+          <div style="color: #14532d; font-weight: 600; margin-bottom: 8px;">✓ Password Reset Successfully!</div>
+          <div style="color: #166534; font-size: 13px; line-height: 1.6; margin-bottom: 12px;">
+            <strong>Important:</strong> Copy this password and send it to the user securely. The user can log in immediately with this new password.
+          </div>
+          <div style="background: #fff; border: 1px solid #86efac; border-radius: 6px; padding: 10px; margin-bottom: 10px;">
+            <div style="font-size: 11px; color: #166534; font-weight: 600; margin-bottom: 4px;">NEW TEMPORARY PASSWORD:</div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; color: #14532d; font-weight: 600;" id="resetPasswordDisplay">${escHtml(newPassword)}</div>
+          </div>
+          <button onclick="copyResetPassword()" style="background: #16a34a; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; transition: background .2s;">
+            📋 Copy Password
+          </button>
+          <div style="font-size: 12px; color: #166534; margin-top: 12px; padding-top: 12px; border-top: 1px solid #86efac;">
+            <strong>User Email:</strong> ${escHtml(userEmail)}<br>
+            <span style="font-size: 11px; color: #166534; opacity: 0.8;">Recommend the user changes this password after logging in.</span>
+          </div>
+        </div>
+      `;
+      msgEl.style.color = '';
+      
+      // Hide the form fields and show only the success message
+      document.getElementById('resetNewPassword').style.display = 'none';
+      document.getElementById('resetConfirmPassword').style.display = 'none';
+      document.querySelectorAll('#resetPasswordModal .field').forEach(f => f.style.display = 'none');
+      btn.style.display = 'none';
+      
+      // Update the modal title
+      document.querySelector('#resetPasswordModal h3').textContent = 'Password Reset Complete';
+      
+      // Reload users list to refresh any status
+      setTimeout(() => {
+        loadUsers();
+      }, 500);
+    } else {
+      msgEl.textContent = '✗ ' + (json.message || 'Failed to reset password.');
+      msgEl.style.color = 'var(--reject)';
+    }
+  } catch (err) {
+    msgEl.textContent = '✗ Network error: ' + err.message;
+    msgEl.style.color = 'var(--reject)';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Reset Password';
+  }
+});
+
+// Copy password to clipboard
+window.copyResetPassword = function() {
+  const passwordText = document.getElementById('resetPasswordDisplay').textContent;
+  navigator.clipboard.writeText(passwordText).then(() => {
+    const btn = event.target;
+    const originalText = btn.textContent;
+    btn.textContent = '✓ Copied!';
+    btn.style.background = '#15803d';
+    setTimeout(() => {
+      btn.textContent = originalText;
+      btn.style.background = '#16a34a';
+    }, 2000);
+  }).catch(() => {
+    alert('Failed to copy. Please select and copy manually.');
+  });
+};
+
+// Allow Enter key to submit in reset password modal
+document.getElementById('resetConfirmPassword').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    document.getElementById('resetPasswordConfirm').click();
+  }
+});
+
+// Lazy-load users tab when first clicked
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  if (btn.dataset.tab === 'users') {
+    btn.addEventListener('click', () => {
+      if (!document.getElementById('usersList')._loaded) {
+        document.getElementById('usersList')._loaded = true;
+        loadUsers();
       }
     });
   }

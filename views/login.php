@@ -317,7 +317,7 @@
           </div>
         </div>
         <?php if (!$isAdminLoginPage): ?>
-        <div class="row-between"><a href="#">Forgot password?</a></div>
+        <div class="row-between"><a href="#" id="forgotPasswordLink">Forgot password?</a></div>
         <?php else: ?>
         <div style="margin-bottom:20px;"></div>
         <?php endif; ?>
@@ -403,6 +403,45 @@
 
   </div><!-- /card -->
 
+  <!-- Forgot Password Modal -->
+  <div id="forgotPasswordModal" class="card" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); z-index:1000; max-width:440px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <h2 style="font-family:'Fraunces',serif; font-size:20px; margin:0;">Forgot Password?</h2>
+      <button id="closeForgotModal" style="background:none; border:none; font-size:24px; color:var(--ink-soft); cursor:pointer; padding:0; line-height:1;">&times;</button>
+    </div>
+    
+    <p style="font-size:13.5px; color:var(--ink-soft); margin-bottom:20px;">
+      Enter your email address and we'll help you reset your password through our admin team.
+    </p>
+
+    <div id="forgotAlert" style="display:none;" class="auth-alert"></div>
+
+    <form id="forgotPasswordForm">
+      <div class="field">
+        <label for="forgotEmail">Email Address</label>
+        <div class="input-wrap">
+          <input id="forgotEmail" type="email" name="email" placeholder="you@example.com" required>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="forgotMessage">Additional Message (Optional)</label>
+        <div class="input-wrap">
+          <textarea id="forgotMessage" name="message" rows="3" placeholder="Any additional information..."
+                    style="width:100%; padding:12px 14px; font-family:'Source Sans 3',sans-serif; font-size:14px; 
+                           color:var(--ink); background:#FDFBF6; border:1.5px solid var(--line); border-radius:10px;
+                           outline:none; resize:vertical; transition:border-color .2s, box-shadow .2s;"></textarea>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-primary" id="forgotBtn">Request Password Reset</button>
+      <p class="switch-line"><a id="backToLogin">Back to Sign In</a></p>
+    </form>
+  </div>
+
+  <!-- Modal Backdrop -->
+  <div id="modalBackdrop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:999; backdrop-filter:blur(4px);"></div>
+
   <!-- Stage footer -->
   <div class="stage-foot">
     <span><?= htmlspecialchars(APP_NAME) ?> · <?= date('Y') ?></span>
@@ -477,6 +516,101 @@ document.getElementById('signUpForm')?.addEventListener('submit', () => {
   const b = document.getElementById('suBtn');
   b.disabled = true; b.textContent = 'Creating account…';
 });
+
+// ── Forgot Password Modal ──
+<?php if (!$isAdminLoginPage): ?>
+const forgotModal = document.getElementById('forgotPasswordModal');
+const modalBackdrop = document.getElementById('modalBackdrop');
+const forgotLink = document.getElementById('forgotPasswordLink');
+const closeForgotModal = document.getElementById('closeForgotModal');
+const backToLogin = document.getElementById('backToLogin');
+const forgotForm = document.getElementById('forgotPasswordForm');
+const forgotAlert = document.getElementById('forgotAlert');
+
+function showForgotModal() {
+  forgotModal.style.display = 'block';
+  modalBackdrop.style.display = 'block';
+  document.getElementById('forgotEmail').focus();
+  forgotAlert.style.display = 'none';
+}
+
+function hideForgotModal() {
+  forgotModal.style.display = 'none';
+  modalBackdrop.style.display = 'none';
+  forgotForm.reset();
+  forgotAlert.style.display = 'none';
+}
+
+forgotLink?.addEventListener('click', (e) => {
+  e.preventDefault();
+  showForgotModal();
+});
+
+closeForgotModal?.addEventListener('click', hideForgotModal);
+backToLogin?.addEventListener('click', (e) => {
+  e.preventDefault();
+  hideForgotModal();
+});
+
+modalBackdrop?.addEventListener('click', hideForgotModal);
+
+// Handle forgot password form submission
+forgotForm?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const email = document.getElementById('forgotEmail').value.trim();
+  const message = document.getElementById('forgotMessage').value.trim();
+  const btn = document.getElementById('forgotBtn');
+  
+  if (!email) {
+    forgotAlert.className = 'auth-alert auth-alert--error';
+    forgotAlert.innerHTML = '<span>⚠</span>Please enter your email address.';
+    forgotAlert.style.display = 'flex';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Sending request...';
+  forgotAlert.style.display = 'none';
+
+  try {
+    const response = await fetch('<?= BASE_URL ?>/api/contact', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: 'Password Reset Request',
+        email: email,
+        reason: 'Technical issue',
+        message: `PASSWORD RESET REQUEST\n\nEmail: ${email}\n\n${message || 'I forgot my password and need help resetting it. Please assist me in recovering my account.'}`
+      })
+    });
+
+    const data = await response.json();
+
+    if (data.status === 'success') {
+      forgotAlert.className = 'auth-alert auth-alert--success';
+      forgotAlert.innerHTML = '<span>✓</span>Your password reset request has been sent to our admin team. They will contact you shortly via email to help reset your password.';
+      forgotAlert.style.display = 'flex';
+      forgotForm.reset();
+      
+      setTimeout(() => {
+        hideForgotModal();
+      }, 4000);
+    } else {
+      forgotAlert.className = 'auth-alert auth-alert--error';
+      forgotAlert.innerHTML = '<span>⚠</span>' + (data.message || 'Failed to send request. Please try again.');
+      forgotAlert.style.display = 'flex';
+    }
+  } catch (error) {
+    forgotAlert.className = 'auth-alert auth-alert--error';
+    forgotAlert.innerHTML = '<span>⚠</span>Network error. Please check your connection and try again.';
+    forgotAlert.style.display = 'flex';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Request Password Reset';
+  }
+});
+<?php endif; ?>
 </script>
 </body>
 </html>

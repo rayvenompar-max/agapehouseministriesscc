@@ -219,6 +219,43 @@ class MemberRepository
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    /**
+     * Get all members for admin panel with pagination.
+     * Returns members with safe fields (excluding password).
+     */
+    public function getAllMembersForAdmin(int $limit = 50, int $offset = 0): array
+    {
+        $sql = 'SELECT id, email, username, display_name, profile_picture, status, last_login, created_at
+                FROM members
+                ORDER BY created_at DESC
+                LIMIT :limit OFFSET :offset';
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Get total count of all members.
+     */
+    public function getTotalMembersCount(): int
+    {
+        $stmt = $this->db->query('SELECT COUNT(*) FROM members');
+        return (int) $stmt->fetchColumn();
+    }
+
+    /**
+     * Update member status (active, inactive, banned).
+     */
+    public function updateStatus(int $id, string $status): void
+    {
+        $stmt = $this->db->prepare('UPDATE members SET status = :status WHERE id = :id');
+        $stmt->execute(['status' => $status, 'id' => $id]);
+    }
+
     private function hydrate(array $row): Member
     {
         return new Member(
